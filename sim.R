@@ -74,20 +74,28 @@ Zfit = glm(Z ~ A + W + S, data = data, family = binomial())
 f_M1 = function(Z, W, S) {
   # W = W[1:10]
   nn = length(W)
-  plogis((matrix(c(rep(1, nn), rep(1, nn), W), nrow = nn) %*% Mfit$coefficients))*
-    plogis((matrix(c(rep(1, nn), rep(1, nn), W, rep(1, nn)), nrow = nn) %*% Zfit$coefficients)) +
-    plogis((matrix(c(rep(1, nn), rep(0, nn), W), nrow = nn) %*% Mfit$coefficients))*
-    (1 - plogis((matrix(c(rep(1, nn), rep(1, nn), W, rep(1, nn)), nrow = nn) %*% Zfit$coefficients)))
+  dataM1 = data.frame(Z = rep(1,nn), W = W)
+  predM1 = predict(Mfit, newdata = dataM1, type = 'response')
+  dataM0 = data.frame(Z = rep(0,nn), W = W)
+  predM0 = predict(Mfit, newdata = dataM0, type = 'response')
+  dataZ = data.frame(A = rep(1,nn), W = W, S = rep(1, nn))
+  predZ = predict(Zfit, newdata = dataZ, type = 'response')
+  gM = predM1*predZ + predM0*(1 - predZ)
+  return(gM)
 }  
 
 f_M0 = function(Z, W, S) {
   # W = W[1:10]
   nn = length(W)
-  plogis((matrix(c(rep(1, nn), rep(1, nn), W), nrow = nn) %*% Mfit$coefficients))*
-    plogis((matrix(c(rep(1, nn), rep(0, nn), W, rep(1, nn)), nrow = nn) %*% Zfit$coefficients)) +
-    plogis((matrix(c(rep(1, nn), rep(0, nn), W), nrow = nn) %*% Mfit$coefficients))*
-    (1 - plogis((matrix(c(rep(1, nn), rep(0, nn), W, rep(1, nn)), nrow = nn) %*% Zfit$coefficients)))
-} 
+  dataM1 = data.frame(Z = rep(1,nn), W = W)
+  predM1 = predict(Mfit, newdata = dataM1, type = 'response')
+  dataM0 = data.frame(Z = rep(0,nn), W = W)
+  predM0 = predict(Mfit, newdata = dataM0, type = 'response')
+  dataZ = data.frame(A = rep(0,nn), W = W, S = rep(1, nn))
+  predZ = predict(Zfit, newdata = dataZ, type = 'response')
+  gM = predM1*predZ + predM0*(1 - predZ)
+  return(gM)
+}  
 # We can now set A to 1, and stochastically intervene for A = 0 to generate M and our outcome for pop
 
 data_popS11 = gendata(2*1e6, f_SW = f_SW, f_A = function(S,W) 1, f_Z = f_Z, f_M = f_M1, f_Y = f_Y)
@@ -105,3 +113,4 @@ mean(data_popS01$Y)
 data_popS00 = gendata(2*1e6, f_SW = f_SW, f_A = function(S,W) 0, f_Z = f_Z, f_M = f_M0, f_Y = f_Y)
 head(data_popS00)
 mean(data_popS00$Y)
+
