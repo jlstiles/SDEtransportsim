@@ -1,5 +1,7 @@
 devtools::install_github("jeremyrcoyle/sl3")
 devtools::install_github("jlstiles/SDE_transport")
+library("SDEtransport")
+library(sl3)
 
 n=1e6
 W = rnorm(n)
