@@ -59,7 +59,7 @@ gendata = function(n, f_S, f_A, f_Z, f_M, f_Y) {
   return(data.frame(W = W, S = S, A = A, Z = Z, M = M, Y = Y))
 }
 
-
+# define learners in sl3
 lglm = make_learner(Lrnr_glm)
 lmean = make_learner(Lrnr_mean)
 lbayesglm = make_learner(Lrnr_bayesglm)
@@ -69,9 +69,11 @@ lrnr_stack = make_learner(Stack, list(lglm, lmean, lxgboost))
 # lrnr_stack = make_learner(Stack, list(lmean))
 metalearner = make_learner(Lrnr_nnls)
 
+# define the superlearner
 sl <- Lrnr_sl$new(learners = lrnr_stack,
                   metalearner = metalearner)
 
+# declare covariates for the learners
 covariates=list(covariates_Mstar = c("W", "Z"),
                 covariates_Y = c("M", "Z", "W"),
                 covariates_M = c("S", "W", "Z"),
@@ -79,10 +81,17 @@ covariates=list(covariates_Mstar = c("W", "Z"),
                 covariates_A = c("S","W"),
                 covariates_S = c("W"))
 
+# generate the data
 n = 1e3
 data = gendata(n, f_S = f_S, f_A = f_A, f_Z = f_Z, f_M = f_M, f_Y = f_Y)
+
+# run the tmle
 res = SDE_tmle(data = data, a = 1, a_star = 0, sl = sl, covariates = covariates)
+# tmle est
 res$est
+# mle gcomp
 res$est_mle
+# IC mean for tmle
 mean(res$IC)
+# sl coefficients for the learners
 res$SL_coef
