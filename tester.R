@@ -86,6 +86,9 @@ n = 1e3
 data = gendata(n, f_S = f_S, f_A = f_A, f_Z = f_Z, f_M = f_M, f_Y = f_Y)
 
 # run the tmle
+# a is the intervention, a_star is for the stochastic intervention.  For now, the stochastic
+# intervention is defined on S = 1 only for both M and Z but can add options easily for that
+
 res = SDE_tmle(data = data, a = 1, a_star = 0, sl = sl, covariates = covariates)
 # tmle est
 res$est
