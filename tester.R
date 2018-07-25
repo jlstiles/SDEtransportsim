@@ -62,7 +62,7 @@ gendata = function(n, f_S, f_A, f_Z, f_M, f_Y) {
 # define learners in sl3
 lglm = make_learner(Lrnr_glm)
 lmean = make_learner(Lrnr_mean)
-lbayesglm = make_learner(Lrnr_bayesglm)
+# lbayesglm = make_learner(Lrnr_bayesglm)
 lxgboost = make_learner(Lrnr_xgboost)
 lrnr_stack = make_learner(Stack, list(lglm, lmean, lxgboost))
 # lrnr_stack = make_learner(Stack, list(lglm))
