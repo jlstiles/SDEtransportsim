@@ -134,7 +134,27 @@ fcn.SDE = function(data,
   return(list(est = est, est_mle = est_mle, IC = D))
 }
 
+
+#' @title SDE_tmle
+#' @description computes the sequential regression, targeted maximum likelihood estimate
+#' for the stochastic direct effect or stochastic indirect effect when the outcome and 
+#' mediator model are only available on site 1 (S = 1).  This is a data adaptive parameter
+#' as the stochastic direct effect has a model for the mediator is determined on the data for 
+#' site 1. 
+#' @param data, data.frame of variables in time ordering from left to right
+#' @param a, the treatment intervention of interest
+#' @param a_star, the treatment intervention of the stochastic model for Mediator, M
+#' @param covariates, list of covariates for each necessary model, going backwards from the 
+#' outcome, Y, M, Z, A, W, S where S is the binary site, W are confounders, A is the treatment
+#' Z is the intermediary confounder (binary) and M is the mediator
+#' @param sl the sl3 superlearner defined, see sl3 documentation for defining a superlearner
+#' and the example below
+#' @param V number of folds for cross-validation (fixed to 10 for now)
+#' @return  a list with a CI for the estimate, and estimate using linear main terms MLE 
+#' gcomp formula (est_mle), the influence curve (IC), the superlearner coefficients for
+#' the Y model and the QZ model (SL_coef)
 #' @export
+#' @example /inst/tester_SDE_tmle.R
 SDE_tmle = function(data, a, a_star, sl, V=10, covariates) {
   # compute the first clever covariate
   # data_ipcw
