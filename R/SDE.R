@@ -524,13 +524,15 @@ SDE_tmle = function(data, a, a_star, sl, V=10, covariates) {
   # compute the parameter estimate
   est = mean(QZstar_a[data$S==0])
   est_mle = mean(YZ_preds_a[data$S==0])
-  
+
   D_Y = with(data, Hm*(Y - Qstar_M))
   D_Z = Hz*(Qstar_Mg - QZstar_a)
   D_W = with(data, (QZstar_a - est)*(S ==0)/PS0)
   
   D = D_Y + D_Z + D_W
-  return(list(est = est, est_mle = est_mle, IC = D, 
+  n = nrow(data)
+  CI = (est = est, left = est - 1.96*sd(D)/sqrt(n), right = est + 1.96*sd(D)/sqrt(n))
+  return(list(CI = CI, est_mle = est_mle, IC = D, 
               SL_coef = list(Y = Yfit$coefficients, QZ = QZfit$coefficients)))
 }
 
