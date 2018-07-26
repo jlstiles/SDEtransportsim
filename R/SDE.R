@@ -531,7 +531,7 @@ SDE_tmle = function(data, a, a_star, sl, V=10, covariates) {
   
   D = D_Y + D_Z + D_W
   n = nrow(data)
-  CI = (est = est, left = est - 1.96*sd(D)/sqrt(n), right = est + 1.96*sd(D)/sqrt(n))
+  CI = c(est = est, left = est - 1.96*sd(D)/sqrt(n), right = est + 1.96*sd(D)/sqrt(n))
   return(list(CI = CI, est_mle = est_mle, IC = D, 
               SL_coef = list(Y = Yfit$coefficients, QZ = QZfit$coefficients)))
 }

@@ -93,7 +93,7 @@ data = gendata(n, f_S = f_S, f_A = f_A, f_Z = f_Z, f_M = f_M, f_Y = f_Y)
 
 res = SDE_tmle(data = data, a = 1, a_star = 1, sl = sl, covariates = covariates)
 # tmle est
-res$est
+res$CI
 # mle gcomp
 res$est_mle
 # IC mean for tmle
