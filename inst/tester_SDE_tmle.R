@@ -3,65 +3,22 @@ devtools::install_github("jlstiles/SDE_transport")
 library("SDEtransport")
 library(sl3)
 
-set.seed(101)
-
-W = rnorm(n)
+# data generating process for 1-d W
+f_W = function(n) rnorm(n)
 f_S = function(W) plogis(W +.7)
-P_SW = f_S(W)
-S = rbinom(n,1,P_SW)
-mean(S)
-
 # make a pscore model
 f_A = function(S,W) plogis(-.7*S-1*W +.7)
-pscores = f_A(S,W)
-max(pscores)
-min(pscores)
-hist(pscores, 200)
-A = rbinom(n, 1, pscores)
-
 # make a intermediate confounder model
 f_Z = function(A,S,W) plogis(.1*S-1*W+2*A-.8)
-pzscores = f_Z(A,S,W)
-hist(pzscores,200)
-Z = rbinom(n, 1, pzscores)
-
 # make an M model according to the restrictions
 f_M = function(Z,W,S) plogis(-.14*S + 1*W + 2*Z +.6)
-Mscores = f_M(Z,W,S)
-hist(Mscores, 200)
-M = rbinom(n, 1, Mscores)
-
 # make a Y model according to the restrictions
-f_Y = function(M,Z,W) plogis(1*M - .5*W^2 + W*M + .41*Z*W - .1)
-Yscores = f_Y(M,Z,W)
-Y = rbinom(n, 1, Yscores)
-hist(Yscores, 200)
+f_Y = function(M,Z,W) plogis(1*M + 1.5*W + 1*Z - 1)
 
-# pack these functions into a DGP
-gendata = function(n, f_S, f_A, f_Z, f_M, f_Y) {
-  W = rnorm(n)
-  P_SW = f_S(W)
-  S = rbinom(n,1,P_SW)
-  
-  # make a pscore model
-  pscores = f_A(S,W)
-  A = rbinom(n, 1, pscores)
-  
-  # make a intermediate confounder model
-  pzscores = f_Z(A,S,W)
-  Z = rbinom(n, 1, pzscores)
-  
-  # make an M model according to the restrictions
-  Mscores = f_M(Z,W,S)
-  M = rbinom(n, 1, Mscores)
-  
-  # make a Y model according to the restrictions
-  Yscores = f_Y(M,Z,W)
-  Y = rbinom(n, 1, Yscores)
-  
-  return(data.frame(W = W, S = S, A = A, Z = Z, M = M, Y = Y,
-                    truth = list(f_S = f_S, f_A = f_A, f_Z = f_Z, f_Y)))
-}
+# generate n random samples
+n = 1e3
+set.seed(1)
+data = gendata.SDEtransport(n, f_W = f_W, f_S = f_S, f_A = f_A, f_Z = f_Z, f_M = f_M, f_Y = f_Y)
 
 # define learners in sl3
 lglm = make_learner(Lrnr_glm)
@@ -86,21 +43,6 @@ covariates=list(covariates_Mstar = c("W", "Z"),
                 covariates_S = c("W"))
 
 
-# data generating process for 1-d W
-f_W = function(n) rnorm(n)
-f_S = function(W) plogis(W +.7)
-# make a pscore model
-f_A = function(S,W) plogis(-.7*S-1*W +.7)
-# make a intermediate confounder model
-f_Z = function(A,S,W) plogis(.1*S-1*W+2*A-.8)
-# make an M model according to the restrictions
-f_M = function(Z,W,S) plogis(-.14*S + 1*W + 2*Z +.6)
-# make a Y model according to the restrictions
-f_Y = function(M,Z,W) plogis(1*M + 1.5*W + 1*Z - 1)
-
-# generate n random samples
-n = 1e3
-data = gendata.SDEtransport(n, f_W = f_W, f_S = f_S, f_A = f_A, f_Z = f_Z, f_M = f_M, f_Y = f_Y)
 
 # run the tmle
 # a is the intervention, a_star is for the stochastic intervention.  For now, the stochastic
