@@ -235,6 +235,48 @@ SDE_tmle = function(data, a, a_star, sl, V=10, covariates, truth = FALSE) {
   Mstarfit = sl$train(task_Mstar)
   Zstarfit = sl$train(task_Zstar)
   
+  if (!is.null(truth)) {
+  f_truth = function(Z, W, S) {
+    # W = W[1:10]
+    nn = length(W)
+    dataM1 = data.frame(Z = rep(1,nn), W = W, M = rep(1,nn))
+    taskM1 =   sl3_Task$new(
+      data = data.table::copy(dataM1),
+      covariates = covariates$covariates_Mstar,
+      outcome = "M",
+      outcome_type = "binomial"
+    )
+    predM1 = Mstarfit$predict(taskM1)
+    
+    dataM0 = data.frame(Z = rep(1,nn), W = W, M = rep(1,nn))
+    taskM0 =   sl3_Task$new(
+      data = data.table::copy(dataM0),
+      covariates = covariates$covariates_Mstar,
+      outcome = "M",
+      outcome_type = "binomial"
+    )
+    
+    predM0 = Mstarfit$predict(taskM0)
+    
+    dataZ = data.frame(A = rep(a_star,nn), W = W, S = rep(1, nn), Z = rep(1,nn))
+    
+    taskZ <- sl3_Task$new(
+      data = data.table::copy(dataZ),
+      covariates = covariates$covariates_Z,
+      outcome = "Z",
+      outcome_type = "binomial"
+    )
+    
+    predZ = Zstarfit$predict(taskZ)
+    gM = predM1*predZ + predM0*(1 - predZ)
+    return(gM)
+  }
+  
+  data_pop = gendata.SDEtransport(2*1e6, f_W = f_W, f_S = truth$f_S, f_A = function(S,W) a, 
+                                  f_Z = truth$f_Z, f_M = f_truth, f_Y = truth$f_Y)
+  Psi_0 = mean(data_pop$Y[data_pop$S==0])
+  
+  }
   if (a_star == 1) {
     predM1 = Mstarfit$predict(task_M1)
     predM0 = Mstarfit$predict(task_M0)
@@ -551,6 +593,7 @@ SDE_tmle = function(data, a, a_star, sl, V=10, covariates, truth = FALSE) {
   n = nrow(data)
   CI = c(est = est, left = est - 1.96*sd(D)/sqrt(n), right = est + 1.96*sd(D)/sqrt(n))
   return(list(CI = CI, est_mle = est_mle, IC = D, 
-              SL_coef = list(Y = Yfit$coefficients, QZ = QZfit$coefficients)))
+              SL_coef = list(Y = Yfit$coefficients, QZ = QZfit$coefficients),
+              Psi_0 = ifelse(is.null(truth), NULL, Psi_0)))
 }
 

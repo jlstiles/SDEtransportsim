@@ -2,3 +2,4 @@
 
 export(SDE_tmle)
 export(fcn.SDE)
+export(gendata.SDEtransport)
