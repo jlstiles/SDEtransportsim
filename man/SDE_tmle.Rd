@@ -60,11 +60,8 @@ data = gendata.SDEtransport(n, f_W = f_W, f_S = f_S, f_A = f_A, f_Z = f_Z, f_M =
 # define learners in sl3
 lglm = make_learner(Lrnr_glm)
 lmean = make_learner(Lrnr_mean)
-# lbayesglm = make_learner(Lrnr_bayesglm)
 lxgboost = make_learner(Lrnr_xgboost)
 lrnr_stack = make_learner(Stack, list(lglm, lmean, lxgboost))
-# lrnr_stack = make_learner(Stack, list(lglm))
-# lrnr_stack = make_learner(Stack, list(lmean))
 metalearner = make_learner(Lrnr_nnls)
 
 # define the superlearner
