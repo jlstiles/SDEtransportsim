@@ -32,7 +32,7 @@ hist(Mscores, 200)
 M = rbinom(n, 1, Mscores)
 
 # make a Y model according to the restrictions
-f_Y = function(M,Z,W) plogis(1*M + 1.5*W*M + 1*Z*M - 1)
+f_Y = function(M,Z,W) plogis(1*M - .5*W^2 + W*M + .41*Z*W - .1)
 Yscores = f_Y(M,Z,W)
 Y = rbinom(n, 1, Yscores)
 hist(Yscores, 200)

@@ -155,14 +155,13 @@ fcn.SDE = function(data,
 #' the Y model and the QZ model (SL_coef)
 #' @export
 #' @example /inst/tester_SDE_tmle.R
-SDE_tmle = function(data, a, a_star, sl, V=10, covariates) {
+SDE_tmle = function(data, a, a_star, sl, V=10, covariates, truth = FALSE) {
   # compute the first clever covariate
   # data_ipcw
   # data_ipcw[, censored_at_t_obs := as.numeric(!Delta & t_disc == t_obs)]
   # V=2
   # dd = data
   # folds = make_folds(n, V=2)
-  
   task_Mstar <- sl3_Task$new(
     data = data.table::copy(data[data$S == 1,]),
     covariates = covariates$covariates_Mstar,
@@ -236,7 +235,6 @@ SDE_tmle = function(data, a, a_star, sl, V=10, covariates) {
   Mstarfit = sl$train(task_Mstar)
   Zstarfit = sl$train(task_Zstar)
   
-  a_star = 0
   if (a_star == 1) {
     predM1 = Mstarfit$predict(task_M1)
     predM0 = Mstarfit$predict(task_M0)
