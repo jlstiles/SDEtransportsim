@@ -3,6 +3,7 @@ devtools::install_github("jlstiles/SDE_transport")
 library("SDEtransport")
 library(sl3)
 
+set.seed(101)
 n=1e6
 W = rnorm(n)
 f_S = function(W) plogis(W +.7)
@@ -31,7 +32,7 @@ hist(Mscores, 200)
 M = rbinom(n, 1, Mscores)
 
 # make a Y model according to the restrictions
-f_Y = function(M,Z,W) plogis(1*M + 1.5*W + 1*Z - 1)
+f_Y = function(M,Z,W) plogis(1*M + 1.5*W*M + 1*Z*M - 1)
 Yscores = f_Y(M,Z,W)
 Y = rbinom(n, 1, Yscores)
 hist(Yscores, 200)
@@ -90,8 +91,9 @@ data = gendata(n, f_S = f_S, f_A = f_A, f_Z = f_Z, f_M = f_M, f_Y = f_Y)
 # run the tmle
 # a is the intervention, a_star is for the stochastic intervention.  For now, the stochastic
 # intervention is defined on S = 1 only for both M and Z but can add options easily for that
-
-res = SDE_tmle(data = data, a = 1, a_star = 1, sl = sl, covariates = covariates)
+a = 1
+a_star = 1
+res = SDE_tmle(data = data, a = a, a_star = a_star, sl = sl, covariates = covariates)
 
 # tmle est
 res$CI
