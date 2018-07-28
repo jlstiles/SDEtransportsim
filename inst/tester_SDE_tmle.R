@@ -12,27 +12,24 @@ f_A = function(S,W) plogis(-.6*S-.7*W +.17)
 f_Z = function(A,S,W) plogis(.1*S-.4*W+1*A-.3)
 # make an M model according to the restrictions
 f_M = function(Z,W,S) plogis(-.14*S + 1*W + 1.2*Z +.1)
-# make a Y model according to the restrictions
+# make a Y model according to the restrictions, main terms linear logistic reg.
+# plug-in is biased and not robust like tmle
 f_Y = function(M,Z,W) {
-  # plogis(1*M + 1.5*W*Z + 1*Z - W - .7*M*W - 1)
-  # plogis(1*M  + Z - .68*W - 1)
-  # plogis(1*M  - Z*M - .68*W^2*Z - .3*Z - (W > .7)*M*Z + (W < -.4)*M - 1)
-  plogis(1*M -.5*cos(W) +.68*cos(W)*Z - .38*Z*M + (W < -.4)*M - 1)
+  plogis(W*M + 3*cos(W)*Z-.4)
 }
 
 
 # generate n random samples
-n = 1e2
-# set.seed(1)
+n = 5e3
+set.seed(1)
 data = gendata.SDEtransport(n, f_W = f_W, f_S = f_S, f_A = f_A, f_Z = f_Z, f_M = f_M, f_Y = f_Y)
 mean(data$S==0)
 # define learners in sl3
 lglm = make_learner(Lrnr_glm)
 lmean = make_learner(Lrnr_mean)
-lxgboost = make_learner(Lrnr_xgboost, nrounds = 100, eta = .01, depth = 2)
-lxgboost1 = make_learner(Lrnr_xgboost, nrounds = 20, eta = .4, depth = 2)
-lrnr_stack = make_learner(Stack, list(lglm, lmean))
-lrnr_stack = make_learner(Stack, list(lglm, lmean, lxgboost1))
+lxgboost = make_learner(Lrnr_xgboost)
+lrnr_stack = make_learner(Stack, list(lglm, lmean, lxgboost))
+
 metalearner = make_learner(Lrnr_nnls)
 
 # define the superlearner
@@ -58,7 +55,7 @@ a = 0
 a_star = 1
 res = SDE_tmle(data = data, a = a, a_star = a_star, sl = sl, covariates = covariates,
                truth = list(f_S = f_S, f_Z = f_Z, f_Y = f_Y),
-               truncate = list(lower =.9, upper = .99))
+               truncate = list(lower =.01, upper = .99))
 
 # tmle est
 res$CI
