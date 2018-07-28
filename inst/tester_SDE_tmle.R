@@ -63,7 +63,6 @@ res$CI
 res$est_mle
 # IC mean for tmle
 mean(res$IC)
-hist(res$IC, breaks = 50)
 # sl coefficients for the learners
 res$SL_coef
 # true parameter value
