@@ -248,7 +248,7 @@ SDE_tmle = function(data, a, a_star, sl, V=10, covariates, truth = FALSE) {
     )
     predM1 = Mstarfit$predict(taskM1)
     
-    dataM0 = data.frame(Z = rep(1,nn), W = W, M = rep(1,nn))
+    dataM0 = data.frame(Z = rep(0,nn), W = W, M = rep(1,nn))
     taskM0 =   sl3_Task$new(
       data = data.table::copy(dataM0),
       covariates = covariates$covariates_Mstar,
