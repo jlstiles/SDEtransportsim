@@ -1,3 +1,4 @@
+
 #' @export
 gendata.SDEtransport = function(n, f_W, f_S, f_A, f_Z, f_M, f_Y) {
   W = f_W(n)
@@ -21,4 +22,9 @@ gendata.SDEtransport = function(n, f_W, f_S, f_A, f_Z, f_M, f_Y) {
   Y = rbinom(n, 1, Yscores)
   
   return(data.frame(W = W, S = S, A = A, Z = Z, M = M, Y = Y))
+}
+
+#' @export
+bound = function(x, lower, upper) {
+  pmin(pmax(lower, x), upper)
 }

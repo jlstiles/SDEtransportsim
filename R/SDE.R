@@ -144,24 +144,33 @@ fcn.SDE = function(data,
 #' @param data, data.frame of variables in time ordering from left to right
 #' @param a, the treatment intervention of interest
 #' @param a_star, the treatment intervention of the stochastic model for Mediator, M
-#' @param covariates, list of covariates for each necessary model, going backwards from the 
-#' outcome, Y, M, Z, A, W, S where S is the binary site, W are confounders, A is the treatment
-#' Z is the intermediary confounder (binary) and M is the mediator
 #' @param sl the sl3 superlearner defined, see sl3 documentation for defining a superlearner
 #' and the example below
 #' @param V number of folds for cross-validation (fixed to 10 for now)
+#' @param covariates, list of covariates for each necessary model, going backwards from the 
+#' outcome, Y, M, Z, A, W, S where S is the binary site, W are confounders, A is the treatment
+#' Z is the intermediary confounder (binary) and M is the mediator, Y is the outcome. 
+#' @param truth for testing purposes input a list with names f_W, f_S, f_Z and f_Y models representing
+#' and the corresponding elements are functions of appropriate variables so as to be able to 
+#' generate the truth and check the estimator's performance.  Default is NULL
+#' @param truncate, a list with elements lower and upper to truncate the various p-scores  
+#' not functional at present
 #' @return  a list with a CI for the estimate, and estimate using linear main terms MLE 
 #' gcomp formula (est_mle), the influence curve (IC), the superlearner coefficients for
 #' the Y model and the QZ model (SL_coef)
 #' @export
 #' @example /inst/tester_SDE_tmle.R
-SDE_tmle = function(data, a, a_star, sl, V=10, covariates, truth = FALSE) {
+SDE_tmle = function(data, a, a_star, sl, V=10, covariates, truth = FALSE, 
+                    truncate = list(lower =.01, upper = .99)) {
   # compute the first clever covariate
   # data_ipcw
   # data_ipcw[, censored_at_t_obs := as.numeric(!Delta & t_disc == t_obs)]
   # V=2
   # dd = data
   # folds = make_folds(n, V=2)
+  L = truncate$lower
+  U = truncate$upper
+  
   task_Mstar <- sl3_Task$new(
     data = data.table::copy(data[data$S == 1,]),
     covariates = covariates$covariates_Mstar,
@@ -280,7 +289,7 @@ SDE_tmle = function(data, a, a_star, sl, V=10, covariates, truth = FALSE) {
   if (a_star == 1) {
     predM1 = Mstarfit$predict(task_M1)
     predM0 = Mstarfit$predict(task_M0)
-    predZ = Zstarfit$predict(task_Z1)
+    predZ =  Zstarfit$predict(task_Z1)
     gstarM_ps = predM1*predZ + predM0*(1 - predZ)
   } else {
     predM1 = Mstarfit$predict(task_M1)
@@ -486,7 +495,7 @@ SDE_tmle = function(data, a, a_star, sl, V=10, covariates, truth = FALSE) {
       ((M == 1)*gstarM_ps + (M == 0)*(1 - gstarM_ps))*
       ((Z == 1)*Z0a_ps + (Z == 0)*(1 - Z0a_ps))*
       S0_preds)/
-      (((M == 1)*M1a_ps + (M == 0)*(1 - M1a_ps))*
+         (((M == 1)*M1a_ps + (M == 0)*(1 - M1a_ps))*
          ((Z == 1)*Z1a_ps + (Z == 0)*(1 - Z1a_ps))*
          ((A == 1)*A1_ps + (A == 0)*(1 - A1_ps))*S1_preds*PS0))
   
@@ -567,8 +576,10 @@ SDE_tmle = function(data, a, a_star, sl, V=10, covariates, truth = FALSE) {
   # compute the clever covariate 2
   A_preds = data$A*A_ps + (1 - data$A)*(1 - A_ps)
   
-  Hz = (data$A == a)*(data$S == 0)/A_preds/PS0 
-  if (a == 1) Hza = (data$S == 0)/A_ps/PS0 else Hza = (data$S == 0)/(1-A_ps)/PS0
+  Hz = (data$A == a)*(data$S == 0)/A_preds/PS0
+  if (a == 1) Hza = (data$S == 0)/A_ps/PS0 else {
+    Hza = (data$S == 0)/(1-A_ps)/PS0
+  }
   
   # estimates
   QZ_preds = pmin(pmax(QZfit$predict(), .001), .999)
