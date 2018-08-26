@@ -1,5 +1,6 @@
 # library(cateSurvival)
-library(Simulations)
+devtools::install_github("jlstiles/SDE_transport")
+# library(Simulations)
 library(SDEtransport)
 # Functions to generate data for transport:
 
@@ -110,6 +111,6 @@ sim_kara = function(n, covariates, truth) {
 B = 1000
 n=100
 res100 = mclapply(1:B, FUN = function(x) sim_kara(n, covariates, func_list), 
-         mc.cores = getOption("mc.cores", 2L))
+         mc.cores = getOption("mc.cores", 24L))
 
 save(res100_mis, func_list, file = "res100_mis.RData")
