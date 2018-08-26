@@ -90,9 +90,9 @@ data = gendata.SDEtransport(n, f_W = f_W, f_S = f_S, f_A = f_A, f_Z = f_Z, f_M =
 # head(data)
 # undebug(SDE_tmle1)
 # debug(gendata.SDEtransport)
-test = SDE_tmle3(data,covariates= covariates, truth = func_list, 
-          truncate = list(lower =.0001, upper = .9999), glm_only = TRUE,
-          iptw = TRUE, onestep = TRUE) 
+# test = SDE_tmle3(data,covariates= covariates, truth = func_list, 
+#           truncate = list(lower =.0001, upper = .9999), glm_only = TRUE,
+#           iptw = TRUE, onestep = TRUE) 
 
 sim_kara = function(n, covariates, truth) {
   data = gendata.SDEtransport(n, 
@@ -108,6 +108,7 @@ sim_kara = function(n, covariates, truth) {
   return(test)
 }
 
+library(parallel)
 B = 1000
 n=100
 res100 = mclapply(1:B, FUN = function(x) sim_kara(n, covariates, func_list), 
