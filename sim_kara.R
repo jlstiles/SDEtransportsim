@@ -111,7 +111,7 @@ sim_kara = function(n, covariates, truth) {
 library(parallel)
 B = 1000
 n=100
-res100 = mclapply(1:B, FUN = function(x) sim_kara(n, covariates, func_list), 
+res100_mis = mclapply(1:B, FUN = function(x) sim_kara(n, covariates, func_list), 
          mc.cores = getOption("mc.cores", 24L))
 
 save(res100_mis, func_list, file = "res100_mis.RData")

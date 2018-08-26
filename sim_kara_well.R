@@ -114,4 +114,4 @@ n=100
 res100 = mclapply(1:B, FUN = function(x) sim_kara(n, covariates, func_list), 
          mc.cores = getOption("mc.cores", 24L))
 
-save(res500, func_list, file = "res100.RData")
+save(res100, func_list, file = "res100.RData")
