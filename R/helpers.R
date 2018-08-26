@@ -6,22 +6,22 @@ gendata.SDEtransport = function(n, f_W, f_S, f_A, f_Z, f_M, f_Y) {
   S = rbinom(n,1,P_SW)
   
   # make a pscore model
-  pscores = f_A(S,W)
+  pscores = f_A(S=S,W=W)
   A = rbinom(n, 1, pscores)
   
   # make a intermediate confounder model
-  pzscores = f_Z(A,S,W)
+  pzscores = f_Z(A=A,S=S,W=W)
   Z = rbinom(n, 1, pzscores)
   
   # make an M model according to the restrictions
-  Mscores = f_M(Z,W,S)
+  Mscores = f_M(Z=Z,W=W,S=S)
   M = rbinom(n, 1, Mscores)
   
   # make a Y model according to the restrictions
-  Yscores = f_Y(M,Z,W)
+  Yscores = f_Y(M=M,Z=Z,W=W)
   Y = rbinom(n, 1, Yscores)
   
-  return(data.frame(W = W, S = S, A = A, Z = Z, M = M, Y = Y))
+  return(cbind(W, S = S, A = A, Z = Z, M = M, Y = Y))
 }
 
 #' @export

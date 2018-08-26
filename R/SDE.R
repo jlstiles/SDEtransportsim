@@ -160,20 +160,22 @@ fcn.SDE = function(data,
 #' the Y model and the QZ model (SL_coef)
 #' @export
 #' @example /inst/tester_SDE_tmle.R
-SDE_tmle = function(data, a, a_star, sl, V=10, covariates, truth = FALSE, 
-                    truncate = list(lower =.01, upper = .99)) {
+SDE_tmle = function(data, a, a_star, sl, V=10, covariates, truth = NULL, 
+                    truncate = list(lower =.0001, upper = .9999), glm_only = TRUE) {
   # compute the first clever covariate
   # data_ipcw
   # data_ipcw[, censored_at_t_obs := as.numeric(!Delta & t_disc == t_obs)]
   # V=2
   # dd = data
   # folds = make_folds(n, V=2)
+  if (glm_only) sl = make_learner(Lrnr_glm_fast, family = binomial())
+  
   L = truncate$lower
   U = truncate$upper
   
   task_Mstar <- sl3_Task$new(
     data = data.table::copy(data[data$S == 1,]),
-    covariates = covariates$covariates_Mstar,
+    covariates = covariates$covariates_M,
     # covariates = colnames(dt_in)[str_detect(colnames(dt_in), "W")],
     outcome = "M",
     # id = "ID",
@@ -208,7 +210,7 @@ SDE_tmle = function(data, a, a_star, sl, V=10, covariates, truth = FALSE,
   
   
   task_Zstar <- sl3_Task$new(
-    data = data.table::copy(data[data$S == 1,]),
+    data = data.table::copy(data),
     covariates = covariates$covariates_Z,
     # covariates = colnames(dt_in)[str_detect(colnames(dt_in), "W")],
     outcome = "Z",
@@ -244,6 +246,7 @@ SDE_tmle = function(data, a, a_star, sl, V=10, covariates, truth = FALSE,
   Mstarfit = sl$train(task_Mstar)
   Zstarfit = sl$train(task_Zstar)
   
+  # find the truth if simulating
   if (!is.null(truth)) {
   f_truth = function(Z, W, S) {
     # W = W[1:10]
@@ -251,7 +254,7 @@ SDE_tmle = function(data, a, a_star, sl, V=10, covariates, truth = FALSE,
     dataM1 = data.frame(Z = rep(1,nn), W = W, M = rep(1,nn))
     taskM1 =   sl3_Task$new(
       data = data.table::copy(dataM1),
-      covariates = covariates$covariates_Mstar,
+      covariates = covariates$covariates_M,
       outcome = "M",
       outcome_type = "binomial"
     )
@@ -260,7 +263,7 @@ SDE_tmle = function(data, a, a_star, sl, V=10, covariates, truth = FALSE,
     dataM0 = data.frame(Z = rep(0,nn), W = W, M = rep(1,nn))
     taskM0 =   sl3_Task$new(
       data = data.table::copy(dataM0),
-      covariates = covariates$covariates_Mstar,
+      covariates = covariates$covariates_M,
       outcome = "M",
       outcome_type = "binomial"
     )
@@ -281,11 +284,12 @@ SDE_tmle = function(data, a, a_star, sl, V=10, covariates, truth = FALSE,
     return(gM)
   }
   
-  data_pop = gendata.SDEtransport(2*1e6, f_W = f_W, f_S = truth$f_S, f_A = function(S,W) a, 
+  data_pop = gendata.SDEtransport(5*1e6, f_W = truth$f_W, f_S = truth$f_S, f_A = function(S,W) a, 
                                   f_Z = truth$f_Z, f_M = f_truth, f_Y = truth$f_Y)
   Psi_0 = mean(data_pop$Y[data_pop$S==0])
-  
+  PS0_0 = mean(data_pop$S)   
   }
+
   if (a_star == 1) {
     predM1 = Mstarfit$predict(task_M1)
     predM0 = Mstarfit$predict(task_M0)
@@ -314,6 +318,16 @@ SDE_tmle = function(data, a, a_star, sl, V=10, covariates, truth = FALSE,
   df_S0a$S = 0
   df_S0a$A = a
   
+  
+  task_YS1 <- sl3_Task$new(
+    data = data.table::copy(data[data$S==1,]),
+    covariates = covariates$covariates_Y,
+    # covariates = colnames(dt_in)[str_detect(colnames(dt_in), "W")],
+    outcome = "Y",
+    # id = "ID",
+    # folds = folds,
+    outcome_type = "binomial"
+  )
   
   task_Y <- sl3_Task$new(
     data = data.table::copy(data),
@@ -356,7 +370,7 @@ SDE_tmle = function(data, a, a_star, sl, V=10, covariates, truth = FALSE,
   )
   
   task_M <- sl3_Task$new(
-    data = data.table::copy(data),
+    data = data.table::copy(data[data$S == 1,]),
     covariates = covariates$covariates_M,
     # covariates = colnames(dt_in)[str_detect(colnames(dt_in), "W")],
     outcome = "M",
@@ -419,7 +433,7 @@ SDE_tmle = function(data, a, a_star, sl, V=10, covariates, truth = FALSE,
   Zfit = sl$train(task_Z)
   
   Z0a_ps = Zfit$predict(task_S0a)
-  
+  Z0a_ps0 = with(df_S0a, truth$f_Z(A=A, W=W, S=S))
   
   task_S <- sl3_Task$new(
     data = data.table::copy(data),
@@ -434,14 +448,19 @@ SDE_tmle = function(data, a, a_star, sl, V=10, covariates, truth = FALSE,
   # compute probs S = 0 given W
   Sfit = sl$train(task_S)
   S0_preds = 1 - Sfit$predict()
+  S0_preds0 = 1 - with(data, truth$f_S(W=W))
   
-  # compute M preds 
-  M_ps = Mfit$predict(task_M)
+  # compute M preds
+  M_ps = rep(10, nrow(data))
+  M_ps[data$S==1] = Mfit$predict(task_M)
   M1a_ps = Mfit$predict(taskM_M1S1a)
-  
+  M_ps0 = with(data, truth$f_M(Z=Z, W=W, S=1))
+    
   # compute Z preds 
   Z_ps = Zfit$predict()
+  Z_ps0 = with(data, f_Z(A=A, W=W, S=S))
   Z1a_ps = Zfit$predict(taskZ_M1S1a)
+  Z1a_ps0 = with(df_M1S1a, truth$f_Z(A=A, W=W, S=S))
   
   # compute A=1 preds for S = 1
   
@@ -470,10 +489,14 @@ SDE_tmle = function(data, a, a_star, sl, V=10, covariates, truth = FALSE,
   
   Afit = sl$train(task_A)
   A_ps = Afit$predict()
+  A_ps0 = with(data, truth$f_A(W=W, S=S))
+  
   A1_ps = Afit$predict(task_AS1a)
+  A1_ps0 = with(df_S1a, truth$f_A(W=W, S=S))
   
   #compute prob S = 1 given W
   S1_preds = 1 - S0_preds
+  S1_preds0 = 1 - S0_preds0
   
   # compute prob S = 0
   PS0 = mean(data$S == 0)
@@ -487,6 +510,17 @@ SDE_tmle = function(data, a, a_star, sl, V=10, covariates, truth = FALSE,
               (((M == 1)*M_ps + (M == 0)*(1 - M_ps))*
                  ((Z == 1)*Z_ps + (Z == 0)*(1 - Z_ps))*
                  ((A == 1)*A_ps + (A == 0)*(1 - A_ps))*S1_preds*PS0))
+  
+  Hm_0 = with(data, ((S == 1)*(A == a)*
+                     ((M == 1)*gstarM_ps + (M == 0)*(1 - gstarM_ps))*
+                     ((Z == 1)*Z0a_ps0 + (Z == 0)*(1 - Z0a_ps0))*
+                     S0_preds0)/
+              (((M == 1)*M_ps0 + (M == 0)*(1 - M_ps0))*
+                 ((Z == 1)*Z_ps0 + (Z == 0)*(1 - Z_ps0))*
+                 ((A == 1)*A_ps0 + (A == 0)*(1 - A_ps0))*S1_preds*PS0_0))
+  
+  # computing true clever covariate
+
   
   # for clever covariate we set S = 1 because it is not affecting the outcome, then we 
   # intervene on A and M via stoc intervention
@@ -509,10 +543,16 @@ SDE_tmle = function(data, a, a_star, sl, V=10, covariates, truth = FALSE,
          ((A == 1)*A1_ps + (A == 0)*(1 - A1_ps))*S1_preds*PS0))
   
   # estimates
-  Yfit = sl$train(task_Y)
-  Y_preds = Yfit$predict()
+  Yfit = sl$train(task_YS1)
+  Y_preds = Yfit$predict(task_Y)
   Y_preds_M1 = Yfit$predict(task_M1S1a)
   Y_preds_M0 = Yfit$predict(task_M0S1a)
+  
+  lrnr_glm = make_learner(Lrnr_glm_fast, family = binomial())
+  Yfit_mle = lrnr_glm$train(task_YS1)
+  Y_mle_preds = Yfit_mle$predict(task_Y)
+  Y_mle_preds_M1 = Yfit_mle$predict(task_M1S1a)
+  Y_mle_preds_M0 = Yfit_mle$predict(task_M0S1a)
   
   # updates
   Qfit = glm(data$Y ~ Hm - 1 + offset(qlogis(Y_preds)), family = binomial)
@@ -524,7 +564,7 @@ SDE_tmle = function(data, a, a_star, sl, V=10, covariates, truth = FALSE,
   
   # perform the stochastic intervention on Qstar, fcn of Z, W, S.  These are inits
   Qstar_Mg = Qstar_M1*gstarM_ps + Qstar_M0*(1 - gstarM_ps)
-  Y_Mg = Y_preds_M1*gstarM_ps + Y_preds_M0*(1 - gstarM_ps)
+  Y_Mg = Y_mle_preds_M1*gstarM_ps + Y_mle_preds_M0*(1 - gstarM_ps)
   # NEXT REGRESSION
   
   # regress on Z,W,S
@@ -568,24 +608,38 @@ SDE_tmle = function(data, a, a_star, sl, V=10, covariates, truth = FALSE,
   
   QZfit = sl$train(task_QZ)
   # QZfit = lglm$train(task_QZ)
-  YZfit = sl$train(task_QZ_Y)
+  YZfit = lrnr_glm$train(task_QZ_Y)
   # pp = glm(Qstar_Mg~A+W+S, data = df_QZ, family = binomial)
   # QZ_preds = predict(pp, type = 'response')
   # 
   # QZ_preds_a = predict(pp, newdata = df_QZS0a, type = 'response')
   # compute the clever covariate 2
   A_preds = data$A*A_ps + (1 - data$A)*(1 - A_ps)
+  A_preds0 = with(data, A*A_ps0 + (1 - A)*(1 - A_ps0))
   
   Hz = (data$A == a)*(data$S == 0)/A_preds/PS0
   if (a == 1) Hza = (data$S == 0)/A_ps/PS0 else {
     Hza = (data$S == 0)/(1-A_ps)/PS0
   }
   
+  Hz_0 = (data$A == a)*(data$S == 0)/A_preds0/PS0_0
+  if (a == 1) Hza_0 = (data$S == 0)/A_ps0/PS0_0 else {
+    Hza_0 = (data$S == 0)/(1-A_ps0)/PS0_0
+  }
+  
+  
   # estimates
   QZ_preds = pmin(pmax(QZfit$predict(), .001), .999)
   
   QZ_preds_a = pmin(pmax(QZfit$predict(task_QZS0a), .001), .999)
   YZ_preds_a = pmin(pmax(YZfit$predict(task_QZ_Y), .001), .999)
+  
+  gstar_M = with(data, f_truth(Z=Z, W=W, S=S))
+  p_0Z = with(data, truth$f_Z(A=a, W=W, S=S))
+  Q_0Y = with(data, truth$f_Y(M=M, Z=Z, W=W))
+  
+  Q_ghat_astar = Q_0Y*gstar_M
+  Q_ghat_astarW = Q_ghat_astar*p_0Z
   
   # update
   QZfit_tmle = glm(Qstar_Mg ~ Hz - 1 + offset(qlogis(QZ_preds)), family = binomial)
@@ -595,15 +649,26 @@ SDE_tmle = function(data, a, a_star, sl, V=10, covariates, truth = FALSE,
   # compute the parameter estimate
   est = mean(QZstar_a[data$S==0])
   est_mle = mean(YZ_preds_a[data$S==0])
-
+  
   D_Y = with(data, Hm*(Y - Qstar_M))
+  D_0Y = with(data, Hm_0*(Y - Q_0Y))
+  
   D_Z = Hz*(Qstar_Mg - QZstar_a)
+  D_0Z = Hz_0*(Q_ghat_astar - Q_ghat_astarW)
+  
   D_W = with(data, (QZstar_a - est)*(S ==0)/PS0)
+  D_0W = with(data, (Q_ghat_astarW - Psi_0)*(S ==0)/PS0_0)
   
   D = D_Y + D_Z + D_W
+  D_0 = D_0Y + D_0Z + D_0W
+  
   n = nrow(data)
-  CI = c(est = est, left = est - 1.96*sd(D)/sqrt(n), right = est + 1.96*sd(D)/sqrt(n))
-  return(list(CI = CI, est_mle = est_mle, IC = D, 
+  SE = sd(D)/sqrt(n)
+  SE_0 = sd(D_0)/sqrt(n)
+  
+  CI = c(est = est, left = est - 1.96*SE, right = est + 1.96*SE)
+  
+  return(list(CI = CI, est_mle = est_mle, IC = D, IC_0 = D_0, SE = SE, SE_0 = SE_0, 
               SL_coef = list(Y = Yfit$coefficients, QZ = QZfit$coefficients),
               Psi_0 = ifelse(is.null(truth), NULL, Psi_0)))
 }
