@@ -81,7 +81,7 @@ else
 	${R} $< ${OUTPUT_DIR}/$<.out &
 endif
 
-sim_kara: sim_kara.R
+simkara: sim_kara.R
 ifeq (${JOB_ENGINE},slurm)
 	${SBATCH} --nodes 1 --cpus-per-task=24 --job-name=$< ${SCRIPT_DIR}/sbatch-r.sh --file=$< --dir=${OUTPUT_DIR}
 else
