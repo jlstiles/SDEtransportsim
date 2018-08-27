@@ -59,32 +59,24 @@ SDE_tmle3 = function(data, sl, V=10, covariates, truth = NULL,
   df_ZS0 = data
   df_ZS0$S = 0
   
-  Z_S0_ps0 = with(df_ZS0, truth$f_Z(A=A, W=W, S=S))
-  S0_preds0 = 1 - with(data, truth$f_S(W=W))
+  S_ps0 = 1 - S0_preds0
+  ZS0_ps0 = with(df_ZS0, truth$f_Z(A=A, W=W, S=S))
   M_ps0 = with(data, truth$f_M(Z=Z, W=W, S=1))
   Z_ps0 = with(data, f_Z(A=A, W=W, S=S))
   A_ps0 = with(data, truth$f_A(W=W, S=S))
-  S1_preds0 = 1 - S0_preds0
-  A_preds0 = with(data, A*A_ps0 + (1 - A)*(1 - A_ps0))
   
   get_cc_0 = function(data, gstarM_astar, a) {
     with(data, ((S == 1)*(A == a)*
                   ((M == 1)*gstarM_astar + (M == 0)*(1 - gstarM_astar))*
-                  ((Z == 1)*Z_S0_ps0 + (Z == 0)*(1 - Z_S0_ps0))*
-                  S0_preds0)/
+                  ((Z == 1)*ZS0_ps0 + (Z == 0)*(1 - ZS0_ps0))*(1 - S_ps0))/
            (((M == 1)*M_ps0 + (M == 0)*(1 - M_ps0))*
               ((Z == 1)*Z_ps0 + (Z == 0)*(1 - Z_ps0))*
-              ((A == 1)*A_ps0 + (A == 0)*(1 - A_ps0))*S1_preds0
+              ((A == 1)*A_ps0 + (A == 0)*(1 - A_ps0))*S_ps0
             *PS0_0))
   }
   
-  get_Hz_0 = function(a) {
-    (data$A == a)*(data$S == 0)/A_preds0/PS0_0
-    if (a == 1) Hza_0 = (data$S == 0)/A_ps0/PS0_0 else {
-      Hza_0 = (data$S == 0)/(1-A_ps0)/PS0_0
-    }
-  }
-  
+  get_Hz_0 = function(a) with(data, (A == a)*(S == 0)/(A*A_ps0 + (1 - A)*(1 - A_ps0))/PS0_0)
+
   Hm_astar0a1_0 = get_cc_0(data = data, gstarM_astar = gstarM_astar0, a = 1)
   Hm_astar0a0_0 = get_cc_0(data = data, gstarM_astar = gstarM_astar0, a = 0)
   Hm_astar1a1_0 = get_cc_0(data = data, gstarM_astar = gstarM_astar1, a = 1)
@@ -135,13 +127,16 @@ SDE_tmle3 = function(data, sl, V=10, covariates, truth = NULL,
   ####
   ####
   get_estimates = function(data, gstarM_astar1, gstarM_astar0, bootstrap) {
-    task_YS1 <- sl3_Task$new(
+    
+    # to be used for fitting Y
+    task_YsubS1 <- sl3_Task$new(
       data = data.table::copy(data[data$S==1,]),
       covariates = covariates$covariates_Y,
       outcome = "Y",
       outcome_type = "binomial"
     )
     
+    # Used for predicting Y
     task_Y <- sl3_Task$new(
       data = data.table::copy(data),
       covariates = covariates$covariates_Y,
@@ -163,21 +158,15 @@ SDE_tmle3 = function(data, sl, V=10, covariates, truth = NULL,
       outcome_type = "binomial"
     )
     
-    
-    task_ZS0 <- sl3_Task$new(
-      data = data.table::copy(df_ZS0),
-      covariates = covariates$covariates_Z,
-      outcome = "Z",
-      outcome_type = "binomial"
-    )
-    
-    task_M <- sl3_Task$new(
+    # used for fitting M
+    task_MsubS1 <- sl3_Task$new(
       data = data.table::copy(data[data$S == 1,]),
       covariates = covariates$covariates_M,
       outcome = "M",
       outcome_type = "binomial"
     )
     
+    # used for predicting M
     task_MS1 <- sl3_Task$new(
       data = data.table::copy(df_YM1S1),
       covariates = covariates$covariates_M,
@@ -193,36 +182,12 @@ SDE_tmle3 = function(data, sl, V=10, covariates, truth = NULL,
       outcome_type = "binomial"
     )
     
-    task_ZS1 <- sl3_Task$new(
-      data = data.table::copy(df_YM1S1),
+    task_ZS0 <- sl3_Task$new(
+      data = data.table::copy(df_ZS0),
       covariates = covariates$covariates_Z,
       outcome = "Z",
       outcome_type = "binomial"
     )
-    
-    Mfit = sl$train(task_M)
-    Zfit = sl$train(task_Z)
-    
-    Z_S0_ps = Zfit$predict(task_ZS0)
-    
-    task_S <- sl3_Task$new(
-      data = data.table::copy(data),
-      covariates = covariates$covariates_S,
-      outcome = "S",
-      outcome_type = "binomial"
-    )
-    
-    # compute probs S = 0 given W
-    Sfit = sl$train(task_S)
-    S0_preds = 1 - Sfit$predict()
-    
-    M_ps = rep(.5, nrow(data))
-    M_ps[data$S==1] = Mfit$predict(task_M)
-    
-    # compute Z preds 
-    Z_ps = Zfit$predict()
-    
-    # compute A=1 preds for S = 1
     
     task_A <- sl3_Task$new(
       data = data.table::copy(data),
@@ -231,24 +196,46 @@ SDE_tmle3 = function(data, sl, V=10, covariates, truth = NULL,
       outcome_type = "binomial"
     )
     
+    task_ZS1 <- sl3_Task$new(
+      data = data.table::copy(df_YM1S1),
+      covariates = covariates$covariates_Z,
+      outcome = "Z",
+      outcome_type = "binomial"
+    )
+    
+    task_S <- sl3_Task$new(
+      data = data.table::copy(data),
+      covariates = covariates$covariates_S,
+      outcome = "S",
+      outcome_type = "binomial"
+    )
+    
+    # Y, M, Z, A, S fits
+    Sfit = sl$train(task_S)
     Afit = sl$train(task_A)
-    A_ps = Afit$predict()
+    Zfit = sl$train(task_Z)
     
-    #compute prob S = 1 given W
-    S1_preds = 1 - S0_preds
+    # fitting M and Y on subsets where S is 1.  This is all that is needed for M and Y
+    Mfit = sl$train(task_MsubS1)
+    Yfit = sl$train(task_YsubS1)
     
-    # compute prob S = 0
+    # propensity scores
+    S_ps = Sfit$predict()
     PS0 = mean(data$S == 0)
+    A_ps = Afit$predict()
+    Z_ps = Zfit$predict()
+    ZS0_ps = Zfit$predict(task_ZS0)
+    M_ps = rep(.5, nrow(data))
+    M_ps[data$S==1] = Mfit$predict(task_M)
     
     # 1st clever cov FOR SDE, ALSO NEED THE ONE FOR SIE
     get_cc = function(data, gstarM_astar, a) {
       with(data, ((S == 1)*(A == a)*
                     ((M == 1)*gstarM_astar + (M == 0)*(1 - gstarM_astar))*
-                    ((Z == 1)*Z_S0_ps + (Z == 0)*(1 - Z_S0_ps))*
-                    S0_preds)/
+                    ((Z == 1)*ZS0_ps + (Z == 0)*(1 - ZS0_ps))*(1 - S_ps))/
              (((M == 1)*M_ps + (M == 0)*(1 - M_ps))*
                 ((Z == 1)*Z_ps + (Z == 0)*(1 - Z_ps))*
-                (A_ps*A + (1 - A)*(1 - A_ps))*S1_preds*PS0))
+                (A_ps*A + (1 - A)*(1 - A_ps))*S_ps*PS0))
     }
     
     
@@ -256,19 +243,18 @@ SDE_tmle3 = function(data, sl, V=10, covariates, truth = NULL,
     Hm_astar0a0 = get_cc(data = data, gstarM_astar = gstarM_astar0, a = 0)
     Hm_astar1a1 = get_cc(data = data, gstarM_astar = gstarM_astar1, a = 1)
     
-    # for clever covariate we set S = 1 because it is not affecting the outcome, then we 
-    # intervene on A and M via stoc intervention
-    
-    Yfit = sl$train(task_YS1)
+    # Predict Y for whole data, also with M = 1 and 0, S does not matter since
+    # Y is not a function of that variable so won't be used for prediction
     Y_preds = Yfit$predict(task_Y)
     Y_preds_M1 = Yfit$predict(task_YM1S1)
     Y_preds_M0 = Yfit$predict(task_YM0S1)
     
     # updates
     update_fcn = function(weights) {
-      Qfit = glm(data$Y ~ 1 + offset(qlogis(Y_preds)), family = binomial,
-                 weights = weights)
-      eps = Qfit$coefficients
+      Qfit = try(glm(data$Y ~ 1 + offset(qlogis(Y_preds)), family = binomial,
+                 weights = weights), silent = TRUE)
+
+      if (class(Qfit)=="try-error") eps = 0 else eps = Qfit$coefficients
       
       Qstar_M  = plogis(qlogis(Y_preds) + eps)
       Qstar_M1 = plogis(qlogis(Y_preds_M1) + eps)
@@ -302,13 +288,15 @@ SDE_tmle3 = function(data, sl, V=10, covariates, truth = NULL,
       df_QZ$Qstar_Mg = Qstar_Mg
       df_QZ$Y_Mg = Y_Mg  
       
-      task_QZ <- sl3_Task$new(
+      # for tmle 
+      task_QZsubAa <- sl3_Task$new(
         data = data.table::copy(df_QZ[df_QZ$A == a, ]),
         covariates = covariates$covariates_QZ,
         outcome = "Qstar_Mg",
         outcome_type = "gaussian"
       )
       
+      # for standard gcomp
       task_QZ_Y <- sl3_Task$new(
         data = data.table::copy(df_QZ[df_QZ$A == a, ]),
         covariates = covariates$covariates_QZ,
@@ -323,24 +311,21 @@ SDE_tmle3 = function(data, sl, V=10, covariates, truth = NULL,
         outcome_type = "gaussian"
       )
       
-      QZfit = sl$train(task_QZ)
-      YZfit = sl$train(task_QZ_Y)
+      QZfit = sl$train(task_QZsubAa)
+      YZfit = sl$train(task_QZ_YsubAa)
       
       # compute the clever covariate 2
-      A_preds = data$A*A_ps + (1 - data$A)*(1 - A_ps)
+      get_Hz = function(a) with(data, (A == a)*(S == 0)/(A*A_ps + (1 - A)*(1 - A_ps))/PS0)
       
-      Hz = (data$A == a)*(data$S == 0)/A_preds/PS0
-      if (a == 1) Hza = (data$S == 0)/A_ps/PS0 else {
-        Hza = (data$S == 0)/(1-A_ps)/PS0
-      }
-      
-      # estimates
+      # estimates predicted on whole data.  Since they were fit on A = a, A is not
+      # a covariate in these predictions as A = a is therefore implicit
       QZ_preds_a = pmin(pmax(QZfit$predict(task_data), .001), .999)
       YZ_preds_a = pmin(pmax(YZfit$predict(task_data), .001), .999)
       
       # update
-      QZfit_tmle = glm(Qstar_Mg ~ 1 + offset(qlogis(QZ_preds_a)), family = binomial,
-                       weights = Hz)
+      QZfit_tmle = try(glm(Qstar_Mg ~ 1 + offset(qlogis(QZ_preds_a)), family = binomial,
+                       weights = Hz), silent = TRUE)
+      if (class(QZfit)=="try-error") eps2 = 0 else eps = Qfit$coefficients
       
       eps2 = QZfit_tmle$coefficients
       QZstar_a = plogis(qlogis(QZ_preds_a) + eps2)
