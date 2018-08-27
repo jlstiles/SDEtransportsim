@@ -261,12 +261,16 @@ SDE_tmle3 = function(data, sl, V=10, covariates, truth = NULL,
       Qstar_M1 = plogis(qlogis(Y_preds_M1) + eps)
       Qstar_M0 = plogis(qlogis(Y_preds_M0) + eps)
       df = data.frame(Qstar_M = Qstar_M, Qstar_M0 = Qstar_M0, Qstar_M1 = Qstar_M1)
-      return(df)
+      return(list(df = df, eps = eps))
     }
     
-    QstarY_astar0a1_df = update_fcn(weights = Hm_astar0a1)
-    QstarY_astar0a0_df = update_fcn(weights = Hm_astar0a0)
-    QstarY_astar1a1_df = update_fcn(weights = Hm_astar1a1)
+    QstarY_astar0a1_info = update_fcn(weights = Hm_astar0a1)
+    QstarY_astar0a0_info = update_fcn(weights = Hm_astar0a0)
+    QstarY_astar1a1_info = update_fcn(weights = Hm_astar1a1)
+    
+    QstarY_astar0a1_df = QstarY_astar0a1_info$df
+    QstarY_astar0a0_df = QstarY_astar0a0_info$df 
+    QstarY_astar1a1_df = QstarY_astar1a1_info$df
     
     QstarMg_astar0a1 = QstarY_astar0a1_df[,3]*gstarM_astar0 + 
         QstarY_astar0a1_df[,2]*(1 - gstarM_astar0)
@@ -361,7 +365,7 @@ SDE_tmle3 = function(data, sl, V=10, covariates, truth = NULL,
         CI_iptw = c(est_iptw, left = est_iptw - 1.96*SE_iptw, right = est_iptw + 1.96*SE_iptw)
         
         return(list(est = est, est_1s = est_1s, est_iptw = est_iptw,
-                    est_mle = est_mle, IC = D, IC_1s = D_1s, IC_iptw = D_iptw, eps = eps, eps2 = eps2))
+                    est_mle = est_mle, IC = D, IC_1s = D_1s, IC_iptw = D_iptw, eps2 = eps2))
       } else {
         return(list(est = est, est_1s = est_1s, est_iptw = est_iptw, est_mle = est_mle))
       }
@@ -388,7 +392,11 @@ SDE_tmle3 = function(data, sl, V=10, covariates, truth = NULL,
     
     return(list(info_astar0a1 = info_astar0a1, 
                 info_astar0a0 = info_astar0a0, 
-                info_astar1a1 = info_astar1a1))
+                info_astar1a1 = info_astar1a1,
+                eps_astar0a1 = QstarY_astar0a1_info$eps, 
+                eps_astar0a0 = QstarY_astar0a0_info$eps, 
+                eps_astar1a1 = QstarY_astar1a1_info$eps
+                ))
   }
   
   # get the estimates and IC's
@@ -396,7 +404,7 @@ SDE_tmle3 = function(data, sl, V=10, covariates, truth = NULL,
   
   # run the bootstrap 500 times
   # bootstrap from the data and thus the gstarM_astar1 and gstarM_astar0
-  
+  n = nrow(data)
   boots = lapply(1:500, FUN = function(x) {
     inds = sample(1:n, replace = TRUE)
     data = data[inds,]
@@ -493,7 +501,10 @@ SDE_tmle3 = function(data, sl, V=10, covariates, truth = NULL,
   SE_SDE_iptw = SE_SDE_iptw,   
   SE_SIE_iptw = SE_SIE_iptw, 
   SE_SDE_0 = SE_SDE_0, 
-  SE_SIE_0 = SE_SIE_0)) 
+  SE_SIE_0 = SE_SIE_0,
+  eps_astar0a1 = info$eps_astar0a1, 
+  eps_astar0a0 = info$eps_astar0a0, 
+  eps_astar1a1 = info$eps_astar1a1)) 
 } 
 
 #' @title get_gstarM
