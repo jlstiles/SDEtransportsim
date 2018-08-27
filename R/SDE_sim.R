@@ -59,7 +59,7 @@ SDE_tmle3 = function(data, sl, V=10, covariates, truth = NULL,
   df_ZS0 = data
   df_ZS0$S = 0
   
-  S_ps0 = 1 - S0_preds0
+  S_ps0 = with(data, truth$f_S(W=W))
   ZS0_ps0 = with(df_ZS0, truth$f_Z(A=A, W=W, S=S))
   M_ps0 = with(data, truth$f_M(Z=Z, W=W, S=1))
   Z_ps0 = with(data, f_Z(A=A, W=W, S=S))
@@ -225,8 +225,9 @@ SDE_tmle3 = function(data, sl, V=10, covariates, truth = NULL,
     A_ps = Afit$predict()
     Z_ps = Zfit$predict()
     ZS0_ps = Zfit$predict(task_ZS0)
-    M_ps = rep(.5, nrow(data))
-    M_ps[data$S==1] = Mfit$predict(task_M)
+    # might as well predict for S = 1 on whole data because only S = 1 subset is relevant
+    # as clev cov is 0 otherwise 
+    M_ps = Mfit$predict(task_MS1)
     
     # 1st clever cov FOR SDE, ALSO NEED THE ONE FOR SIE
     get_cc = function(data, gstarM_astar, a) {
@@ -297,7 +298,7 @@ SDE_tmle3 = function(data, sl, V=10, covariates, truth = NULL,
       )
       
       # for standard gcomp
-      task_QZ_Y <- sl3_Task$new(
+      task_QZ_YsubAa <- sl3_Task$new(
         data = data.table::copy(df_QZ[df_QZ$A == a, ]),
         covariates = covariates$covariates_QZ,
         outcome = "Y_Mg",
@@ -315,8 +316,8 @@ SDE_tmle3 = function(data, sl, V=10, covariates, truth = NULL,
       YZfit = sl$train(task_QZ_YsubAa)
       
       # compute the clever covariate 2
-      get_Hz = function(a) with(data, (A == a)*(S == 0)/(A*A_ps + (1 - A)*(1 - A_ps))/PS0)
-      
+      Hz = with(data, (A == a)*(S == 0)/(A*A_ps + (1 - A)*(1 - A_ps))/PS0)
+
       # estimates predicted on whole data.  Since they were fit on A = a, A is not
       # a covariate in these predictions as A = a is therefore implicit
       QZ_preds_a = pmin(pmax(QZfit$predict(task_data), .001), .999)
@@ -325,9 +326,8 @@ SDE_tmle3 = function(data, sl, V=10, covariates, truth = NULL,
       # update
       QZfit_tmle = try(glm(Qstar_Mg ~ 1 + offset(qlogis(QZ_preds_a)), family = binomial,
                        weights = Hz), silent = TRUE)
-      if (class(QZfit)=="try-error") eps2 = 0 else eps = Qfit$coefficients
-      
-      eps2 = QZfit_tmle$coefficients
+      if (class(QZfit_tmle)=="try-error") eps2 = 0 else eps2 = QZfit_tmle$coefficients
+
       QZstar_a = plogis(qlogis(QZ_preds_a) + eps2)
       
       # compute the parameter estimate
@@ -361,7 +361,7 @@ SDE_tmle3 = function(data, sl, V=10, covariates, truth = NULL,
         CI_iptw = c(est_iptw, left = est_iptw - 1.96*SE_iptw, right = est_iptw + 1.96*SE_iptw)
         
         return(list(est = est, est_1s = est_1s, est_iptw = est_iptw,
-                    est_mle = est_mle, IC = D, IC_1s = D_1s, IC_iptw = D_iptw))
+                    est_mle = est_mle, IC = D, IC_1s = D_1s, IC_iptw = D_iptw, eps = eps, eps2 = eps2))
       } else {
         return(list(est = est, est_1s = est_1s, est_iptw = est_iptw, est_mle = est_mle))
       }
