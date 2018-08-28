@@ -112,6 +112,6 @@ library(parallel)
 B = 1000
 n=5000
 res5000_mis = mclapply(1:B, FUN = function(x) sim_kara(n, covariates, func_list), 
-         mc.cores = getOption("mc.cores", 24L))
+         mc.cores = getOption("mc.cores", 16L))
 
 save(res5000_mis, func_list, file = "res5000_mis.RData")

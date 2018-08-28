@@ -13,6 +13,7 @@ f_W = function(n) {
   data.frame(W1=W1, W2=W2)
 }
 W = f_W(n)
+colMeans(W)
 f_S = function(W) {
   with(W, plogis(W1-W2 +.7))
 }
@@ -43,7 +44,7 @@ f_Z = function(A,S,W) {
 pzscores = f_Z(A,S,W)
 hist(pzscores,200)
 Z = rbinom(n, 1, pzscores)
-
+mean(Z)
 # make an M model according to the restrictions
 
 # make an M model according to the restrictions
@@ -54,7 +55,7 @@ f_M = function(Z,W,S) {
 Mscores = f_M(Z,W,S)
 hist(Mscores, 200)
 M = rbinom(n, 1, Mscores)
-
+mean(M)
 # make a Y model according to the restrictions
 f_Y = function(M,Z,W) {
   df = cbind(M=M, Z = Z, W)
@@ -112,6 +113,6 @@ library(parallel)
 B = 1000
 n=5000
 res5000 = mclapply(1:B, FUN = function(x) sim_kara(n, covariates, func_list), 
-         mc.cores = getOption("mc.cores", 24L))
+         mc.cores = getOption("mc.cores", 16L))
 
 save(res5000, func_list, file = "res5000.RData")
