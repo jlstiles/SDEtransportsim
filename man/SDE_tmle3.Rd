@@ -6,7 +6,7 @@
 \usage{
 SDE_tmle3(data, sl, V = 10, covariates, truth = NULL,
   truncate = list(lower = 1e-04, upper = 0.9999), glm_only = TRUE,
-  iptw = TRUE, onestep = TRUE)
+  iptw = TRUE, onestep = TRUE, B = 500)
 }
 \arguments{
 \item{data, }{data.frame of variables in time ordering from left to right}
