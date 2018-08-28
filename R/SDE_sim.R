@@ -26,7 +26,7 @@
 #' @example /inst/tester_SDE_tmle.R
 SDE_tmle3 = function(data, sl, V=10, covariates, truth = NULL, 
                      truncate = list(lower =.0001, upper = .9999), glm_only = TRUE,
-                     iptw = TRUE, onestep = TRUE) 
+                     iptw = TRUE, onestep = TRUE, B = 500) 
 {
   
   # n = 1e3
@@ -47,22 +47,13 @@ SDE_tmle3 = function(data, sl, V=10, covariates, truth = NULL,
   PS0_0 = gstar_info$PS0_0
   
   # get the true IC's
-  
-  W = data[,grep("W", colnames(data))]
-  df_YM1S1 = data
-  df_YM1S1$M = 1
-  df_YM1S1$S = 1
-  
-  df_YM0S1 = df_YM1S1
-  df_YM0S1$M = 0
-  
   df_ZS0 = data
   df_ZS0$S = 0
   
   S_ps0 = with(data, truth$f_S(W=W))
   ZS0_ps0 = with(df_ZS0, truth$f_Z(A=A, W=W, S=S))
   M_ps0 = with(data, truth$f_M(Z=Z, W=W, S=1))
-  Z_ps0 = with(data, f_Z(A=A, W=W, S=S))
+  Z_ps0 = with(data, truth$f_Z(A=A, W=W, S=S))
   A_ps0 = with(data, truth$f_A(W=W, S=S))
   
   get_cc_0 = function(data, gstarM_astar, a) {
@@ -128,86 +119,86 @@ SDE_tmle3 = function(data, sl, V=10, covariates, truth = NULL,
   ####
   get_estimates = function(data, gstarM_astar1, gstarM_astar0, bootstrap) {
     
+    W = data[,grep("W", colnames(data))]
+    df_YM1S1 = data
+    df_YM1S1$M = 1
+    df_YM1S1$S = 1
+    
+    df_YM0S1 = df_YM1S1
+    df_YM0S1$M = 0
+    
+    df_ZS0 = data
+    df_ZS0$S = 0
+    
     # to be used for fitting Y
     task_YsubS1 <- sl3_Task$new(
       data = data.table::copy(data[data$S==1,]),
       covariates = covariates$covariates_Y,
-      outcome = "Y",
-      outcome_type = "binomial"
+      outcome = "Y"
     )
     
     # Used for predicting Y
     task_Y <- sl3_Task$new(
       data = data.table::copy(data),
       covariates = covariates$covariates_Y,
-      outcome = "Y",
-      outcome_type = "binomial"
+      outcome = "Y"
     )
     
     task_YM1S1 <- sl3_Task$new(
       data = data.table::copy(df_YM1S1),
       covariates = covariates$covariates_Y,
-      outcome = "Y",
-      outcome_type = "binomial"
+      outcome = "Y"
     )
     
     task_YM0S1 <- sl3_Task$new(
       data = data.table::copy(df_YM0S1),
       covariates = covariates$covariates_Y,
-      outcome = "Y",
-      outcome_type = "binomial"
+      outcome = "Y"
     )
     
     # used for fitting M
     task_MsubS1 <- sl3_Task$new(
       data = data.table::copy(data[data$S == 1,]),
       covariates = covariates$covariates_M,
-      outcome = "M",
-      outcome_type = "binomial"
+      outcome = "M"
     )
     
     # used for predicting M
     task_MS1 <- sl3_Task$new(
       data = data.table::copy(df_YM1S1),
       covariates = covariates$covariates_M,
-      outcome = "M",
-      outcome_type = "binomial"
+      outcome = "M"
     )
     
     
     task_Z <- sl3_Task$new(
       data = data.table::copy(data),
       covariates = covariates$covariates_Z,
-      outcome = "Z",
-      outcome_type = "binomial"
+      outcome = "Z"
     )
     
     task_ZS0 <- sl3_Task$new(
       data = data.table::copy(df_ZS0),
       covariates = covariates$covariates_Z,
-      outcome = "Z",
-      outcome_type = "binomial"
+      outcome = "Z"
     )
     
     task_A <- sl3_Task$new(
       data = data.table::copy(data),
       covariates = covariates$covariates_A,
-      outcome = "A",
-      outcome_type = "binomial"
+      outcome = "A"
     )
     
     task_ZS1 <- sl3_Task$new(
       data = data.table::copy(df_YM1S1),
       covariates = covariates$covariates_Z,
-      outcome = "Z",
-      outcome_type = "binomial"
+      outcome = "Z"
     )
     
     task_S <- sl3_Task$new(
       data = data.table::copy(data),
       covariates = covariates$covariates_S,
-      outcome = "S",
-      outcome_type = "binomial"
+      outcome = "S"
     )
     
     # Y, M, Z, A, S fits
@@ -297,23 +288,20 @@ SDE_tmle3 = function(data, sl, V=10, covariates, truth = NULL,
       task_QZsubAa <- sl3_Task$new(
         data = data.table::copy(df_QZ[df_QZ$A == a, ]),
         covariates = covariates$covariates_QZ,
-        outcome = "Qstar_Mg",
-        outcome_type = "gaussian"
+        outcome = "Qstar_Mg"
       )
       
       # for standard gcomp
       task_QZ_YsubAa <- sl3_Task$new(
         data = data.table::copy(df_QZ[df_QZ$A == a, ]),
         covariates = covariates$covariates_QZ,
-        outcome = "Y_Mg",
-        outcome_type = "guassian"
+        outcome = "Y_Mg"
       )
       
       task_data <- sl3_Task$new(
         data = data.table::copy(data),
         covariates = covariates$covariates_QZ,
-        outcome = "Y",
-        outcome_type = "gaussian"
+        outcome = "Y"
       )
       
       QZfit = sl$train(task_QZsubAa)
@@ -405,7 +393,10 @@ SDE_tmle3 = function(data, sl, V=10, covariates, truth = NULL,
   # run the bootstrap 500 times
   # bootstrap from the data and thus the gstarM_astar1 and gstarM_astar0
   n = nrow(data)
-  boots = lapply(1:500, FUN = function(x) {
+  boots = lapply(1:B, FUN = function(x) {
+    # print (i)
+    # x = sample(1:1000000,1)
+    # set.seed(x)
     inds = sample(1:n, replace = TRUE)
     data = data[inds,]
     gstarM_astar1 = gstarM_astar1[inds]
@@ -541,8 +532,7 @@ get_gstarM  = function(data, sl, V=10, covariates, truth)
   task_Mstar <- sl3_Task$new(
     data = data.table::copy(data[data$S == 1,]),
     covariates = covariates$covariates_M,
-    outcome = "M",
-    outcome_type = "binomial"
+    outcome = "M"
   )
   
   df_MZ1 = df_MZ0 = data
@@ -552,22 +542,19 @@ get_gstarM  = function(data, sl, V=10, covariates, truth)
   task_MZ1 <- sl3_Task$new(
     data = data.table::copy(df_MZ1),
     covariates = covariates$covariates_M,
-    outcome = "M",
-    outcome_type = "binomial"
+    outcome = "M"
   )
   
   task_MZ0 <- sl3_Task$new(
     data = data.table::copy(df_MZ0),
     covariates = covariates$covariates_M,
-    outcome = "M",
-    outcome_type = "binomial"
+    outcome = "M"
   )
   
   task_Zstar <- sl3_Task$new(
     data = data.table::copy(data),
     covariates = covariates$covariates_Z,
-    outcome = "Z",
-    outcome_type = "binomial"
+    outcome = "Z"
   )
   
   df_ZA1 = df_ZA0 = data
@@ -577,15 +564,13 @@ get_gstarM  = function(data, sl, V=10, covariates, truth)
   task_ZA1 <- sl3_Task$new(
     data = data.table::copy(df_ZA1),
     covariates = covariates$covariates_Z,
-    outcome = "Z",
-    outcome_type = "binomial"
+    outcome = "Z"
   )
   
   task_ZA0 <- sl3_Task$new(
     data = data.table::copy(df_ZA0),
     covariates = covariates$covariates_Z,
-    outcome = "Z",
-    outcome_type = "binomial"
+    outcome = "Z"
   )
   
   Mstarfit = sl$train(task_Mstar)
@@ -600,8 +585,7 @@ get_gstarM  = function(data, sl, V=10, covariates, truth)
     taskM1 =   sl3_Task$new(
       data = data.table::copy(dataM1),
       covariates = covariates$covariates_M,
-      outcome = "M",
-      outcome_type = "binomial"
+      outcome = "M"
     )
     predM1 = Mstarfit$predict(taskM1)
     
@@ -609,8 +593,7 @@ get_gstarM  = function(data, sl, V=10, covariates, truth)
     taskM0 =   sl3_Task$new(
       data = data.table::copy(dataM0),
       covariates = covariates$covariates_M,
-      outcome = "M",
-      outcome_type = "binomial"
+      outcome = "M"
     )
     
     predM0 = Mstarfit$predict(taskM0)
@@ -620,8 +603,7 @@ get_gstarM  = function(data, sl, V=10, covariates, truth)
     taskZ <- sl3_Task$new(
       data = data.table::copy(dataZ),
       covariates = covariates$covariates_Z,
-      outcome = "Z",
-      outcome_type = "binomial"
+      outcome = "Z"
     )
     
     predZ = Zstarfit$predict(taskZ)
@@ -637,8 +619,7 @@ get_gstarM  = function(data, sl, V=10, covariates, truth)
     taskM1 =   sl3_Task$new(
       data = data.table::copy(dataM1),
       covariates = covariates$covariates_M,
-      outcome = "M",
-      outcome_type = "binomial"
+      outcome = "M"
     )
     predM1 = Mstarfit$predict(taskM1)
     
@@ -646,8 +627,7 @@ get_gstarM  = function(data, sl, V=10, covariates, truth)
     taskM0 =   sl3_Task$new(
       data = data.table::copy(dataM0),
       covariates = covariates$covariates_M,
-      outcome = "M",
-      outcome_type = "binomial"
+      outcome = "M"
     )
     
     predM0 = Mstarfit$predict(taskM0)
@@ -657,8 +637,7 @@ get_gstarM  = function(data, sl, V=10, covariates, truth)
     taskZ <- sl3_Task$new(
       data = data.table::copy(dataZ),
       covariates = covariates$covariates_Z,
-      outcome = "Z",
-      outcome_type = "binomial"
+      outcome = "Z"
     )
     
     predZ = Zstarfit$predict(taskZ)
