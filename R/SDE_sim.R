@@ -50,6 +50,7 @@ SDE_tmle3 = function(data, sl, V=10, covariates, truth = NULL,
   df_ZS0 = data
   df_ZS0$S = 0
   
+  W = data[,grep("W", colnames(data))]
   S_ps0 = with(data, truth$f_S(W=W))
   ZS0_ps0 = with(df_ZS0, truth$f_Z(A=A, W=W, S=S))
   M_ps0 = with(data, truth$f_M(Z=Z, W=W, S=1))
