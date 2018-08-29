@@ -441,23 +441,23 @@ SDE_tmle3 = function(data, sl, V=10, covariates, truth = NULL,
   SE_SDE_0 = sd(D_SDE_0)/sqrt(n)
   SE_SIE_0 = sd(D_SIE_0)/sqrt(n)
   
-  ests_astar0a1 =   c(info$info_astar0a1$est,
-                      info$info_astar0a1$est_1s,
-                      info$info_astar0a1$est_iptw,
-                      info$info_astar0a1$est_mle,
-                      Psi_astar0a1_0)
+  ests_astar0a1 =   c(tmle = info$info_astar0a1$est,
+                      EE = info$info_astar0a1$est_1s,
+                      iptw = info$info_astar0a1$est_iptw,
+                      mle = info$info_astar0a1$est_mle,
+                      Psi_0 = Psi_astar0a1_0)
   
-  ests_astar0a0 =   c(info$info_astar0a0$est,
-                      info$info_astar0a0$est_1s,
-                      info$info_astar0a0$est_iptw,
-                      info$info_astar0a0$est_mle,
-                      Psi_astar0a0_0)
+  ests_astar0a0 =   c(tmle = info$info_astar0a0$est,
+                      EE = info$info_astar0a0$est_1s,
+                      iptw = info$info_astar0a0$est_iptw,
+                      mle = info$info_astar0a0$est_mle,
+                      Psi_0 = Psi_astar0a0_0)
   
-  ests_astar1a1 =   c(info$info_astar1a1$est,
-                      info$info_astar1a1$est_1s,
-                      info$info_astar1a1$est_iptw,
-                      info$info_astar1a1$est_mle,
-                      Psi_astar1a1_0)
+  ests_astar1a1 =   c(tmle = info$info_astar1a1$est,
+                      EE = info$info_astar1a1$est_1s,
+                      iptw = info$info_astar1a1$est_iptw,
+                      mle = info$info_astar1a1$est_mle,
+                      Psi_0 = Psi_astar1a1_0)
   
   SDE_ests = ests_astar0a1 - ests_astar0a0
   SIE_ests = ests_astar1a1 - ests_astar0a1
@@ -480,6 +480,7 @@ SDE_tmle3 = function(data, sl, V=10, covariates, truth = NULL,
   CI_SDE_iptw_boot = c(SDE_ests[3], SDE_ests[3] - 1.96*bootSE_SDE[3], SDE_ests[3] + 1.96*bootSE_SDE[3])
   CI_SIE_iptw_boot = c(SIE_ests[3], SIE_ests[3] - 1.96*bootSE_SIE[3], SIE_ests[3] + 1.96*bootSE_SIE[3])
   
+  
   return(list(CI_SDE = CI_SDE, CI_SIE = CI_SIE, CI_SDE_1s = CI_SDE_1s, CI_SIE_1s = CI_SIE_1s,
   CI_SDE_iptw = CI_SDE_iptw, CI_SIE_iptw = CI_SIE_iptw, CI_SDE_boot = CI_SDE_boot, 
   CI_SIE_boot = CI_SIE_boot, CI_SDE_1s_boot = CI_SDE_1s_boot, CI_SIE_1s_boot = CI_SIE_1s_boot, 
@@ -494,6 +495,11 @@ SDE_tmle3 = function(data, sl, V=10, covariates, truth = NULL,
   SE_SIE_iptw = SE_SIE_iptw, 
   SE_SDE_0 = SE_SDE_0, 
   SE_SIE_0 = SE_SIE_0,
+  
+  ests_astar0a1 = ests_astar0a1,
+  ests_astar0a0 = ests_astar0a0,
+  ests_astar1a1 = ests_astar1a1,
+  
   eps2_astar0a1 = info$info_astar0a1$eps2,
   eps2_astar0a0 = info$info_astar0a0$eps2,
   eps2_astar1a1 = info$info_astar1a1$eps2,
