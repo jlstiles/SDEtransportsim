@@ -105,7 +105,7 @@ sim_kara = function(n, covariates, truth) {
                               f_Y = truth$f_Y)
   test = SDE_tmle3(data, covariates= covariates, truth = truth, 
                    truncate = list(lower =.0001, upper = .9999), glm_only = TRUE,
-                   iptw = TRUE, onestep = TRUE, B=1) 
+                   iptw = TRUE, onestep = TRUE, B=500) 
   return(test)
 }
 
