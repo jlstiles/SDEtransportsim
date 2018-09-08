@@ -145,35 +145,35 @@ else
 	${R} $< ${OUTPUT_DIR}/$<.out &
 endif
 
-simkaraA: sim_karaA.R
+simkaraA: sim_kara_A.R
 ifeq (${JOB_ENGINE},slurm)
 	${SBATCH} --nodes 1 --cpus-per-task=24 --job-name=$< ${SCRIPT_DIR}/sbatch-r.sh --file=$< --dir=${OUTPUT_DIR}
 else
 	${R} $< ${OUTPUT_DIR}/$<.out &
 endif
 
-simkaraA1: sim_karaA1.R
+simkaraA1: sim_kara_A1.R
 ifeq (${JOB_ENGINE},slurm)
 	${SBATCH} --nodes 1 --cpus-per-task=24 --job-name=$< ${SCRIPT_DIR}/sbatch-r.sh --file=$< --dir=${OUTPUT_DIR}
 else
 	${R} $< ${OUTPUT_DIR}/$<.out &
 endif
 
-simkaraA1.1: sim_karaA1.1.R
+simkaraA1.1: sim_kara_A1.1.R
 ifeq (${JOB_ENGINE},slurm)
 	${SBATCH} --nodes 1 --cpus-per-task=24 --job-name=$< ${SCRIPT_DIR}/sbatch-r.sh --file=$< --dir=${OUTPUT_DIR}
 else
 	${R} $< ${OUTPUT_DIR}/$<.out &
 endif
 
-simkaraA2: sim_karaA2.R
+simkaraA2: sim_kara_A2.R
 ifeq (${JOB_ENGINE},slurm)
 	${SBATCH} --nodes 1 --cpus-per-task=24 --job-name=$< ${SCRIPT_DIR}/sbatch-r.sh --file=$< --dir=${OUTPUT_DIR}
 else
 	${R} $< ${OUTPUT_DIR}/$<.out &
 endif
 
-simkaraA2.1: sim_karaA2.1.R
+simkaraA2.1: sim_kara_A2.1.R
 ifeq (${JOB_ENGINE},slurm)
 	${SBATCH} --nodes 1 --cpus-per-task=24 --job-name=$< ${SCRIPT_DIR}/sbatch-r.sh --file=$< --dir=${OUTPUT_DIR}
 else
