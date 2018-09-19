@@ -109,7 +109,7 @@ else
 	${R} $< ${OUTPUT_DIR}/$<.out &
 endif
 
-simkaraYMmis5000: sim_kara__YMmis5000.R
+simkaraYMmis5000: sim_kara_YMmis5000.R
 ifeq (${JOB_ENGINE},slurm)
 	${SBATCH} --nodes 1 --cpus-per-task=24 --job-name=$< ${SCRIPT_DIR}/sbatch-r.sh --file=$< --dir=${OUTPUT_DIR}
 else
