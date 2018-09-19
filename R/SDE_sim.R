@@ -238,9 +238,9 @@ SDE_tmle3 = function(data, sl, V=10, covariates, truth = NULL,
     
     # Predict Y for whole data, also with M = 1 and 0, S does not matter since
     # Y is not a function of that variable so won't be used for prediction
-    Y_preds = Yfit$predict(task_Y)
-    Y_preds_M1 = Yfit$predict(task_YM1S1)
-    Y_preds_M0 = Yfit$predict(task_YM0S1)
+    Y_preds = pmin(pmax(Yfit$predict(task_Y), 0.001), .999)
+    Y_preds_M1 = pmin(pmax(Yfit$predict(task_YM1S1), 0.001), .999)
+    Y_preds_M0 = pmin(pmax(Yfit$predict(task_YM0S1), 0.001), .999)
     
     # updates
     update_fcn = function(weights) {
@@ -289,14 +289,16 @@ SDE_tmle3 = function(data, sl, V=10, covariates, truth = NULL,
       task_QZsubAa <- sl3_Task$new(
         data = data.table::copy(df_QZ[df_QZ$A == a, ]),
         covariates = covariates$covariates_QZ,
-        outcome = "Qstar_Mg"
+        outcome = "Qstar_Mg",
+        outcome_type="continuous"
       )
       
       # for standard gcomp
       task_QZ_YsubAa <- sl3_Task$new(
         data = data.table::copy(df_QZ[df_QZ$A == a, ]),
         covariates = covariates$covariates_QZ,
-        outcome = "Y_Mg"
+        outcome = "Y_Mg",
+        outcome_type="continuous"
       )
       
       task_data <- sl3_Task$new(
@@ -394,6 +396,7 @@ SDE_tmle3 = function(data, sl, V=10, covariates, truth = NULL,
   # run the bootstrap 500 times
   # bootstrap from the data and thus the gstarM_astar1 and gstarM_astar0
   n = nrow(data)
+  if (!is.null(B)) {
   boots = lapply(1:B, FUN = function(x) {
     # print (i)
     # x = sample(1:1000000,1)
@@ -416,7 +419,7 @@ SDE_tmle3 = function(data, sl, V=10, covariates, truth = NULL,
 
   bootSE_SDE = apply(boots_SDE, 2, sd)
   bootSE_SIE = apply(boots_SIE, 2, sd)
-
+  }
   D_SDE = info$info_astar0a1$IC - info$info_astar0a0$IC
   D_SIE = info$info_astar1a1$IC - info$info_astar0a1$IC
   
@@ -471,6 +474,7 @@ SDE_tmle3 = function(data, sl, V=10, covariates, truth = NULL,
   CI_SDE_iptw = c(SDE_ests[3], SDE_ests[3] - 1.96*SE_SDE_iptw, SDE_ests[3] + 1.96*SE_SDE_iptw)
   CI_SIE_iptw = c(SIE_ests[3], SIE_ests[3] - 1.96*SE_SIE_iptw, SIE_ests[3] + 1.96*SE_SIE_iptw)
   
+  if (!is.null(B)) {
   CI_SDE_boot = c(SDE_ests[1], SDE_ests[1] - 1.96*bootSE_SDE[1], SDE_ests[1] + 1.96*bootSE_SDE[1])
   CI_SIE_boot = c(SIE_ests[1], SIE_ests[1] - 1.96*bootSE_SIE[1], SIE_ests[1] + 1.96*bootSE_SIE[1])
   
@@ -479,7 +483,6 @@ SDE_tmle3 = function(data, sl, V=10, covariates, truth = NULL,
   
   CI_SDE_iptw_boot = c(SDE_ests[3], SDE_ests[3] - 1.96*bootSE_SDE[3], SDE_ests[3] + 1.96*bootSE_SDE[3])
   CI_SIE_iptw_boot = c(SIE_ests[3], SIE_ests[3] - 1.96*bootSE_SIE[3], SIE_ests[3] + 1.96*bootSE_SIE[3])
-  
   
   return(list(CI_SDE = CI_SDE, CI_SIE = CI_SIE, CI_SDE_1s = CI_SDE_1s, CI_SIE_1s = CI_SIE_1s,
   CI_SDE_iptw = CI_SDE_iptw, CI_SIE_iptw = CI_SIE_iptw, CI_SDE_boot = CI_SDE_boot, 
@@ -506,6 +509,33 @@ SDE_tmle3 = function(data, sl, V=10, covariates, truth = NULL,
   eps_astar0a1 = info$eps_astar0a1, 
   eps_astar0a0 = info$eps_astar0a0, 
   eps_astar1a1 = info$eps_astar1a1)) 
+  } else {
+    
+    return(list(CI_SDE = CI_SDE, CI_SIE = CI_SIE, CI_SDE_1s = CI_SDE_1s, CI_SIE_1s = CI_SIE_1s,
+                CI_SDE_iptw = CI_SDE_iptw, CI_SIE_iptw = CI_SIE_iptw, 
+                SDE_0 = Psi_astar0a1_0 - Psi_astar0a0_0,
+                SIE_0 = Psi_astar1a1_0 - Psi_astar0a1_0, 
+                SE_SDE = SE_SDE, 
+                SE_SIE = SE_SIE, 
+                SE_SDE_1s = SE_SDE_1s,  
+                SE_SIE_1s = SE_SIE_1s, 
+                SE_SDE_iptw = SE_SDE_iptw,   
+                SE_SIE_iptw = SE_SIE_iptw, 
+                SE_SDE_0 = SE_SDE_0, 
+                SE_SIE_0 = SE_SIE_0,
+                
+                ests_astar0a1 = ests_astar0a1,
+                ests_astar0a0 = ests_astar0a0,
+                ests_astar1a1 = ests_astar1a1,
+                
+                eps2_astar0a1 = info$info_astar0a1$eps2,
+                eps2_astar0a0 = info$info_astar0a0$eps2,
+                eps2_astar1a1 = info$info_astar1a1$eps2,
+                eps_astar0a1 = info$eps_astar0a1, 
+                eps_astar0a0 = info$eps_astar0a0, 
+                eps_astar1a1 = info$eps_astar1a1))
+    
+  }
 } 
 
 #' @title get_gstarM
@@ -675,3 +705,275 @@ get_gstarM  = function(data, sl, V=10, covariates, truth)
               Psi_astar1a1= Psi_astar1a1, PS0_0 = PS0_0)) 
 }
 
+
+
+#' @export
+get_estimates1 = function(data, gstarM_astar1, gstarM_astar0, sl, bootstrap) {
+  
+  W = data[,grep("W", colnames(data))]
+  df_YM1S1 = data
+  df_YM1S1$M = 1
+  df_YM1S1$S = 1
+  
+  df_YM0S1 = df_YM1S1
+  df_YM0S1$M = 0
+  
+  df_ZS0 = data
+  df_ZS0$S = 0
+  
+  # to be used for fitting Y
+  task_YsubS1 <- sl3_Task$new(
+    data = data.table::copy(data[data$S==1,]),
+    covariates = covariates$covariates_Y,
+    outcome = "Y"
+  )
+  
+  # Used for predicting Y
+  task_Y <- sl3_Task$new(
+    data = data.table::copy(data),
+    covariates = covariates$covariates_Y,
+    outcome = "Y"
+  )
+  
+  task_YM1S1 <- sl3_Task$new(
+    data = data.table::copy(df_YM1S1),
+    covariates = covariates$covariates_Y,
+    outcome = "Y"
+  )
+  
+  task_YM0S1 <- sl3_Task$new(
+    data = data.table::copy(df_YM0S1),
+    covariates = covariates$covariates_Y,
+    outcome = "Y"
+  )
+  
+  # used for fitting M
+  task_MsubS1 <- sl3_Task$new(
+    data = data.table::copy(data[data$S == 1,]),
+    covariates = covariates$covariates_M,
+    outcome = "M"
+  )
+  
+  # used for predicting M
+  task_MS1 <- sl3_Task$new(
+    data = data.table::copy(df_YM1S1),
+    covariates = covariates$covariates_M,
+    outcome = "M"
+  )
+  
+  
+  task_Z <- sl3_Task$new(
+    data = data.table::copy(data),
+    covariates = covariates$covariates_Z,
+    outcome = "Z"
+  )
+  
+  task_ZS0 <- sl3_Task$new(
+    data = data.table::copy(df_ZS0),
+    covariates = covariates$covariates_Z,
+    outcome = "Z"
+  )
+  
+  task_A <- sl3_Task$new(
+    data = data.table::copy(data),
+    covariates = covariates$covariates_A,
+    outcome = "A"
+  )
+  
+  task_ZS1 <- sl3_Task$new(
+    data = data.table::copy(df_YM1S1),
+    covariates = covariates$covariates_Z,
+    outcome = "Z"
+  )
+  
+  task_S <- sl3_Task$new(
+    data = data.table::copy(data),
+    covariates = covariates$covariates_S,
+    outcome = "S"
+  )
+  
+  # Y, M, Z, A, S fits
+  Sfit = sl$train(task_S)
+  Afit = sl$train(task_A)
+  Zfit = sl$train(task_Z)
+  
+  # fitting M and Y on subsets where S is 1.  This is all that is needed for M and Y
+  Mfit = sl$train(task_MsubS1)
+  Yfit = sl$train(task_YsubS1)
+  
+  # propensity scores
+  S_ps = Sfit$predict()
+  PS0 = mean(data$S == 0)
+  A_ps = Afit$predict()
+  Z_ps = Zfit$predict()
+  ZS0_ps = Zfit$predict(task_ZS0)
+  # might as well predict for S = 1 on whole data because only S = 1 subset is relevant
+  # as clev cov is 0 otherwise 
+  M_ps = Mfit$predict(task_MS1)
+  
+  # 1st clever cov FOR SDE, ALSO NEED THE ONE FOR SIE
+  get_cc = function(data, gstarM_astar, a) {
+    with(data, ((S == 1)*(A == a)*
+                  ((M == 1)*gstarM_astar + (M == 0)*(1 - gstarM_astar))*
+                  ((Z == 1)*ZS0_ps + (Z == 0)*(1 - ZS0_ps))*(1 - S_ps))/
+           (((M == 1)*M_ps + (M == 0)*(1 - M_ps))*
+              ((Z == 1)*Z_ps + (Z == 0)*(1 - Z_ps))*
+              (A_ps*A + (1 - A)*(1 - A_ps))*S_ps*PS0))
+  }
+  
+  
+  Hm_astar0a1 = get_cc(data = data, gstarM_astar = gstarM_astar0, a = 1)
+  Hm_astar0a0 = get_cc(data = data, gstarM_astar = gstarM_astar0, a = 0)
+  Hm_astar1a1 = get_cc(data = data, gstarM_astar = gstarM_astar1, a = 1)
+  
+  # Predict Y for whole data, also with M = 1 and 0, S does not matter since
+  # Y is not a function of that variable so won't be used for prediction
+  Y_preds = Yfit$predict(task_Y)
+  Y_preds_M1 = Yfit$predict(task_YM1S1)
+  Y_preds_M0 = Yfit$predict(task_YM0S1)
+  
+  # updates
+  update_fcn = function(weights) {
+    Qfit = try(glm(data$Y ~ 1 + offset(qlogis(Y_preds)), family = binomial,
+                   weights = weights), silent = TRUE)
+    
+    if (class(Qfit)=="try-error") eps = 0 else eps = Qfit$coefficients
+    
+    Qstar_M  = plogis(qlogis(Y_preds) + eps)
+    Qstar_M1 = plogis(qlogis(Y_preds_M1) + eps)
+    Qstar_M0 = plogis(qlogis(Y_preds_M0) + eps)
+    df = data.frame(Qstar_M = Qstar_M, Qstar_M0 = Qstar_M0, Qstar_M1 = Qstar_M1)
+    return(list(df = df, eps = eps))
+  }
+  
+  QstarY_astar0a1_info = update_fcn(weights = Hm_astar0a1)
+  QstarY_astar0a0_info = update_fcn(weights = Hm_astar0a0)
+  QstarY_astar1a1_info = update_fcn(weights = Hm_astar1a1)
+  
+  QstarY_astar0a1_df = QstarY_astar0a1_info$df
+  QstarY_astar0a0_df = QstarY_astar0a0_info$df 
+  QstarY_astar1a1_df = QstarY_astar1a1_info$df
+  
+  QstarMg_astar0a1 = QstarY_astar0a1_df[,3]*gstarM_astar0 + 
+    QstarY_astar0a1_df[,2]*(1 - gstarM_astar0)
+  
+  QstarMg_astar0a0 = QstarY_astar0a0_df[,3]*gstarM_astar0 + 
+    QstarY_astar0a0_df[,2]*(1 - gstarM_astar0)
+  
+  QstarMg_astar1a1 = QstarY_astar1a1_df[,3]*gstarM_astar1 + 
+    QstarY_astar1a1_df[,2]*(1 - gstarM_astar1)
+  
+  YMg_astar0a1 = YMg_astar0a0 = Y_preds_M1*gstarM_astar0 + 
+    Y_preds_M0*(1 - gstarM_astar0)
+  
+  YMg_astar1a1 = Y_preds_M1*gstarM_astar1 + 
+    Y_preds_M0*(1 - gstarM_astar1)
+  
+  # NEXT REGRESSION
+  regress_step2 = function(Qstar_M, Qstar_Mg, Y_Mg, Hm, a) {
+    df_QZ = data
+    df_QZ$Qstar_Mg = Qstar_Mg
+    df_QZ$Y_Mg = Y_Mg  
+    
+    # for tmle 
+    task_QZsubAa <- sl3_Task$new(
+      data = data.table::copy(df_QZ[df_QZ$A == a, ]),
+      covariates = covariates$covariates_QZ,
+      outcome = "Qstar_Mg"
+    )
+    
+    # for standard gcomp
+    task_QZ_YsubAa <- sl3_Task$new(
+      data = data.table::copy(df_QZ[df_QZ$A == a, ]),
+      covariates = covariates$covariates_QZ,
+      outcome = "Y_Mg"
+    )
+    
+    task_data <- sl3_Task$new(
+      data = data.table::copy(data),
+      covariates = covariates$covariates_QZ,
+      outcome = "Y"
+    )
+    
+    QZfit = sl$train(task_QZsubAa)
+    YZfit = sl$train(task_QZ_YsubAa)
+    
+    # compute the clever covariate 2
+    Hz = with(data, (A == a)*(S == 0)/(A*A_ps + (1 - A)*(1 - A_ps))/PS0)
+    
+    # estimates predicted on whole data.  Since they were fit on A = a, A is not
+    # a covariate in these predictions as A = a is therefore implicit
+    QZ_preds_a = pmin(pmax(QZfit$predict(task_data), .001), .999)
+    YZ_preds_a = pmin(pmax(YZfit$predict(task_data), .001), .999)
+    
+    # update
+    QZfit_tmle = try(glm(Qstar_Mg ~ 1 + offset(qlogis(QZ_preds_a)), family = binomial,
+                         weights = Hz), silent = TRUE)
+    if (class(QZfit_tmle)=="try-error") eps2 = 0 else eps2 = QZfit_tmle$coefficients
+    
+    QZstar_a = plogis(qlogis(QZ_preds_a) + eps2)
+    
+    # compute the parameter estimate
+    est = mean(QZstar_a[data$S==0])
+    est_1s_init = mean(YZ_preds_a[data$S==0])
+    est_iptw = mean(with(data, Y*Hm))
+    est_mle = mean(YZ_preds_a[data$S==0])
+    
+    D_Y = with(data, Hm*(Y - Qstar_M))
+    D_Y1s = with(data, Hm*(Y - Y_preds))
+    
+    D_Z = Hz*(Qstar_Mg - QZstar_a)
+    D_Z1s = Hz*(Y_Mg - YZ_preds_a)
+    
+    D_W = with(data, (QZstar_a - est)*(S ==0)/PS0)
+    D_W1s = with(data, (YZ_preds_a - est_1s_init)*(S ==0)/PS0)
+    
+    D = D_Y + D_Z + D_W
+    D_1s = D_Y1s + D_Z1s + D_W1s
+    D_iptw = with(data, Y*Hm) - est_iptw
+    est_1s = est_1s_init + mean(D_1s)
+    
+    if (!bootstrap) {
+      n = nrow(data)
+      SE = sd(D)/sqrt(n)
+      SE_1s = sd(D_1s)/sqrt(n)
+      SE_iptw = sd(D_iptw)/sqrt(n)
+      
+      CI = c(est = est, left = est - 1.96*SE, right = est + 1.96*SE)
+      CI_1s = c(est_1s, left = est_1s - 1.96*SE_1s, right = est_1s + 1.96*SE_1s)
+      CI_iptw = c(est_iptw, left = est_iptw - 1.96*SE_iptw, right = est_iptw + 1.96*SE_iptw)
+      
+      return(list(est = est, est_1s = est_1s, est_iptw = est_iptw,
+                  est_mle = est_mle, IC = D, IC_1s = D_1s, IC_iptw = D_iptw, eps2 = eps2))
+    } else {
+      return(list(est = est, est_1s = est_1s, est_iptw = est_iptw, est_mle = est_mle))
+    }
+  }
+  
+  # undebug(regress_step2)
+  info_astar0a1 = regress_step2(Qstar_M = QstarY_astar0a1_df$Qstar_M,
+                                Qstar_Mg = QstarMg_astar0a1, 
+                                Y_Mg = YMg_astar0a1, 
+                                Hm = Hm_astar0a1, 
+                                a = 1)
+  
+  info_astar0a0 = regress_step2(Qstar_M = QstarY_astar0a0_df$Qstar_M,
+                                Qstar_Mg = QstarMg_astar0a0, 
+                                Y_Mg = YMg_astar0a0, 
+                                Hm = Hm_astar0a0, 
+                                a = 0)
+  
+  info_astar1a1 = regress_step2(Qstar_M = QstarY_astar1a1_df$Qstar_M,
+                                Qstar_Mg = QstarMg_astar1a1, 
+                                Y_Mg = YMg_astar1a1, 
+                                Hm = Hm_astar1a1, 
+                                a = 1)
+  
+  return(list(info_astar0a1 = info_astar0a1, 
+              info_astar0a0 = info_astar0a0, 
+              info_astar1a1 = info_astar1a1,
+              eps_astar0a1 = QstarY_astar0a1_info$eps, 
+              eps_astar0a0 = QstarY_astar0a0_info$eps, 
+              eps_astar1a1 = QstarY_astar1a1_info$eps
+  ))
+}

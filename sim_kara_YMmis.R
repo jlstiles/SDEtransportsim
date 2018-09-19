@@ -78,11 +78,11 @@ max(Yscores)
 func_list = list(f_W = f_W, f_S = f_S, f_A = f_A, f_Z = f_Z, f_M = f_M, f_Y = f_Y)
 
 
-covariates = list(covariates_S = c("W1","W2"),
+covariates_mis = list(covariates_S = c("W1","W2"),
                   covariates_A = c("S","W1","W2"),
                   covariates_Z = c("S","A","W1","W2"),
-                  covariates_M = c("Z","W1","W2"),
-                  covariates_Y = c("M","Z","W1","W2"),
+                  covariates_M = c("Z"),
+                  covariates_Y = c("Z"),
                   covariates_QZ = c("S","W1","W2"))
 
 
@@ -106,7 +106,7 @@ library(parallel)
 B = 1000
 n=100
 
-res100 = mclapply(1:B, FUN = function(x) sim_kara(n, covariates, func_list), 
+res100_YMmis = mclapply(1:B, FUN = function(x) sim_kara(n, covariates_mis, func_list), 
                mc.cores = getOption("mc.cores", 24L))
 
-save(res100, func_list, file = "res100.RData")
+save(res100_YMmis, func_list, file = "res100_YMmis.RData")

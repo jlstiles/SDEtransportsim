@@ -85,7 +85,6 @@ covariates = list(covariates_S = c("W1","W2"),
                   covariates_Y = c("M","Z","W1","W2"),
                   covariates_QZ = c("S","W1","W2"))
 
-
 sim_kara = function(n, covariates, truth) {
   data = gendata.SDEtransport(n, 
                               f_W = truth$f_W, 
@@ -103,10 +102,15 @@ sim_kara = function(n, covariates, truth) {
 
 library(parallel)
 
-B = 1000
-n=100
+B = 500
+n=5000
 
-res100 = mclapply(1:B, FUN = function(x) sim_kara(n, covariates, func_list), 
+res5000 = mclapply(1:B, FUN = function(x) sim_kara(n, covariates, func_list), 
                mc.cores = getOption("mc.cores", 24L))
 
-save(res100, func_list, file = "res100.RData")
+save(res5000, func_list, file = "res5000.RData")
+
+res5000_YMmis.1 = mclapply(1:B, FUN = function(x) sim_kara(n, covariates, func_list), 
+                        mc.cores = getOption("mc.cores", 24L))
+
+save(res5000, func_list, file = "res5000.1.RData")
