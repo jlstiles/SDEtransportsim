@@ -87,7 +87,7 @@ covariates = list(covariates_S = c("W1","W2"),
 
 
 sim_kara = function(n, covariates, truth) {
-  truth = func_list
+
   data = gendata.SDEtransport(n, 
                               f_W = truth$f_W, 
                               f_S = truth$f_S, 
