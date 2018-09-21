@@ -28,3 +28,10 @@ gendata.SDEtransport = function(n, f_W, f_S, f_A, f_Z, f_M, f_Y) {
 bound = function(x, lower, upper) {
   pmin(pmax(lower, x), upper)
 }
+
+#' @export
+get.stochasticM = function(gstarM_astar, Y_preds1, Y_preds0) {
+    Y_preds1*gstarM_astar + Y_preds0*(1 - gstarM_astar)
+}
+
+

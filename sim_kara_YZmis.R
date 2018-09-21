@@ -40,14 +40,14 @@ mean(A)
 
 f_Z = function(A,S,W) {
   df = cbind(S=S, W, A = A)
-  with(df, plogis(0.1 * S - 0.4 * W1 + 0.3 * W2 + 1 * A - 0.3))
+  with(df, plogis(2 * S - 2 * W1 + 0.3 * W2 + 1* A - 2))
 }
 
 pzscores = f_Z(A,S,W)
 hist(pzscores,200)
 Z = rbinom(n, 1, pzscores)
 max(pzscores)
-
+min(pzscores)
 # make an M model according to the restrictions
 
 f_M = function(Z,W,S) {
@@ -78,12 +78,12 @@ max(Yscores)
 func_list = list(f_W = f_W, f_S = f_S, f_A = f_A, f_Z = f_Z, f_M = f_M, f_Y = f_Y)
 
 
-covariates_mis = list(covariates_S = c("W1","W2"),
-                  covariates_A = c("S","W1","W2"),
-                  covariates_Z = c("S","A","W1","W2"),
-                  covariates_M = c("Z"),
-                  covariates_Y = c("Z"),
-                  covariates_QZ = c("S","W1","W2"))
+covariates = list(covariates_S = c("W1","W2"),
+                      covariates_A = c("S","W1","W2"),
+                      covariates_Z = c("A"),
+                      covariates_M = c("Z","W1","W2"),
+                      covariates_Y = c("Z"),
+                      covariates_QZ = c("S", "W1", "W2"))
 
 
 sim_kara = function(n, covariates, truth) {
@@ -105,31 +105,31 @@ library(parallel)
 B = 1000
 n=100
 
-res100_YMmis = mclapply(1:B, FUN = function(x) sim_kara(n, covariates, func_list), 
-                         mc.cores = getOption("mc.cores", 24L))
+res100_YZmis = mclapply(1:B, FUN = function(x) sim_kara(n, covariates, func_list), 
+                       mc.cores = getOption("mc.cores", 24L))
 
-save(res100_YMmis, func_list, covariates, file = "results/res100_YMmis.RData")
+save(res100_YZmis, func_list, covariates, file = "results/res100_YZmis.RData")
 
 B = 1000
 n=500
 
-res500_YMmis = mclapply(1:B, FUN = function(x) sim_kara(n, covariates, func_list), 
-                         mc.cores = getOption("mc.cores", 24L))
+res500_YZmis = mclapply(1:B, FUN = function(x) sim_kara(n, covariates, func_list), 
+                       mc.cores = getOption("mc.cores", 24L))
 
-save(res500_YMmis, func_list, covariates, file = "results/res500_YMmis.RData")
-
-B = 500
-n=5000
-
-res5000_YMmis = mclapply(1:B, FUN = function(x) sim_kara(n, covariates, func_list), 
-                          mc.cores = getOption("mc.cores", 24L))
-
-save(res5000_YMmis, func_list, covariates, file = "results/res5000_YMmis.RData")
+save(res500_YZmis, func_list, covariates, file = "results/res500_YZmis.RData")
 
 B = 500
 n=5000
 
-res5000_YMmis = mclapply(1:B, FUN = function(x) sim_kara(n, covariates, func_list), 
-                         mc.cores = getOption("mc.cores", 24L))
+res5000_YZmis = mclapply(1:B, FUN = function(x) sim_kara(n, covariates, func_list), 
+                        mc.cores = getOption("mc.cores", 24L))
 
-save(res5000_YMmis, func_list, covariates, file = "results/res5000_YMmis1.RData")
+save(res5000_YZmis, func_list, covariates, file = "results/res5000_YZmis.RData")
+
+B = 500
+n=5000
+
+res5000_YZmis = mclapply(1:B, FUN = function(x) sim_kara(n, covariates, func_list), 
+                        mc.cores = getOption("mc.cores", 24L))
+
+save(res5000_YZmis, func_list, covariates, file = "results/res5000_YZmis1.RData")

@@ -1,5 +1,5 @@
 # library(cateSurvival)
-devtools::install_github("jlstiles/SDE_transport")
+# devtools::install_github("jlstiles/SDE_transport")
 # library(Simulations)
 library(SDEtransport)
 # Functions to generate data for transport:
@@ -14,7 +14,7 @@ f_W = function(n) {
 }
 W = f_W(n)
 f_S = function(W) {
-  with(W, plogis(W1-W2 +.7))
+  with(W, plogis(W1*W2 + .2*W2 + .7))
 }
 P_SW = f_S(W)
 S = rbinom(n,1,P_SW)
@@ -37,7 +37,8 @@ mean(A)
 
 f_Z = function(A,S,W) {
   df = cbind(S=S, W, A = A)
-  with(df, plogis(.1*S-.4*W1+.3*W2+1*A-.3))
+  # with(df, plogis(.1*S-.4*W1+.3*W2+1*A-.3))
+  with(df, plogis(.1*S-.4*W1*S+ 1*W2*A-.3 + A))
 }
 
 pzscores = f_Z(A,S,W)
@@ -49,7 +50,8 @@ Z = rbinom(n, 1, pzscores)
 # make an M model according to the restrictions
 f_M = function(Z,W,S) {
   df = cbind(S=S, W, Z = Z)
-  with(df, plogis(-.14*S + 1*W1-.5*W2 + 1.2*Z +.1))
+  with(df, plogis(1*W1*W2 + 1.2*Z*W1 + .2*Z + .1))
+  # with(df, plogis(-.14*S + 1*W1-.5*W2 + 1.2*Z +.1))
 }
 Mscores = f_M(Z,W,S)
 hist(Mscores, 200)
@@ -58,12 +60,13 @@ M = rbinom(n, 1, Mscores)
 # make a Y model according to the restrictions
 f_Y = function(M,Z,W) {
   df = cbind(M=M, Z = Z, W)
-  with(df, plogis(1*M*Z + 1.5*W2*Z + 1*Z*W2*W1 - .7*M*W1 + .6))
+  # with(df, plogis(1*M*Z + 1.5*W2*Z + 1*Z*W2*W1 - .7*M*W1 + .6))
   # with(df, plogis(1*M  + Z - .68*W - 1))
   # with(df, plogis(1*M  - Z*M - .68*W1^2*Z - .3*Z*W2 - (W2 > .7)*M*Z + (W1 < -.4)*M - 1))
   # with(df, plogis(1*M + 1.5*W + 1*Z - 1))
   # with(df, plogis(1*M -.5*cos(W) +.68*cos(W)*Z - .38*Z*M + (W < -.4)*M - 1))
   # with(df, plogis(1*M + 1.5*W + 1*Z - 1))
+  with(df, plogis(1*M + 1.5*W1 - .37*W2 + .3*Z - 1))
   # with(df, plogis(W * M + 3 * cos(W) * Z - 0.4))
   # with(df, plogis(.3*M*W2^2-.3*W1*W2+.2*cos(W1)*Z-.3*Z*W1^2+.3))
 }
@@ -82,19 +85,9 @@ covariates = list(covariates_S = c("W1","W2"),
                   covariates_Y = c("M","Z","W1","W2"),
                   covariates_QZ = c("S","W1","W2"))
 
-n = 1e2
-# debug(SDE_tmle3)
-# debug(get_gstarM)
-
-data = gendata.SDEtransport(n, f_W = f_W, f_S = f_S, f_A = f_A, f_Z = f_Z, f_M = f_M, f_Y = f_Y)
-# head(data)
-# undebug(SDE_tmle1)
-# debug(gendata.SDEtransport)
-# test = SDE_tmle3(data,covariates= covariates, truth = func_list, 
-#           truncate = list(lower =.0001, upper = .9999), glm_only = TRUE,
-#           iptw = TRUE, onestep = TRUE) 
 
 sim_kara = function(n, covariates, truth) {
+  truth = func_list
   data = gendata.SDEtransport(n, 
                               f_W = truth$f_W, 
                               f_S = truth$f_S, 
@@ -102,16 +95,41 @@ sim_kara = function(n, covariates, truth) {
                               f_Z = truth$f_Z, 
                               f_M = truth$f_M, 
                               f_Y = truth$f_Y)
-  test = SDE_tmle3(data, covariates= covariates, truth = truth, 
-                   truncate = list(lower =.0001, upper = .9999), glm_only = TRUE,
-                   iptw = TRUE, onestep = TRUE) 
-  return(test)
+  SDE_tmle4(data, sl = NULL, covariates= covariates, truth = truth,
+            truncate = list(lower =.0001, upper = .9999), glm_only = TRUE,
+            B=500)
 }
 
 library(parallel)
+
+B = 1000
+n=100
+
+res100_YAwell = mclapply(1:B, FUN = function(x) sim_kara(n, covariates, func_list), 
+                       mc.cores = getOption("mc.cores", 24L))
+
+save(res100_YAwell, func_list, covariates, file = "results/res100_YAwell.RData")
+
 B = 1000
 n=500
-res500_mis = mclapply(1:B, FUN = function(x) sim_kara(n, covariates, func_list), 
-         mc.cores = getOption("mc.cores", 24L))
 
-save(res500_mis, func_list, file = "res500_mis.RData")
+res500_YAwell = mclapply(1:B, FUN = function(x) sim_kara(n, covariates, func_list), 
+                       mc.cores = getOption("mc.cores", 24L))
+
+save(res500_YAwell, func_list, covariates, file = "results/res500_YAwell.RData")
+
+B = 500
+n=5000
+
+res5000_YAwell = mclapply(1:B, FUN = function(x) sim_kara(n, covariates, func_list), 
+                        mc.cores = getOption("mc.cores", 24L))
+
+save(res5000_YAwell, func_list, covariates, file = "results/res5000_YAwell.RData")
+
+B = 500
+n=5000
+
+res5000_YAwell = mclapply(1:B, FUN = function(x) sim_kara(n, covariates, func_list), 
+                          mc.cores = getOption("mc.cores", 24L))
+
+save(res5000_YAwell, func_list, covariates, file = "results/res5000_YAwell1.RData")

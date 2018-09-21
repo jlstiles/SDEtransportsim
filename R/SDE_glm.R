@@ -1,44 +1,15 @@
 
-#' @title SDE_tmle3
-#' @description computes the sequential regression, targeted maximum likelihood estimate
-#' for the stochastic direct effect or stochastic indirect effect when the outcome and 
-#' mediator model are only available on site 1 (S = 1).  This is a data adaptive parameter
-#' as the stochastic direct effect has a model for the mediator is determined on the data for 
-#' site 1. 
-#' @param data, data.frame of variables in time ordering from left to right
-#' @param a, the treatment intervention of interest
-#' @param a_star, the treatment intervention of the stochastic model for Mediator, M
-#' @param sl the sl3 superlearner defined, see sl3 documentation for defining a superlearner
-#' and the example below
-#' @param V number of folds for cross-validation (fixed to 10 for now)
-#' @param covariates, list of covariates for each necessary model, going backwards from the 
-#' outcome, Y, M, Z, A, W, S where S is the binary site, W are confounders, A is the treatment
-#' Z is the intermediary confounder (binary) and M is the mediator, Y is the outcome. 
-#' @param truth for testing purposes input a list with names f_W, f_S, f_Z and f_Y models representing
-#' and the corresponding elements are functions of appropriate variables so as to be able to 
-#' generate the truth and check the estimator's performance.  Default is NULL
-#' @param truncate, a list with elements lower and upper to truncate the various p-scores  
-#' not functional at present
-#' @return  a list with a CI for the estimate, and estimate using linear main terms MLE 
-#' gcomp formula (est_mle), the influence curve (IC), the superlearner coefficients for
-#' the Y model and the QZ model (SL_coef)
 #' @export
-#' @example /inst/tester_SDE_tmle.R
-SDE_tmle3 = function(data, sl, V=10, covariates, truth = NULL, 
+SDE_glm = function(data, covariates, truth = NULL, 
                      truncate = list(lower =.0001, upper = .9999), glm_only = TRUE,
                      iptw = TRUE, onestep = TRUE, B = 500) 
 {
-  
-  # n = 1e3
-  # data = gendata.SDEtransport(n, f_W = f_W, f_S = f_S, f_A = f_A, f_Z = f_Z, f_M = f_M, f_Y = f_Y)
-  # 
-  if (glm_only) sl = make_learner(Lrnr_glm, family = binomial())
   
   L = truncate$lower
   U = truncate$upper
   
   # get the stochastic dist of M and true params
-  gstar_info = get_gstarM1(data = data, sl, V=10, covariates = covariates, truth = truth)
+  gstar_info = get_gstarM_glm(data = data, covariates = covariates, truth = truth)
   gstarM_astar1 = gstar_info$gstarM_astar1 
   gstarM_astar0 = gstar_info$gstarM_astar0 
   Psi_astar0a1_0 = gstar_info$Psi_astar0a1
@@ -118,7 +89,7 @@ SDE_tmle3 = function(data, sl, V=10, covariates, truth = NULL,
   # Here we call a function to compute the estimates based on stochastic M
   ####
   ####
-  get_estimates = function(data, gstarM_astar1, gstarM_astar0, bootstrap) {
+  get_estimates_glm = function(data, gstarM_astar1, gstarM_astar0, bootstrap) {
     
     W = data[,grep("W", colnames(data))]
     df_YM1S1 = data
@@ -131,95 +102,33 @@ SDE_tmle3 = function(data, sl, V=10, covariates, truth = NULL,
     df_ZS0 = data
     df_ZS0$S = 0
     
-    # to be used for fitting Y
-    task_YsubS1 <- sl3_Task$new(
-      data = data.table::copy(data[data$S==1,]),
-      covariates = covariates$covariates_Y,
-      outcome = "Y"
-    )
-    
-    # Used for predicting Y
-    task_Y <- sl3_Task$new(
-      data = data.table::copy(data),
-      covariates = covariates$covariates_Y,
-      outcome = "Y"
-    )
-    
-    task_YM1S1 <- sl3_Task$new(
-      data = data.table::copy(df_YM1S1),
-      covariates = covariates$covariates_Y,
-      outcome = "Y"
-    )
-    
-    task_YM0S1 <- sl3_Task$new(
-      data = data.table::copy(df_YM0S1),
-      covariates = covariates$covariates_Y,
-      outcome = "Y"
-    )
-    
-    # used for fitting M
-    task_MsubS1 <- sl3_Task$new(
-      data = data.table::copy(data[data$S == 1,]),
-      covariates = covariates$covariates_M,
-      outcome = "M"
-    )
-    
-    # used for predicting M
-    task_MS1 <- sl3_Task$new(
-      data = data.table::copy(df_YM1S1),
-      covariates = covariates$covariates_M,
-      outcome = "M"
-    )
-    
-    
-    task_Z <- sl3_Task$new(
-      data = data.table::copy(data),
-      covariates = covariates$covariates_Z,
-      outcome = "Z"
-    )
-    
-    task_ZS0 <- sl3_Task$new(
-      data = data.table::copy(df_ZS0),
-      covariates = covariates$covariates_Z,
-      outcome = "Z"
-    )
-    
-    task_A <- sl3_Task$new(
-      data = data.table::copy(data),
-      covariates = covariates$covariates_A,
-      outcome = "A"
-    )
-    
-    task_ZS1 <- sl3_Task$new(
-      data = data.table::copy(df_YM1S1),
-      covariates = covariates$covariates_Z,
-      outcome = "Z"
-    )
-    
-    task_S <- sl3_Task$new(
-      data = data.table::copy(data),
-      covariates = covariates$covariates_S,
-      outcome = "S"
-    )
-    
     # Y, M, Z, A, S fits
-    Sfit = sl$train(task_S)
-    Afit = sl$train(task_A)
-    Zfit = sl$train(task_Z)
+    Sform = paste0("Y ~", paste(covariates$covariates_S, collapse = "+"))
+    Sfit = glm(formula = Sform, family = binomial(), data = data)
+    
+    Aform = paste0("A ~", paste(covariates$covariates_A, collapse = "+"))
+    Afit = glm(formula = Aform, family = binomial(), data = data)
+    
+    Zform = paste0("Z ~", paste(covariates$covariates_Z, collapse = "+"))
+    Zfit = glm(formula = Zform, family = binomial(), data = data)
     
     # fitting M and Y on subsets where S is 1.  This is all that is needed for M and Y
-    Mfit = sl$train(task_MsubS1)
-    Yfit = sl$train(task_YsubS1)
+    Mform = paste0("M ~", paste(covariates$covariates_M, collapse = "+"))
+    Mfit = glm(formula = Mform, family = binomial(), data = data[data$S==1, ])
+    
+    Yform = paste0("Y ~", paste(covariates$covariates_Y, collapse = "+"))
+    Yfit = glm(formula = Yform, family = binomial(),  data = data[data$S==1, ])
     
     # propensity scores
-    S_ps = Sfit$predict()
+    S_ps = predict(Sfit, type = 'response')
     PS0 = mean(data$S == 0)
-    A_ps = Afit$predict()
-    Z_ps = Zfit$predict()
-    ZS0_ps = Zfit$predict(task_ZS0)
+    A_ps = predict(Afit, type = 'response')
+    Z_ps = predict(Zfit, type = 'response')
+    ZS0_ps = predict(Zfit, newdata = df_ZS0, type = 'response')
+    
     # might as well predict for S = 1 on whole data because only S = 1 subset is relevant
     # as clev cov is 0 otherwise 
-    M_ps = Mfit$predict(task_MS1)
+    M_ps = predict(Mfit, newdata = data, type = 'response')
     
     # 1st clever cov FOR SDE, ALSO NEED THE ONE FOR SIE
     get_cc = function(data, gstarM_astar, a) {
@@ -238,9 +147,9 @@ SDE_tmle3 = function(data, sl, V=10, covariates, truth = NULL,
     
     # Predict Y for whole data, also with M = 1 and 0, S does not matter since
     # Y is not a function of that variable so won't be used for prediction
-    Y_preds = pmin(pmax(Yfit$predict(task_Y), 0.001), .999)
-    Y_preds_M1 = pmin(pmax(Yfit$predict(task_YM1S1), 0.001), .999)
-    Y_preds_M0 = pmin(pmax(Yfit$predict(task_YM0S1), 0.001), .999)
+    Y_preds = pmin(pmax(predict(Yfit, newdata = data, type = 'response'), 0.001), .999)
+    Y_preds_M1 = pmin(pmax(predict(Yfit, newdata = df_YM1S1, type = 'response'), 0.001), .999)
+    Y_preds_M0 = pmin(pmax(predict(Yfit, newdata = df_YM0S1, type = 'response'), 0.001), .999)
     
     # updates
     update_fcn = function(weights) {
@@ -280,43 +189,24 @@ SDE_tmle3 = function(data, sl, V=10, covariates, truth = NULL,
         Y_preds_M0*(1 - gstarM_astar1)
     
     # NEXT REGRESSION
-    regress_step2 = function(Qstar_M, Qstar_Mg, Y_Mg, Hm, a) {
+    regress_step2_glm = function(Qstar_M, Qstar_Mg, Y_Mg, Hm, a) {
       df_QZ = data
       df_QZ$Qstar_Mg = Qstar_Mg
       df_QZ$Y_Mg = Y_Mg  
       
-      # for tmle 
-      task_QZsubAa <- sl3_Task$new(
-        data = data.table::copy(df_QZ[df_QZ$A == a, ]),
-        covariates = covariates$covariates_QZ,
-        outcome = "Qstar_Mg",
-        outcome_type="continuous"
-      )
+      QZform = formula(paste0("Qstar_Mg ~ ", paste(covariates$covariates_QZ, collapse = "+")))
+      YZform = formula(paste0("Y_Mg ~ ", paste(covariates$covariates_QZ, collapse = "+")))
       
-      # for standard gcomp
-      task_QZ_YsubAa <- sl3_Task$new(
-        data = data.table::copy(df_QZ[df_QZ$A == a, ]),
-        covariates = covariates$covariates_QZ,
-        outcome = "Y_Mg",
-        outcome_type="continuous"
-      )
-      
-      task_data <- sl3_Task$new(
-        data = data.table::copy(data),
-        covariates = covariates$covariates_QZ,
-        outcome = "Y"
-      )
-      
-      QZfit = sl$train(task_QZsubAa)
-      YZfit = sl$train(task_QZ_YsubAa)
+      QZfit = glm(QZform, family = binomial(), data = df_QZ[df_QZ$A == a, ])
+      YZfit = glm(YZform, family = binomial(), data = df_QZ[df_QZ$A == a, ])
       
       # compute the clever covariate 2
       Hz = with(data, (A == a)*(S == 0)/(A*A_ps + (1 - A)*(1 - A_ps))/PS0)
 
       # estimates predicted on whole data.  Since they were fit on A = a, A is not
       # a covariate in these predictions as A = a is therefore implicit
-      QZ_preds_a = pmin(pmax(QZfit$predict(task_data), .001), .999)
-      YZ_preds_a = pmin(pmax(YZfit$predict(task_data), .001), .999)
+      QZ_preds_a = pmin(pmax(predict(QZfit, newdata = data, type = 'response'), .001), .999)
+      YZ_preds_a = pmin(pmax(predict(YZfit, newdata = data, type = 'response'), .001), .999)
       
       # update
       QZfit_tmle = try(glm(Qstar_Mg ~ 1 + offset(qlogis(QZ_preds_a)), family = binomial,
@@ -363,19 +253,19 @@ SDE_tmle3 = function(data, sl, V=10, covariates, truth = NULL,
     }
     
     # undebug(regress_step2)
-    info_astar0a1 = regress_step2(Qstar_M = QstarY_astar0a1_df$Qstar_M,
+    info_astar0a1 = regress_step2_glm(Qstar_M = QstarY_astar0a1_df$Qstar_M,
                                   Qstar_Mg = QstarMg_astar0a1, 
                                   Y_Mg = YMg_astar0a1, 
                                   Hm = Hm_astar0a1, 
                                   a = 1)
     
-    info_astar0a0 = regress_step2(Qstar_M = QstarY_astar0a0_df$Qstar_M,
+    info_astar0a0 = regress_step2_glm(Qstar_M = QstarY_astar0a0_df$Qstar_M,
                                   Qstar_Mg = QstarMg_astar0a0, 
                                   Y_Mg = YMg_astar0a0, 
                                   Hm = Hm_astar0a0, 
                                   a = 0)
     
-    info_astar1a1 = regress_step2(Qstar_M = QstarY_astar1a1_df$Qstar_M,
+    info_astar1a1 = regress_step2_glm(Qstar_M = QstarY_astar1a1_df$Qstar_M,
                                   Qstar_Mg = QstarMg_astar1a1, 
                                   Y_Mg = YMg_astar1a1, 
                                   Hm = Hm_astar1a1, 
@@ -391,7 +281,7 @@ SDE_tmle3 = function(data, sl, V=10, covariates, truth = NULL,
   }
   
   # get the estimates and IC's
-  info = get_estimates(data, gstarM_astar1, gstarM_astar0, bootstrap = FALSE)
+  info = get_estimates_glm(data, gstarM_astar1, gstarM_astar0, bootstrap = FALSE)
   
   # run the bootstrap 500 times
   # bootstrap from the data and thus the gstarM_astar1 and gstarM_astar0
@@ -405,7 +295,7 @@ SDE_tmle3 = function(data, sl, V=10, covariates, truth = NULL,
     data = data[inds,]
     gstarM_astar1 = gstarM_astar1[inds]
     gstarM_astar0 = gstarM_astar0[inds]
-    get_estimates(data, gstarM_astar1, gstarM_astar0, bootstrap = TRUE)
+    get_estimates_glm(data, gstarM_astar1, gstarM_astar0, bootstrap = TRUE)
   })
 
   boot_ests = lapply(boots, FUN = function(boot) {
@@ -420,6 +310,7 @@ SDE_tmle3 = function(data, sl, V=10, covariates, truth = NULL,
   bootSE_SDE = apply(boots_SDE, 2, sd)
   bootSE_SIE = apply(boots_SIE, 2, sd)
   }
+  
   D_SDE = info$info_astar0a1$IC - info$info_astar0a0$IC
   D_SIE = info$info_astar1a1$IC - info$info_astar0a1$IC
   
@@ -538,80 +429,18 @@ SDE_tmle3 = function(data, sl, V=10, covariates, truth = NULL,
   }
 } 
 
-#' @title get_gstarM1
-#' @description computes the sequential regression, targeted maximum likelihood estimate
-#' for the stochastic direct effect or stochastic indirect effect when the outcome and 
-#' mediator model are only available on site 1 (S = 1).  This is a data adaptive parameter
-#' as the stochastic direct effect has a model for the mediator is determined on the data for 
-#' site 1. 
-#' @param data, data.frame of variables in time ordering from left to right
-#' @param a, the treatment intervention of interest
-#' @param a_star, the treatment intervention of the stochastic model for Mediator, M
-#' @param sl the sl3 superlearner defined, see sl3 documentation for defining a superlearner
-#' and the example below
-#' @param V number of folds for cross-validation (fixed to 10 for now)
-#' @param covariates, list of covariates for each necessary model, going backwards from the 
-#' outcome, Y, M, Z, A, W, S where S is the binary site, W are confounders, A is the treatment
-#' Z is the intermediary confounder (binary) and M is the mediator, Y is the outcome. 
-#' @param truth for testing purposes input a list with names f_W, f_S, f_Z and f_Y models representing
-#' and the corresponding elements are functions of appropriate variables so as to be able to 
-#' generate the truth and check the estimator's performance.  Default is NULL
-#' @param truncate, a list with elements lower and upper to truncate the various p-scores  
-#' not functional at present
-#' @return  a list with a CI for the estimate, and estimate using linear main terms MLE 
-#' gcomp formula (est_mle), the influence curve (IC), the superlearner coefficients for
-#' the Y model and the QZ model (SL_coef)
 #' @export
-#' @example /inst/tester_SDE_tmle.R
-get_gstarM1  = function(data, sl, V=10, covariates, truth) 
+get_gstarM_glm  = function(data, sl, V=10, covariates, truth) 
 {
   W = data[,grep("W", colnames(data))]
-  task_Mstar <- sl3_Task$new(
-    data = data.table::copy(data[data$S == 1,]),
-    covariates = covariates$covariates_M,
-    outcome = "M"
-  )
+
+  # fit M model via the data on S==1
+  Mform = formula(paste0("M ~", paste(covariates$covariates_M, collapse = "+")))
+  Mstarfit = glm(formula = Mform, family = binomial(), data = data[data$S == 1,])  
   
-  df_MZ1 = df_MZ0 = data
-  df_MZ1$Z = 1
-  df_MZ0$Z = 0
-  
-  task_MZ1 <- sl3_Task$new(
-    data = data.table::copy(df_MZ1),
-    covariates = covariates$covariates_M,
-    outcome = "M"
-  )
-  
-  task_MZ0 <- sl3_Task$new(
-    data = data.table::copy(df_MZ0),
-    covariates = covariates$covariates_M,
-    outcome = "M"
-  )
-  
-  task_Zstar <- sl3_Task$new(
-    data = data.table::copy(data),
-    covariates = covariates$covariates_Z,
-    outcome = "Z"
-  )
-  
-  df_ZA1 = df_ZA0 = data
-  df_ZA1$A = 1
-  df_ZA0$A = 0
-  
-  task_ZA1 <- sl3_Task$new(
-    data = data.table::copy(df_ZA1),
-    covariates = covariates$covariates_Z,
-    outcome = "Z"
-  )
-  
-  task_ZA0 <- sl3_Task$new(
-    data = data.table::copy(df_ZA0),
-    covariates = covariates$covariates_Z,
-    outcome = "Z"
-  )
-  
-  Mstarfit = sl$train(task_Mstar)
-  Zstarfit = sl$train(task_Zstar)
+  # fit Z model on the data
+  Zform = formula(paste0("Z ~", paste(covariates$covariates_Z, collapse = "+")))
+  Zstarfit = glm(formula = Zform, family = binomial(), data = data) 
   
   # find the truth if simulating
   f_truth0 = function(Z, W, S) {
@@ -619,65 +448,32 @@ get_gstarM1  = function(data, sl, V=10, covariates, truth)
     nn = nrow(W)
     # dataM1 = data.frame(cbind)
     dataM1 = cbind(Z = rep(1,nn), W, M = rep(1,nn))
-    taskM1 =   sl3_Task$new(
-      data = data.table::copy(dataM1),
-      covariates = covariates$covariates_M,
-      outcome = "M"
-    )
-    predM1 = Mstarfit$predict(taskM1)
-    
     dataM0 = cbind(Z = rep(0,nn), W, M = rep(1,nn))
-    taskM0 =   sl3_Task$new(
-      data = data.table::copy(dataM0),
-      covariates = covariates$covariates_M,
-      outcome = "M"
-    )
+
+    # predictions for M given Z = 1 and Z = 0
+    predM1 = predict(Mstarfit, newdata = dataM1, type = "response")
+    predM0 = predict(Mstarfit, newdata = dataM0, type = "response")
     
-    predM0 = Mstarfit$predict(taskM0)
-    
-    dataZ = cbind(A = rep(0,nn), W, S = rep(1, nn), Z = rep(1,nn))
-    
-    taskZ <- sl3_Task$new(
-      data = data.table::copy(dataZ),
-      covariates = covariates$covariates_Z,
-      outcome = "Z"
-    )
-    
-    predZ = Zstarfit$predict(taskZ)
+    # stochastic intervention is over S = 1 for Astar = 0
+    dataZ = cbind(A = rep(0,nn), W, S = rep(1, nn))
+    predZ = predict(Zstarfit, newdata = dataZ, type = 'response')
     gM = predM1*predZ + predM0*(1 - predZ)
     return(gM)
   }
   
   f_truth1 = function(Z, W, S) {
-    # W = W[1:10]
     nn = nrow(W)
     # dataM1 = data.frame(cbind)
     dataM1 = cbind(Z = rep(1,nn), W, M = rep(1,nn))
-    taskM1 =   sl3_Task$new(
-      data = data.table::copy(dataM1),
-      covariates = covariates$covariates_M,
-      outcome = "M"
-    )
-    predM1 = Mstarfit$predict(taskM1)
-    
     dataM0 = cbind(Z = rep(0,nn), W, M = rep(1,nn))
-    taskM0 =   sl3_Task$new(
-      data = data.table::copy(dataM0),
-      covariates = covariates$covariates_M,
-      outcome = "M"
-    )
     
-    predM0 = Mstarfit$predict(taskM0)
+    # predictions for M given Z = 1 and Z = 0
+    predM1 = predict(Mstarfit, newdata = dataM1, type = "response")
+    predM0 = predict(Mstarfit, newdata = dataM0, type = "response")
     
-    dataZ = cbind(A = rep(1,nn), W, S = rep(1, nn), Z = rep(1,nn))
-    
-    taskZ <- sl3_Task$new(
-      data = data.table::copy(dataZ),
-      covariates = covariates$covariates_Z,
-      outcome = "Z"
-    )
-    
-    predZ = Zstarfit$predict(taskZ)
+    # stochastic intervention is over S = 1 for Astar = 0
+    dataZ = cbind(A = rep(1,nn), W, S = rep(1, nn))
+    predZ = predict(Zstarfit, newdata = dataZ, type = 'response')
     gM = predM1*predZ + predM0*(1 - predZ)
     return(gM)
   }
@@ -707,32 +503,20 @@ get_gstarM1  = function(data, sl, V=10, covariates, truth)
 
 
 #' @export
-regress_step2 = function(data, sl, Qstar_M, Qstar_Mg, covariatesQZ, Hm, A_ps, a, tmle = TRUE,
+regress_step2_glm = function(data, Qstar_M, Qstar_Mg, covariatesQZ, Hm, A_ps, a, tmle = TRUE,
                          EE = FALSE, iptw = FALSE, gcomp = FALSE) {
 
   df_QZ = data
   df_QZ$Qstar_Mg = Qstar_Mg
   
-  # for tmle 
-  task_QZsubAa <- sl3_Task$new(
-    data = data.table::copy(df_QZ[df_QZ$A == a, ]),
-    covariates = covariates_QZ,
-    outcome = "Qstar_Mg"
-  )
+  QZform = formula(paste0("Qstar_Mg ~ ", paste(covariates$covariates_QZ, collapse = "+")))
+  QZfit = glm(QZform, family = binomial(), data = df_QZ[df_QZ$A == a, ])
   
-  task_data <- sl3_Task$new(
-    data = data.table::copy(data),
-    covariates = covariates$covariates_QZ,
-    outcome = "Y"
-  )
-  
-  QZfit = sl$train(task_QZsubAa)
-  
-  
+  QZstar_a = plogis(qlogis(QZ_preds_a) + eps2)
   # compute the clever covariate and update if tmle
   if (tmle) {
     Hz = with(data, (A == a)*(S == 0)/(A*A_ps + (1 - A)*(1 - A_ps))/PS0)  
-    QZ_preds_a = pmin(pmax(QZfit$predict(task_data), .001), .999)
+    QZ_preds_a = pmin(pmax(predict(QZfit, newdata = data, type = 'response'), .001), .999)
     # update
     QZfit_tmle = try(glm(Qstar_Mg ~ 1 + offset(qlogis(QZ_preds_a)), family = binomial,
                          weights = Hz), silent = TRUE)
@@ -740,25 +524,25 @@ regress_step2 = function(data, sl, Qstar_M, Qstar_Mg, covariatesQZ, Hm, A_ps, a,
     
     QZstar_a = plogis(qlogis(QZ_preds_a) + eps2)
     est = mean(QZstar_a[data$S==0])
-   if(!bootstrap) { 
-    D_Y = with(data, Hm*(Y - Qstar_M))
-    D_Z = Hz*(Qstar_Mg - QZstar_a)
-    D_W = with(data, (QZstar_a - est)*(S ==0)/PS0)
-    D = D_Y + D_Z + D_W
-   }
+    if(!bootstrap) { 
+      D_Y = with(data, Hm*(Y - Qstar_M))
+      D_Z = Hz*(Qstar_Mg - QZstar_a)
+      D_W = with(data, (QZstar_a - est)*(S ==0)/PS0)
+      D = D_Y + D_Z + D_W
+    }
   } 
   
   # regress if EE or mle, EE updates the estimate, mle does not
   if (gcomp | EE) {
-    QZstar_a = pmin(pmax(QZfit$predict(task_data), .001), .999) 
+    QZstar_a = pmin(pmax(predict(QZfit, newdata = data, type = 'response'), .001), .999)
     est = mean(QZstar_a[data$S==0])
     if (EE) {
       if (!bootstrap) {
-      D_Y1s = with(data, Hm*(Y - Y_preds))
-      Hz = with(data, (A == a)*(S == 0)/(A*A_ps + (1 - A)*(1 - A_ps))/PS0)
-      D_Z1s = Hz*(Qstar_Mg - QZstar_a)
-      D_W1s = with(data, (QZstar_a - est_init)*(S ==0)/PS0)
-      D = D_Y1s + D_Z1s + D_W1s
+        D_Y1s = with(data, Hm*(Y - Y_preds))
+        Hz = with(data, (A == a)*(S == 0)/(A*A_ps + (1 - A)*(1 - A_ps))/PS0)
+        D_Z1s = Hz*(Qstar_Mg - QZstar_a)
+        D_W1s = with(data, (QZstar_a - est_init)*(S ==0)/PS0)
+        D = D_Y1s + D_Z1s + D_W1s
       }
       # update the estimate
       est = est + mean(D)
@@ -772,7 +556,7 @@ regress_step2 = function(data, sl, Qstar_M, Qstar_Mg, covariatesQZ, Hm, A_ps, a,
   
   if (!bootstrap) {
     if (tmle) return(list(est = est, IC = D, eps2 = eps2)) else return(list(est = est, IC = D))
-    } else {
+  } else {
     return(list(est = est))
   }
 }
