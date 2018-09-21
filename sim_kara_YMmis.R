@@ -78,7 +78,7 @@ max(Yscores)
 func_list = list(f_W = f_W, f_S = f_S, f_A = f_A, f_Z = f_Z, f_M = f_M, f_Y = f_Y)
 
 
-covariates_mis = list(covariates_S = c("W1","W2"),
+covariates = list(covariates_S = c("W1","W2"),
                   covariates_A = c("S","W1","W2"),
                   covariates_Z = c("S","A","W1","W2"),
                   covariates_M = c("Z"),
