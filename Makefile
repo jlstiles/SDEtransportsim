@@ -124,6 +124,27 @@ else
 	${R} $< ${OUTPUT_DIR}/$<.out &
 endif
 
+simkaracrazy: sim_kara_crazy.R
+ifeq (${JOB_ENGINE},slurm)
+	${SBATCH} --nodes 1 --cpus-per-task=24 --job-name=$< ${SCRIPT_DIR}/sbatch-r.sh --file=$< --dir=${OUTPUT_DIR}
+else
+	${R} $< ${OUTPUT_DIR}/$<.out &
+endif
+
+simkaraYSmis1: sim_kara_YSmis1.R
+ifeq (${JOB_ENGINE},slurm)
+	${SBATCH} --nodes 1 --cpus-per-task=24 --job-name=$< ${SCRIPT_DIR}/sbatch-r.sh --file=$< --dir=${OUTPUT_DIR}
+else
+	${R} $< ${OUTPUT_DIR}/$<.out &
+endif
+
+simkaraYZmis1: sim_kara_YZmis1.R
+ifeq (${JOB_ENGINE},slurm)
+	${SBATCH} --nodes 1 --cpus-per-task=24 --job-name=$< ${SCRIPT_DIR}/sbatch-r.sh --file=$< --dir=${OUTPUT_DIR}
+else
+	${R} $< ${OUTPUT_DIR}/$<.out &
+endif
+
 # Options customized based on "7. GPU job script" at:
 # http://research-it.berkeley.edu/services/high-performance-computing/running-your-jobs
 gpu-test: gpu-test.Rmd
