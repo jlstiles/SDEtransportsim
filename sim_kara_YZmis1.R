@@ -117,7 +117,7 @@ B = 1000
 n=100
 
 res100_YZmis1 = mclapply(1:B, FUN = function(x) sim_kara(n, covariates, func_list), 
-                       mc.cores = getOption("mc.cores", 24L))
+                       mc.cores = getOption("mc.cores", 16L))
 
 # save(res100_YZmis1, func_list, covariates, file = "results/res100_YZmis1.RData")
 
@@ -125,7 +125,7 @@ B = 1000
 n=500
 
 res500_YZmis1 = mclapply(1:B, FUN = function(x) sim_kara(n, covariates, func_list), 
-                       mc.cores = getOption("mc.cores", 24L))
+                       mc.cores = getOption("mc.cores", 16L))
 
 save(res500_YZmis1, func_list, covariates, file = "results/res500_YZmis1.RData")
 
@@ -133,7 +133,7 @@ B = 500
 n=5000
 
 res5000_YZmis1 = mclapply(1:B, FUN = function(x) sim_kara(n, covariates, func_list), 
-                        mc.cores = getOption("mc.cores", 24L))
+                        mc.cores = getOption("mc.cores", 16L))
 
 save(res5000_YZmis1, func_list, covariates, file = "results/res5000_YZmis1.RData")
 
@@ -141,6 +141,6 @@ B = 500
 n=5000
 
 res5000_YZmis1 = mclapply(1:B, FUN = function(x) sim_kara(n, covariates, func_list), 
-                        mc.cores = getOption("mc.cores", 24L))
+                        mc.cores = getOption("mc.cores", 16L))
 
 save(res5000_YZmis1, func_list, covariates, file = "results/res5000_YZmis1_1.RData")
