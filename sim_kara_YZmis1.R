@@ -87,11 +87,16 @@ covariates = list(covariates_S = c("W1","W2"),
                   covariates_Y = c("M"),
                   covariates_QZ = c("S","W1","W2"))
 
+# p = sim_kara(5000, covariates, truth = func_list)
+# c(p$CI_SDE, p$CI_SDE_1s,p$CI_SDE_iptw,p$SDE_0, p$SE_SDE_0)
+# c(p$CI_SDE, p$CI_SDE_1s,p$CI_SDE_iptw,p$SDE_0, p$SE_SDE_0)[3]-
+#   c(p$CI_SDE, p$CI_SDE_1s,p$CI_SDE_iptw,p$SDE_0, p$SE_SDE_0)[2]
+# 
+# c(p$CI_SIE, p$CI_SIE_1s,p$CI_SIE_iptw,p$SIE_0, p$SE_SIE_0)
+# c(p$CI_SIE, p$CI_SIE_1s,p$CI_SIE_iptw,p$SIE_0, p$SE_SIE_0)[3]-
+#   c(p$CI_SIE, p$CI_SIE_1s,p$CI_SIE_iptw,p$SIE_0, p$SE_SIE_0)[2]
 
 sim_kara = function(n, covariates, truth) {
-  # n=5000
-  # covariates$covariates_Z = c("A","S", "W1", "W2")
-  # truth = func_list
   data = gendata.SDEtransport(n, 
                               f_W = truth$f_W, 
                               f_S = truth$f_S, 
@@ -101,14 +106,7 @@ sim_kara = function(n, covariates, truth) {
                               f_Y = truth$f_Y)
   p = SDE_tmle4(data, sl = NULL, covariates= covariates, truth = truth,
             truncate = list(lower =.0001, upper = .9999), glm_only = TRUE,
-            B=NULL)
-  # c(p$CI_SDE, p$CI_SDE_1s,p$CI_SDE_iptw,p$SDE_0, p$SE_SDE_0)
-  # c(p$CI_SDE, p$CI_SDE_1s,p$CI_SDE_iptw,p$SDE_0, p$SE_SDE_0)[3]-
-  #   c(p$CI_SDE, p$CI_SDE_1s,p$CI_SDE_iptw,p$SDE_0, p$SE_SDE_0)[2]
-  # 
-  # c(p$CI_SIE, p$CI_SIE_1s,p$CI_SIE_iptw,p$SIE_0, p$SE_SIE_0)
-  # c(p$CI_SIE, p$CI_SIE_1s,p$CI_SIE_iptw,p$SIE_0, p$SE_SIE_0)[3]-
-  #   c(p$CI_SIE, p$CI_SIE_1s,p$CI_SIE_iptw,p$SIE_0, p$SE_SIE_0)[2]
+            B=500)
   
   return(p)
 }
@@ -121,7 +119,7 @@ n=100
 res100_YZmis1 = mclapply(1:B, FUN = function(x) sim_kara(n, covariates, func_list), 
                        mc.cores = getOption("mc.cores", 24L))
 
-save(res100_YZmis1, func_list, covariates, file = "results/res100_YZmis1.RData")
+# save(res100_YZmis1, func_list, covariates, file = "results/res100_YZmis1.RData")
 
 B = 1000
 n=500
