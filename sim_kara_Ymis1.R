@@ -106,7 +106,7 @@ sim_kara = function(n, covariates, truth) {
                               f_Y = truth$f_Y)
   SDE_tmle4(data, sl = NULL, covariates= covariates, truth = truth,
             truncate = list(lower =.0001, upper = .9999), glm_only = TRUE,
-            B=NULL)
+            B=500)
 }
 
 library(parallel)
