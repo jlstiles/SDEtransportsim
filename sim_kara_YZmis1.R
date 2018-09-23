@@ -88,17 +88,17 @@ covariates = list(covariates_S = c("W1","W2"),
                   covariates_Y = c("M"),
                   covariates_QZ = c("S","W1","W2"))
 
-p = sim_kara(5000, covariates, truth = func_list)
-c(p$CI_SDE, p$CI_SDE_1s,p$CI_SDE_iptw,p$SDE_0, p$SE_SDE_0)
-c(p$CI_SDE, p$CI_SDE_1s,p$CI_SDE_iptw,p$SDE_0, p$SE_SDE_0)[3]-
-  c(p$CI_SDE, p$CI_SDE_1s,p$CI_SDE_iptw,p$SDE_0, p$SE_SDE_0)[2]
-
-c(p$CI_SIE, p$CI_SIE_1s,p$CI_SIE_iptw,p$SIE_0, p$SE_SIE_0)
-c(p$CI_SIE, p$CI_SIE_1s,p$CI_SIE_iptw,p$SIE_0, p$SE_SIE_0)[3]-
-  c(p$CI_SIE, p$CI_SIE_1s,p$CI_SIE_iptw,p$SIE_0, p$SE_SIE_0)[2]
+# p = sim_kara(5000, covariates, truth = func_list)
+# c(p$CI_SDE, p$CI_SDE_1s,p$CI_SDE_iptw,p$SDE_0, p$SE_SDE_0)
+# c(p$CI_SDE, p$CI_SDE_1s,p$CI_SDE_iptw,p$SDE_0, p$SE_SDE_0)[3]-
+#   c(p$CI_SDE, p$CI_SDE_1s,p$CI_SDE_iptw,p$SDE_0, p$SE_SDE_0)[2]
+# 
+# c(p$CI_SIE, p$CI_SIE_1s,p$CI_SIE_iptw,p$SIE_0, p$SE_SIE_0)
+# c(p$CI_SIE, p$CI_SIE_1s,p$CI_SIE_iptw,p$SIE_0, p$SE_SIE_0)[3]-
+#   c(p$CI_SIE, p$CI_SIE_1s,p$CI_SIE_iptw,p$SIE_0, p$SE_SIE_0)[2]
 
 sim_kara = function(n, covariates, truth) {
-  n=1e5
+  # n=1e5
   data = gendata.SDEtransport(n, 
                               f_W = truth$f_W, 
                               f_S = truth$f_S, 
