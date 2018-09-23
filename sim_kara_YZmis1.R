@@ -115,11 +115,6 @@ sim_kara = function(n, covariates, truth) {
 
 library(parallel)
 
-time = proc.time()
-sim_kara(n=100, covariates=covariates, truth = func_list)
-proc.time() - time
-debug(sim_kara)
-debug(SDE_tmle4)
 B = 1000
 n=100
 
