@@ -15,7 +15,7 @@ f_W = function(n) {
 
 W = f_W(n)
 f_S = function(W) {
-  with(W, plogis(W1 -W2 - 1))
+  with(W, plogis(W1 - W2 + 0.7))
 }
 P_SW = f_S(W)
 S = rbinom(n,1,P_SW)
@@ -23,9 +23,6 @@ mean(S)
 hist(P_SW, breaks = 200)
 max(P_SW)
 min(P_SW)
-predict(glm(S~W1, data = W, family = binomial()), type = 'response')[S==1][1:100]/P_SW[S==1][1:100]
-predict(glm(S~W1, data = W, family = binomial()), type = 'response')[S==0][1:100]/P_SW[S==0][1:100]
-P_SW[S==1][1:100]
 # make a pscore model
 
 f_A = function(S,W) {
@@ -43,14 +40,14 @@ mean(A)
 
 f_Z = function(A,S,W) {
   df = cbind(S=S, W, A = A)
-  with(df, plogis(2 * S - 2 * W1 + 0.3 * W2 + 6* A - 2))
+  with(df, plogis(0.1 * S - 0.4 * W1 + 0.3 * W2 + 1 * A - 0.3))
 }
 
 pzscores = f_Z(A,S,W)
 hist(pzscores,200)
 Z = rbinom(n, 1, pzscores)
 max(pzscores)
-min(pzscores)
+
 # make an M model according to the restrictions
 
 f_M = function(Z,W,S) {
@@ -77,18 +74,18 @@ hist(Yscores, 200)
 min(Y*log(Yscores)+(1-Y)*log(1-Yscores))
 mean(Y)
 max(Yscores)
-min(Yscores)
 # pack these functions into a DGP
 func_list = list(f_W = f_W, f_S = f_S, f_A = f_A, f_Z = f_Z, f_M = f_M, f_Y = f_Y)
 
+
 covariates = list(covariates_S = c("W1","W2"),
-                  covariates_A = c("S","W1", "W2"),
-                  covariates_Z = c("A"),
+                  covariates_A = c("S","W1","W2"),
+                  covariates_Z = c("S","A","W1","W2"),
                   covariates_M = c("Z","W1","W2"),
-                  covariates_Y = c("M"),
+                  covariates_Y = c("M","Z","W1","W2"),
                   covariates_QZ = c("S","W1","W2"))
 
-# p = sim_kara(5000, covariates, truth = func_list)
+# p = sim_kara(100000, covariates, truth = func_list)
 # c(p$CI_SDE, p$CI_SDE_1s,p$CI_SDE_iptw,p$SDE_0, p$SE_SDE_0)
 # c(p$CI_SDE, p$CI_SDE_1s,p$CI_SDE_iptw,p$SDE_0, p$SE_SDE_0)[3]-
 #   c(p$CI_SDE, p$CI_SDE_1s,p$CI_SDE_iptw,p$SDE_0, p$SE_SDE_0)[2]
@@ -97,8 +94,9 @@ covariates = list(covariates_S = c("W1","W2"),
 # c(p$CI_SIE, p$CI_SIE_1s,p$CI_SIE_iptw,p$SIE_0, p$SE_SIE_0)[3]-
 #   c(p$CI_SIE, p$CI_SIE_1s,p$CI_SIE_iptw,p$SIE_0, p$SE_SIE_0)[2]
 
+
 sim_kara = function(n, covariates, truth) {
-  # n=1e5
+
   data = gendata.SDEtransport(n, 
                               f_W = truth$f_W, 
                               f_S = truth$f_S, 
@@ -106,48 +104,41 @@ sim_kara = function(n, covariates, truth) {
                               f_Z = truth$f_Z, 
                               f_M = truth$f_M, 
                               f_Y = truth$f_Y)
-  p = SDE_tmle4(data, sl = NULL, covariates= covariates, truth = truth,
+  SDE_tmle4(data, sl = NULL, covariates= covariates, truth = truth,
             truncate = list(lower =.0001, upper = .9999), glm_only = TRUE,
-            B=500)
-  
-  return(p)
+            B=NULL)
 }
 
 library(parallel)
 
-time = proc.time()
-sim_kara(n=100, covariates=covariates, truth = func_list)
-proc.time() - time
-debug(sim_kara)
-debug(SDE_tmle4)
 B = 1000
 n=100
 
-res100_YZmis1 = mclapply(1:B, FUN = function(x) sim_kara(n, covariates, func_list), 
+res100_Ymis1 = mclapply(1:B, FUN = function(x) sim_kara(n, covariates, func_list), 
                        mc.cores = getOption("mc.cores", 24L))
 
-# save(res100_YZmis1, func_list, covariates, file = "results/res100_YZmis1.RData")
+save(res100_Ymis1, func_list, covariates, file = "results/res100_Ymis1.RData")
 
 B = 1000
 n=500
 
-res500_YZmis1 = mclapply(1:B, FUN = function(x) sim_kara(n, covariates, func_list), 
+res500_Ymis1 = mclapply(1:B, FUN = function(x) sim_kara(n, covariates, func_list), 
                        mc.cores = getOption("mc.cores", 24L))
 
-save(res500_YZmis1, func_list, covariates, file = "results/res500_YZmis1.RData")
+save(res500_Ymis1, func_list, covariates, file = "results/res500_Ymis1.RData")
 
 B = 500
 n=5000
 
-res5000_YZmis1 = mclapply(1:B, FUN = function(x) sim_kara(n, covariates, func_list), 
+res5000_Ymis1 = mclapply(1:B, FUN = function(x) sim_kara(n, covariates, func_list), 
                         mc.cores = getOption("mc.cores", 24L))
 
-save(res5000_YZmis1, func_list, covariates, file = "results/res5000_YZmis1.RData")
+save(res5000_Ymis1, func_list, covariates, file = "results/res5000_Ymis1.RData")
 
 B = 500
 n=5000
 
-res5000_YZmis1 = mclapply(1:B, FUN = function(x) sim_kara(n, covariates, func_list), 
+res5000_Ymis1 = mclapply(1:B, FUN = function(x) sim_kara(n, covariates, func_list), 
                         mc.cores = getOption("mc.cores", 24L))
 
-save(res5000_YZmis1, func_list, covariates, file = "results/res5000_YZmis1_1.RData")
+save(res5000_Ymis1, func_list, covariates, file = "results/res5000_Ymis1_1.RData")
