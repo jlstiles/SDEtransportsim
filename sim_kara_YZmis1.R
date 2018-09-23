@@ -15,7 +15,7 @@ f_W = function(n) {
 
 W = f_W(n)
 f_S = function(W) {
-  with(W, plogis(W1 -W2 - 3))
+  with(W, plogis(W1 -W2 - 1))
 }
 P_SW = f_S(W)
 S = rbinom(n,1,P_SW)
@@ -77,6 +77,7 @@ hist(Yscores, 200)
 min(Y*log(Yscores)+(1-Y)*log(1-Yscores))
 mean(Y)
 max(Yscores)
+min(Yscores)
 # pack these functions into a DGP
 func_list = list(f_W = f_W, f_S = f_S, f_A = f_A, f_Z = f_Z, f_M = f_M, f_Y = f_Y)
 
@@ -87,16 +88,17 @@ covariates = list(covariates_S = c("W1","W2"),
                   covariates_Y = c("M"),
                   covariates_QZ = c("S","W1","W2"))
 
-# p = sim_kara(5000, covariates, truth = func_list)
-# c(p$CI_SDE, p$CI_SDE_1s,p$CI_SDE_iptw,p$SDE_0, p$SE_SDE_0)
-# c(p$CI_SDE, p$CI_SDE_1s,p$CI_SDE_iptw,p$SDE_0, p$SE_SDE_0)[3]-
-#   c(p$CI_SDE, p$CI_SDE_1s,p$CI_SDE_iptw,p$SDE_0, p$SE_SDE_0)[2]
-# 
-# c(p$CI_SIE, p$CI_SIE_1s,p$CI_SIE_iptw,p$SIE_0, p$SE_SIE_0)
-# c(p$CI_SIE, p$CI_SIE_1s,p$CI_SIE_iptw,p$SIE_0, p$SE_SIE_0)[3]-
-#   c(p$CI_SIE, p$CI_SIE_1s,p$CI_SIE_iptw,p$SIE_0, p$SE_SIE_0)[2]
+p = sim_kara(5000, covariates, truth = func_list)
+c(p$CI_SDE, p$CI_SDE_1s,p$CI_SDE_iptw,p$SDE_0, p$SE_SDE_0)
+c(p$CI_SDE, p$CI_SDE_1s,p$CI_SDE_iptw,p$SDE_0, p$SE_SDE_0)[3]-
+  c(p$CI_SDE, p$CI_SDE_1s,p$CI_SDE_iptw,p$SDE_0, p$SE_SDE_0)[2]
+
+c(p$CI_SIE, p$CI_SIE_1s,p$CI_SIE_iptw,p$SIE_0, p$SE_SIE_0)
+c(p$CI_SIE, p$CI_SIE_1s,p$CI_SIE_iptw,p$SIE_0, p$SE_SIE_0)[3]-
+  c(p$CI_SIE, p$CI_SIE_1s,p$CI_SIE_iptw,p$SIE_0, p$SE_SIE_0)[2]
 
 sim_kara = function(n, covariates, truth) {
+  n=1e5
   data = gendata.SDEtransport(n, 
                               f_W = truth$f_W, 
                               f_S = truth$f_S, 
@@ -106,13 +108,18 @@ sim_kara = function(n, covariates, truth) {
                               f_Y = truth$f_Y)
   p = SDE_tmle4(data, sl = NULL, covariates= covariates, truth = truth,
             truncate = list(lower =.0001, upper = .9999), glm_only = TRUE,
-            B=500)
+            B=NULL)
   
   return(p)
 }
 
 library(parallel)
 
+time = proc.time()
+sim_kara(n=100, covariates=covariates, truth = func_list)
+proc.time() - time
+debug(sim_kara)
+debug(SDE_tmle4)
 B = 1000
 n=100
 
