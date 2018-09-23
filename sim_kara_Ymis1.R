@@ -85,7 +85,7 @@ covariates = list(covariates_S = c("W1","W2"),
                   covariates_Y = c("M","Z","W1","W2"),
                   covariates_QZ = c("S","W1","W2"))
 
-# p = sim_kara(100000, covariates, truth = func_list)
+# p = sim_kara(5000, covariates, truth = func_list)
 # c(p$CI_SDE, p$CI_SDE_1s,p$CI_SDE_iptw,p$SDE_0, p$SE_SDE_0)
 # c(p$CI_SDE, p$CI_SDE_1s,p$CI_SDE_iptw,p$SDE_0, p$SE_SDE_0)[3]-
 #   c(p$CI_SDE, p$CI_SDE_1s,p$CI_SDE_iptw,p$SDE_0, p$SE_SDE_0)[2]
@@ -95,7 +95,7 @@ covariates = list(covariates_S = c("W1","W2"),
 #   c(p$CI_SIE, p$CI_SIE_1s,p$CI_SIE_iptw,p$SIE_0, p$SE_SIE_0)[2]
 
 
-sim_kara = function(n, covariates, truth) {
+sim_kara = function(n, covariates, truth, B = 500) {
 
   data = gendata.SDEtransport(n, 
                               f_W = truth$f_W, 
@@ -106,7 +106,7 @@ sim_kara = function(n, covariates, truth) {
                               f_Y = truth$f_Y)
   SDE_tmle4(data, sl = NULL, covariates= covariates, truth = truth,
             truncate = list(lower =.0001, upper = .9999), glm_only = TRUE,
-            B=500)
+            B=B)
 }
 
 library(parallel)
