@@ -49,7 +49,7 @@ mean(A)
 
 f_Z = function(A,S,W) {
   df = cbind(S=S, W, A = A)
-  with(df, plogis(2 * S - 2 * W1 + 0.3 * W2 + 6* A - 1))
+  with(df, plogis(1.5 * S - 2 * W1 + 0.3 * W2 + 3.5* A - 1))
 }
 
 pzscores = f_Z(A,S,W)
