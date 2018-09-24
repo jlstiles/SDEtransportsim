@@ -15,7 +15,7 @@ f_W = function(n) {
 
 W = f_W(n)
 f_S = function(W) {
-  with(W, plogis(5*W1 - W2 - 3))
+  with(W, plogis(5*W1 - W2 - 2))
 }
 # 
 # W = f_W(n)
@@ -49,7 +49,7 @@ mean(A)
 
 f_Z = function(A,S,W) {
   df = cbind(S=S, W, A = A)
-  with(df, plogis(1.5 * S - 2 * W1 + 0.3 * W2 + 3.5* A - 1))
+  with(df, plogis(1.5 * S - 2 * W1 + 0.3 * W2 + 3.5* A - 1.5))
 }
 
 pzscores = f_Z(A,S,W)
@@ -79,7 +79,7 @@ min(Mscores)
 
 f_Y = function(M,Z,W) {
   df = cbind(M=M, Z = Z, W)
-  with(df, plogis(1*M + 1.5*W1 - .37*W2 + .3*Z - 1))
+  with(df, plogis(1*M + 1.5*W1 - .37*W2 + 1*Z - 1))
 }
 
 Yscores = f_Y(M,Z,W)
@@ -129,7 +129,7 @@ n=100
 res100_YAwell = mclapply(1:B, FUN = function(x) sim_kara(n, covariates, func_list), 
                        mc.cores = getOption("mc.cores", 20L))
 
-save(res100_YAwell, func_list, covariates, file = "results/res100_YAwell2.RData")
+save(res100_YAwell, func_list, covariates, file = "results3/res100_YAwell2.RData")
 
 B = 1000
 n=500
@@ -137,7 +137,7 @@ n=500
 res500_YAwell = mclapply(1:B, FUN = function(x) sim_kara(n, covariates, func_list), 
                        mc.cores = getOption("mc.cores", 20L))
 
-save(res500_YAwell, func_list, covariates, file = "results/res500_YAwell2.RData")
+save(res500_YAwell, func_list, covariates, file = "results3/res500_YAwell2.RData")
 
 B = 500
 n=5000
@@ -145,7 +145,7 @@ n=5000
 res5000_YAwell = mclapply(1:B, FUN = function(x) sim_kara(n, covariates, func_list), 
                         mc.cores = getOption("mc.cores", 20L))
 
-save(res5000_YAwell, func_list, covariates, file = "results/res5000_YAwell2.RData")
+save(res5000_YAwell, func_list, covariates, file = "results3/res5000_YAwell2.RData")
 
 B = 500
 n=5000
@@ -153,4 +153,4 @@ n=5000
 res5000_YAwell = mclapply(1:B, FUN = function(x) sim_kara(n, covariates, func_list), 
                           mc.cores = getOption("mc.cores", 20L))
 
-save(res5000_YAwell, func_list, covariates, file = "results/res5000_YAwell2_1.RData")
+save(res5000_YAwell, func_list, covariates, file = "results3/res5000_YAwell2_1.RData")
