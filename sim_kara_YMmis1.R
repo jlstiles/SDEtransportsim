@@ -128,7 +128,7 @@ library(parallel)
 B = 1000
 n=100
 
-res100_YMmisT = mclapply(1:B, FUN = function(x) sim_kara(n, covariates, func_list), 
+res100_YMmis1 = mclapply(1:B, FUN = function(x) sim_kara(n, covariates, func_list), 
                        mc.cores = getOption("mc.cores", 20L))
 
 save(res100_YMmis1, func_list, covariates, file = "results/res100_YMmis2.RData")
