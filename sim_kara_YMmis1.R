@@ -71,7 +71,7 @@ mean(M)
 max(Mscores)
 min(Mscores)
 
-make a Y model according to the restrictions
+# make a Y model according to the restrictions
 f_Y = function(M,Z,W) {
   df = cbind(M=M, Z = Z, W)
   with(df, plogis(6 * M * Z - 3))
