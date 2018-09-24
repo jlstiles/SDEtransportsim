@@ -15,14 +15,23 @@ f_W = function(n) {
 
 W = f_W(n)
 f_S = function(W) {
-  with(W, plogis(W1 - W2 + 0.7))
+  with(W, plogis(5*W1 - W2 - 3))
 }
+# 
+# W = f_W(n)
+# f_S = function(W) {
+#   with(W, plogis(W1 - W2 + 0.7))
+# }
+
 P_SW = f_S(W)
 S = rbinom(n,1,P_SW)
 mean(S)
 hist(P_SW, breaks = 200)
 max(P_SW)
 min(P_SW)
+# predict(glm(S~W1, data = W, family = binomial()), type = 'response')[S==1][1:100]/P_SW[S==1][1:100]
+# predict(glm(S~W1, data = W, family = binomial()), type = 'response')[S==0][1:100]/P_SW[S==0][1:100]
+# P_SW[S==1][1:100]
 # make a pscore model
 
 f_A = function(S,W) {
@@ -40,14 +49,14 @@ mean(A)
 
 f_Z = function(A,S,W) {
   df = cbind(S=S, W, A = A)
-  with(df, plogis(0.1 * S - 0.4 * W1 + 0.3 * W2 + 1 * A - 0.3))
+  with(df, plogis(2 * S - 2 * W1 + 0.3 * W2 + 6* A - 2))
 }
 
 pzscores = f_Z(A,S,W)
 hist(pzscores,200)
 Z = rbinom(n, 1, pzscores)
 max(pzscores)
-
+min(pzscores)
 # make an M model according to the restrictions
 
 f_M = function(Z,W,S) {
@@ -63,9 +72,14 @@ max(Mscores)
 min(Mscores)
 
 # make a Y model according to the restrictions
+# f_Y = function(M,Z,W) {
+#   df = cbind(M=M, Z = Z, W)
+#   with(df, plogis(6 * M * Z - 3))
+# }
+
 f_Y = function(M,Z,W) {
   df = cbind(M=M, Z = Z, W)
-  with(df, plogis(1 * M + 1.5 * W1 - 0.37 * W2 + 1 * Z - 1))
+  with(df, plogis(1*M + 1.5*W1 - .37*W2 + .3*Z - 1))
 }
 
 Yscores = f_Y(M,Z,W)
@@ -86,7 +100,16 @@ covariates = list(covariates_S = c("W1","W2"),
                   covariates_QZ = c("S","W1","W2"))
 
 
-sim_kara = function(n, covariates, truth) {
+# p = sim_kara(5000, covariates, truth = func_list, B=NULL)
+# c(p$CI_SDE, p$CI_SDE_1s,p$CI_SDE_iptw,p$SDE_0, p$SE_SDE_0)
+# c(p$CI_SDE, p$CI_SDE_1s,p$CI_SDE_iptw,p$SDE_0, p$SE_SDE_0)[3]-
+#   c(p$CI_SDE, p$CI_SDE_1s,p$CI_SDE_iptw,p$SDE_0, p$SE_SDE_0)[2]
+# 
+# c(p$CI_SIE, p$CI_SIE_1s,p$CI_SIE_iptw,p$SIE_0, p$SE_SIE_0)
+# c(p$CI_SIE, p$CI_SIE_1s,p$CI_SIE_iptw,p$SIE_0, p$SE_SIE_0)[3]-
+#   c(p$CI_SIE, p$CI_SIE_1s,p$CI_SIE_iptw,p$SIE_0, p$SE_SIE_0)[2]
+
+sim_kara = function(n, covariates, truth, B = 500) {
 
   data = gendata.SDEtransport(n, 
                               f_W = truth$f_W, 
@@ -97,7 +120,7 @@ sim_kara = function(n, covariates, truth) {
                               f_Y = truth$f_Y)
   SDE_tmle4(data, sl = NULL, covariates= covariates, truth = truth,
             truncate = list(lower =.0001, upper = .9999), glm_only = TRUE,
-            B=500)
+            B=B)
 }
 
 library(parallel)
