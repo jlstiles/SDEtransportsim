@@ -49,7 +49,7 @@ mean(A)
 
 f_Z = function(A,S,W) {
   df = cbind(S=S, W, A = A)
-  with(df, plogis(2 * S - 2 * W1 + 0.3 * W2 + 6* A - 2))
+  with(df, plogis(2 * S - 2 * W1 + 0.3 * W2 + 4* A - 1))
 }
 
 pzscores = f_Z(A,S,W)
@@ -74,7 +74,7 @@ min(Mscores)
 # make a Y model according to the restrictions
 f_Y = function(M,Z,W) {
   df = cbind(M=M, Z = Z, W)
-  with(df, plogis(6 * M * Z - 3))
+  with(df, plogis(4 * M * Z - 3))
 }
 
 # f_Y = function(M,Z,W) {
@@ -131,7 +131,7 @@ B = 1000
 n=100
 
 res100_YSmis1 = mclapply(1:B, FUN = function(x) sim_kara(n, covariates, func_list), 
-                       mc.cores = getOption("mc.cores", 24L))
+                       mc.cores = getOption("mc.cores", 20L))
 
 save(res100_YSmis1, func_list, covariates, file = "results/res100_YSmis2.RData")
 
@@ -139,7 +139,7 @@ B = 1000
 n=500
 
 res500_YSmis1 = mclapply(1:B, FUN = function(x) sim_kara(n, covariates, func_list), 
-                       mc.cores = getOption("mc.cores", 24L))
+                       mc.cores = getOption("mc.cores", 20L))
 
 save(res500_YSmis1, func_list, covariates, file = "results/res500_YSmis2.RData")
 
@@ -147,7 +147,7 @@ B = 500
 n=5000
 
 res5000_YSmis1 = mclapply(1:B, FUN = function(x) sim_kara(n, covariates, func_list), 
-                        mc.cores = getOption("mc.cores", 24L))
+                        mc.cores = getOption("mc.cores", 20L))
 
 save(res5000_YSmis1, func_list, covariates, file = "results/res5000_YSmis2.RData")
 
@@ -155,6 +155,6 @@ B = 500
 n=5000
 
 res5000_YSmis1 = mclapply(1:B, FUN = function(x) sim_kara(n, covariates, func_list), 
-                        mc.cores = getOption("mc.cores", 24L))
+                        mc.cores = getOption("mc.cores", 20L))
 
 save(res5000_YSmis1, func_list, covariates, file = "results/res5000_YSmis2_1.RData")
