@@ -95,7 +95,7 @@ covariates = list(covariates_S = c("W2"),
                   covariates_A = c("S","W1", "W2"),
                   covariates_Z = c("A", "S", "W1", "W2"),
                   covariates_M = c("Z","W1","W2"),
-                  covariates_Y = c("M","W1","W2"),
+                  covariates_Y = c("M","Z"),
                   covariates_QZ = c("S","W1","W2"))
 
 
@@ -108,7 +108,7 @@ covariates = list(covariates_S = c("W2"),
 # c(p$CI_SIE, p$CI_SIE_1s,p$CI_SIE_iptw,p$SIE_0, p$SE_SIE_0)[3]-
 #   c(p$CI_SIE, p$CI_SIE_1s,p$CI_SIE_iptw,p$SIE_0, p$SE_SIE_0)[2]
 
-sim_kara = function(n, covariates, truth, B=500) {
+sim_kara = function(n, covariates, truth, B=NULL) {
   # n=50000
   # covariates$covariates_Z = c("A","S", "W1", "W2")
   # truth = func_list

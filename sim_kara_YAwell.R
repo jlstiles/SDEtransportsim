@@ -49,7 +49,7 @@ mean(A)
 
 f_Z = function(A,S,W) {
   df = cbind(S=S, W, A = A)
-  with(df, plogis(2 * S - 2 * W1 + 0.3 * W2 + 4* A - 1))
+  with(df, plogis(2 * S - 2 * W1 + 0.3 * W2 + 6* A - 1))
 }
 
 pzscores = f_Z(A,S,W)
@@ -74,7 +74,7 @@ min(Mscores)
 # make a Y model according to the restrictions
 # f_Y = function(M,Z,W) {
 #   df = cbind(M=M, Z = Z, W)
-#   with(df, plogis(4 * M * Z - 3))
+#   with(df, plogis(6 * M * Z - 3))
 # }
 
 f_Y = function(M,Z,W) {
@@ -108,7 +108,7 @@ covariates = list(covariates_S = c("W2"),
 # c(p$CI_SIE, p$CI_SIE_1s,p$CI_SIE_iptw,p$SIE_0, p$SE_SIE_0)[3]-
 #   c(p$CI_SIE, p$CI_SIE_1s,p$CI_SIE_iptw,p$SIE_0, p$SE_SIE_0)[2]
 
-sim_kara = function(n, covariates, truth, B = 500) {
+sim_kara = function(n, covariates, truth, B = NULL) {
   data = gendata.SDEtransport(n, 
                               f_W = truth$f_W, 
                               f_S = truth$f_S, 
