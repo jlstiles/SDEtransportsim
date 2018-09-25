@@ -15,7 +15,7 @@ f_W = function(n) {
 
 W = f_W(n)
 f_S = function(W) {
-  with(W, plogis(5*W1 - W2 - 2))
+  with(W, plogis(3.5*W1 - W2 - 1))
 }
 # 
 # W = f_W(n)
@@ -49,7 +49,7 @@ mean(A)
 
 f_Z = function(A,S,W) {
   df = cbind(S=S, W, A = A)
-  with(df, plogis(1.5 * S - 2 * W1 + 0.3 * W2 + 3.5* A - 1.5))
+  with(df, plogis(0.1 * S - 1.2 * W1 + 0.3 * W2 + 3.0* A - 1))
 }
 
 pzscores = f_Z(A,S,W)
@@ -74,7 +74,7 @@ min(Mscores)
 # make a Y model according to the restrictions
 # f_Y = function(M,Z,W) {
 #   df = cbind(M=M, Z = Z, W)
-#   with(df, plogis(6 * M * Z - 3))
+#   with(df, plogis(6*M - Z - 3-.2*W1))
 # }
 
 f_Y = function(M,Z,W) {
@@ -131,7 +131,7 @@ n=100
 res100_well = mclapply(1:B, FUN = function(x) sim_kara(n, covariates, func_list), 
                        mc.cores = getOption("mc.cores", 20L))
 
-save(res100_well, func_list, covariates, file = "results3/res100_well.RData")
+save(res100_well, func_list, covariates, file = "results4/res100_well.RData")
 
 B = 1000
 n=500
@@ -139,20 +139,15 @@ n=500
 res500_well = mclapply(1:B, FUN = function(x) sim_kara(n, covariates, func_list), 
                        mc.cores = getOption("mc.cores", 20L))
 
-save(res500_well, func_list, covariates, file = "results3/res500_well.RData")
+save(res500_well, func_list, covariates, file = "results4/res500_well.RData")
 
-B = 500
+B = 1000
 n=5000
 
 res5000_well = mclapply(1:B, FUN = function(x) sim_kara(n, covariates, func_list), 
                         mc.cores = getOption("mc.cores", 20L))
 
-save(res5000_well, func_list, covariates, file = "results3/res5000_well.RData")
+save(res5000_well, func_list, covariates, file = "results4/res5000_well.RData")
 
 B = 500
 n=5000
-
-res5000_well = mclapply(1:B, FUN = function(x) sim_kara(n, covariates, func_list), 
-                        mc.cores = getOption("mc.cores", 20L))
-
-save(res5000_well, func_list, covariates, file = "results3/res5000_well1.RData")
