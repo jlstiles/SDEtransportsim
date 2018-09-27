@@ -390,7 +390,7 @@ get_gstarM_glm  = function(data, truth, forms)
 
 
 #' @export
-get.mediation.initdata_glm = function(data, covariates, forms, RCT = 0.5) {
+get.mediation.initdata_glm = function(data, forms, RCT = 0.5) {
   
   W = data[,grep("W", colnames(data))]
   df_YM1S1 = data
