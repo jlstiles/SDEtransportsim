@@ -114,7 +114,7 @@ n=100
 res100_YZmis = mclapply(1:B, FUN = function(x) sim_kara(n=100, forms=forms, truth=func_list, B = NULL), 
                        mc.cores = getOption("mc.cores", 20L))
 
-save(res100_YZmis, func_list, covariates, file = "results5/res100_YZmis.RData")
+save(res100_YZmis, func_list, forms, file = "results5/res100_YZmis.RData")
 
 B = 1000
 n=500
@@ -122,7 +122,7 @@ n=500
 res500_YZmis = mclapply(1:B, FUN = function(x) sim_kara(n=500, forms=forms, truth=func_list, B = NULL), 
                        mc.cores = getOption("mc.cores", 20L))
 
-save(res500_YZmis, func_list, covariates, file = "results5/res500_YZmis.RData")
+save(res500_YZmis, func_list, forms, file = "results5/res500_YZmis.RData")
 
 B = 1000
 n=5000
@@ -130,5 +130,5 @@ n=5000
 res5000_YZmis = mclapply(1:B, FUN = function(x) sim_kara(n=5000, forms=forms, truth=func_list, B = NULL), 
                         mc.cores = getOption("mc.cores", 20L))
 
-save(res5000_YZmis, func_list, covariates, file = "results5/res5000_YZmis.RData")
+save(res5000_YZmis, func_list, forms, file = "results5/res5000_YZmis.RData")
 
