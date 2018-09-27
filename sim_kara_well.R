@@ -49,7 +49,7 @@ min(pzscores)
 
 f_M = function(Z,W,S) {
   df = cbind(S=S, W, Z = Z)
-  with(df, plogis(-log(3) + log(10)*Z- log(10)*W2 + .2*S))
+  with(df, plogis(-log(3) + log(10)*Z- log(40)*W2 + .1*S))
 }
 Mscores = f_M(Z,W,S)
 hist(Mscores, 200)
@@ -60,7 +60,7 @@ min(Mscores)
 
 f_Y = function(M,Z,W) {
   df = cbind(M=M, Z = Z, W)
-  with(df, plogis(log(1.2)  + (log(3)*Z)  + log(3)*M - log(1.2)*W2 + log(1.2)*W2*Z))
+  with(df, plogis(log(1.2)  + log(3)*Z  + 5*M - log(1.2)*W2 + log(1.2)*W2*Z))
 }
 
 Yscores = f_Y(M,Z,W)
@@ -73,6 +73,8 @@ max(Yscores)
 # pack these functions into a DGP
 func_list = list(f_W = f_W, f_S = f_S, f_A = f_A, f_Z = f_Z, f_M = f_M, f_Y = f_Y)
 
+forms = list(Sform = "S~W1", Aform = NULL, Zstarform = "Z ~ A+W2+S", Mstarform = "M ~ Z+W2", 
+             Yform = "Y ~ Z*W2 + M", QZform = "Qstar_Mg ~ W2 + S")
 # 
 # covariates = list(covariates_S = c("W1","W2"),
 #                   covariates_A = c("S","W1","W2"),
@@ -83,15 +85,11 @@ func_list = list(f_W = f_W, f_S = f_S, f_A = f_A, f_Z = f_Z, f_M = f_M, f_Y = f_
 
 
 # this gives CI's for tmle, EE and iptw for SDE and SIE as well as the truths'
+debug(SDE_glm4)
 p = sim_kara(5000, forms, truth = func_list, B=NULL)
 c(p$CI_SDE, p$CI_SDE_1s,p$CI_SDE_iptw, SDE_0 = p$SDE_0, SE_SDE_0 = p$SE_SDE_0)
 
 c(p$CI_SIE, p$CI_SIE_1s,p$CI_SIE_iptw, SIE_0 = p$SIE_0, SE_SIE_0 = p$SE_SIE_0)
-
-
-forms = list(Sform = "S~W2", Aform = NULL, Zstarform = "Z ~ A+W2+S", Mstarform = "M ~ Z", 
-             Yform = "Y ~ Z", QZform = "Qstar_Mg ~ W2 + S")
-
 
 
 sim_kara = function(n, forms, truth, B = NULL) {
@@ -113,26 +111,25 @@ library(parallel)
 B = 1000
 n=100
 
-res100_well = mclapply(1:B, FUN = function(x) sim_kara(n, covariates, func_list), 
+res100_well = mclapply(1:B, FUN = function(x) sim_kara(n=100, forms=forms, truth=func_list, B = NULL), 
                        mc.cores = getOption("mc.cores", 20L))
 
-save(res100_well, func_list, covariates, file = "results4/res100_well.RData")
+save(res100_well, func_list, covariates, file = "results5/res100_well.RData")
 
 B = 1000
 n=500
 
-res500_well = mclapply(1:B, FUN = function(x) sim_kara(n, covariates, func_list), 
+res500_well = mclapply(1:B, FUN = function(x) sim_kara(n=500, forms=forms, truth=func_list, B = NULL), 
                        mc.cores = getOption("mc.cores", 20L))
 
-save(res500_well, func_list, covariates, file = "results4/res500_well.RData")
+save(res500_well, func_list, covariates, file = "results5/res500_well.RData")
 
 B = 1000
 n=5000
 
-res5000_well = mclapply(1:B, FUN = function(x) sim_kara(n, covariates, func_list), 
+res5000_well = mclapply(1:B, FUN = function(x) sim_kara(n=5000, forms=forms, truth=func_list, B = NULL), 
                         mc.cores = getOption("mc.cores", 20L))
 
-save(res5000_well, func_list, covariates, file = "results4/res5000_well.RData")
+save(res5000_well, func_list, covariates, file = "results5/res5000_well.RData")
 
-B = 500
-n=5000
+
