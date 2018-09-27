@@ -71,7 +71,6 @@ SDE_glm4 = function(data, truth = NULL, truncate = list(lower =.0001, upper = .9
   n = nrow(data)
   if (!is.null(B)) {
     boot_ests = lapply(1:B, FUN = function(x) {
-      x=1
     inds = sample(1:n, replace = TRUE)
     data = data[inds,]
     init_info = get.mediation.initdata_glm(data = data, forms = forms, RCT = RCT)
@@ -80,8 +79,6 @@ SDE_glm4 = function(data, truth = NULL, truncate = list(lower =.0001, upper = .9
     
     est_info = lapply(0:1, FUN = function(astar) {
       return(lapply(0:1, FUN = function(a) {
-        astar=0
-        a = 0
         update = mediation.step1_glm(initdata = init_info$initdata, Y_preds = Y_preds, data = data, 
                                  gstarM_astar[[astar+1]], a)
         iptw_info = update$est_iptw
