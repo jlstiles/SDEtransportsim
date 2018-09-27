@@ -4,15 +4,11 @@
 \alias{SDE_glm4}
 \title{SDE_tmle3}
 \usage{
-SDE_glm4(data, covariates, truth = NULL, truncate = list(lower = 1e-04,
-  upper = 0.9999), B = 500)
+SDE_glm4(data, truth = NULL, truncate = list(lower = 1e-04, upper = 0.9999),
+  B = 500, forms, RCT = RCT)
 }
 \arguments{
 \item{data, }{data.frame of variables in time ordering from left to right}
-
-\item{covariates, }{list of covariates for each necessary model, going backwards from the
-outcome, Y, M, Z, A, W, S where S is the binary site, W are confounders, A is the treatment
-Z is the intermediary confounder (binary) and M is the mediator, Y is the outcome.}
 
 \item{truth}{for testing purposes input a list with names f_W, f_S, f_Z and f_Y models representing
 and the corresponding elements are functions of appropriate variables so as to be able to
@@ -29,6 +25,10 @@ not functional at present}
 and the example below}
 
 \item{V}{number of folds for cross-validation (fixed to 10 for now)}
+
+\item{covariates, }{list of covariates for each necessary model, going backwards from the
+outcome, Y, M, Z, A, W, S where S is the binary site, W are confounders, A is the treatment
+Z is the intermediary confounder (binary) and M is the mediator, Y is the outcome.}
 }
 \value{
 a list with a CI for the estimate, and estimate using linear main terms MLE

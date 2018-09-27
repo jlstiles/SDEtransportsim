@@ -4,5 +4,5 @@
 \alias{get_gstarM_glm}
 \title{get_gstarM_glm}
 \usage{
-get_gstarM_glm(data, covariates, truth)
+get_gstarM_glm(data, truth, forms)
 }

@@ -23,18 +23,18 @@
 #' gcomp formula (est_mle), the influence curve (IC), the superlearner coefficients for
 #' the Y model and the QZ model (SL_coef)
 #' @export
-SDE_glm4 = function(data, covariates, truth = NULL, truncate = list(lower =.0001, upper = .9999), 
-                    B = 500) 
+SDE_glm4 = function(data, truth = NULL, truncate = list(lower =.0001, upper = .9999), 
+                    B = 500, forms, RCT = RCT) 
 {
   L = truncate$lower
   U = truncate$upper
   
   # get the stochastic dist of M and true params if you want 
-  gstar_info = get_gstarM_glm(data = data, covariates = covariates, truth = truth)
+  gstar_info = get_gstarM_glm(data = data, truth = truth, forms = forms)
   gstarM_astar = list(gstarM_astar0 = gstar_info$gstarM_astar0, gstarM_astar1 = gstar_info$gstarM_astar1)
   
   # perform initial fits for the first regression
-  init_info = get.mediation.initdata_glm(data = data, covariates = covariates, sl = sl)
+  init_info = get.mediation.initdata_glm(data = data, covariates = covariates, forms = forms, RCT = RCT)
   Y_preds = init_info$Y_preds
   est_info = lapply(0:1, FUN = function(astar) {
     lapply(0:1, FUN = function(a) {
@@ -46,17 +46,17 @@ SDE_glm4 = function(data, covariates, truth = NULL, truncate = list(lower =.0001
       
       Y_Mg = get.stochasticM(gstarM_astar[[astar+1]], Y_preds[[2]], Y_preds[[3]]) 
       A_ps = init_info$initdata$A_ps
-      EE_gcomp_info = mediation.step2_glm(data = data, sl = sl, Qstar_M = Y_preds[[1]], 
-                      Qstar_Mg = Y_Mg, covariates$covariates_QZ, Hm = update$Hm, A_ps = A_ps, 
+      EE_gcomp_info = mediation.step2_glm(data = data, Qstar_M = Y_preds[[1]], 
+                      Qstar_Mg = Y_Mg, Hm = update$Hm, A_ps = A_ps, 
                       a = a, tmle = FALSE,
-                      EE = TRUE, bootstrap = FALSE)
+                      EE = TRUE, bootstrap = FALSE, form = forms$QZform)
 
       Qstar_Mg = get.stochasticM(gstarM_astar[[astar+1]], update$Qstar_M1, update$Qstar_M0) 
       # compute Qstar_Mg here
-      tmle_info = mediation.step2_glm(data = data, sl = sl, Qstar_M = update$Qstar_M, 
-                      Qstar_Mg = Qstar_Mg, covariates$covariates_QZ, Hm = update$Hm, A_ps = A_ps, 
+      tmle_info = mediation.step2_glm(data = data, Qstar_M = update$Qstar_M, 
+                      Qstar_Mg = Qstar_Mg, Hm = update$Hm, A_ps = A_ps, 
                       a = a, tmle = TRUE,
-                      EE = FALSE, bootstrap = FALSE)
+                      EE = FALSE, bootstrap = FALSE, form = forms$QZform)
       
       # compile all estimates
       tmle_info$eps1 = update$eps
@@ -71,7 +71,7 @@ SDE_glm4 = function(data, covariates, truth = NULL, truncate = list(lower =.0001
     boot_ests = lapply(1:B, FUN = function(x) {
     inds = sample(1:n, replace = TRUE)
     data = data[inds,]
-    init_info = get.mediation.initdata_glm(data = data, covariates = covariates, sl = sl)
+    init_info = get.mediation.initdata_glm(data = data, covariates = covariates, forms = forms, RCT = RCT)
     Y_preds = init_info$Y_preds
     gstarM_astar = list(gstarM_astar1[inds], gstarM_astar0[inds])
     
@@ -84,17 +84,17 @@ SDE_glm4 = function(data, covariates, truth = NULL, truncate = list(lower =.0001
         
         Y_Mg = get.stochasticM(gstarM_astar[[astar+1]], Y_preds[[2]], Y_preds[[3]]) 
         A_ps = init_info$initdata$A_ps
-        EE_mle_info = mediation.step2_glm(data = data, sl = sl, Qstar_M = Y_preds[[1]], 
-                                      Qstar_Mg = Y_Mg, covariates$covariates_QZ, Hm = update$Hm, A_ps = A_ps, 
+        EE_mle_info = mediation.step2_glm(data = data, Qstar_M = Y_preds[[1]], 
+                                      Qstar_Mg = Y_Mg, Hm = update$Hm, A_ps = A_ps, 
                                       a = a, tmle = FALSE,
-                                      EE = TRUE, bootstrap = TRUE)
+                                      EE = TRUE, bootstrap = TRUE, form = forms$QZform)
         
         Qstar_Mg = get.stochasticM(gstarM_astar[[astar+1]], update$QstarM1, update$QstarM1) 
         # compute Qstar_Mg here
-        tmle_info = mediation.step2_glm(data = data, sl = sl, Qstar_M = update$Qstar_M, 
-                                    Qstar_Mg = Qstar_Mg, covariates$covariates_QZ, Hm = update$Hm, A_ps = A_ps, 
+        tmle_info = mediation.step2_glm(data = data, Qstar_M = update$Qstar_M, 
+                                    Qstar_Mg = Qstar_Mg, Hm = update$Hm, A_ps = A_ps, 
                                     a = a, tmle = TRUE,
-                                    EE = FALSE, bootstrap = TRUE)
+                                    EE = FALSE, bootstrap = TRUE, form = forms$QZform)
         # compile all estimates
         return(list(tmle_est = tmle_info, EE_est = EE_mle_info[1], iptw_est = iptw_info, 
                     mle_est = EE_mle_info[2]))
@@ -248,14 +248,15 @@ SDE_glm4 = function(data, covariates, truth = NULL, truncate = list(lower =.0001
 
 #' @title get_gstarM_glm
 #' @export
-get_gstarM_glm  = function(data, covariates, truth) 
+get_gstarM_glm  = function(data, truth, forms) 
 {
   W = data[,grep("W", colnames(data))]
-  
+  Mstarform = forms$Mstarform
+  Zstarform = forms$Zstarform
   # fit M for S = 1
-  Mstarform = paste0("M ~ ", paste(covariates$covariates_M, collapse = "+"))
+  # Mstarform = paste0("M ~ ", paste(covariates$covariates_M, collapse = "+"))
   Mstarfit = glm(formula = Mstarform, data = data[data$S==1,], family = binomial())
-  Zstarform = paste0("Z ~ ", paste(covariates$covariates_Z, collapse = "+"))
+  # Zstarform = paste0("Z ~ ", paste(covariates$covariates_Z, collapse = "+"))
   Zstarfit = glm(formula = Zstarform, data = data[data$S==1,], family = binomial())
   
   # find the truth if simulating
@@ -389,7 +390,8 @@ get_gstarM_glm  = function(data, covariates, truth)
 
 
 #' @export
-get.mediation.initdata_glm = function(data, covariates, sl) {
+get.mediation.initdata_glm = function(data, covariates, forms, RCT = 0.5) {
+  
   W = data[,grep("W", colnames(data))]
   df_YM1S1 = data
   df_YM1S1$M = 1
@@ -408,25 +410,32 @@ get.mediation.initdata_glm = function(data, covariates, sl) {
     outcome = "Y"
   )
   
-  Yform = paste0("Y ~ ", paste(covariates$covariates_Y, collapse = "+"))
+  # Yform = paste0("Y ~ ", paste(covariates$covariates_Y, collapse = "+"))
+  Yform = forms$Yform
   Yfit = glm(formula = Yform, data = data[data$S==1,], family = binomial())
   
-  Mform = paste0("M ~ ", paste(covariates$covariates_M, collapse = "+"))
+  # Mform = paste0("M ~ ", paste(covariates$covariates_M, collapse = "+"))
+  Mform = forms$Mstarform
   Mfit = glm(formula = Mform, data = data[data$S==1,], family = binomial())
   
-  Zform = paste0("Z ~ ", paste(covariates$covariates_Z, collapse = "+"))
+  # Zform = paste0("Z ~ ", paste(covariates$covariates_Z, collapse = "+"))
+  Zform = forms$Zstarform
   Zfit = glm(formula = Zform, data = data, family = binomial())
   
-  Aform = paste0("A ~ ", paste(covariates$covariates_A, collapse = "+"))
+  # Aform = paste0("A ~ ", paste(covariates$covariates_A, collapse = "+"))
+  if (is.null(RCT)) { 
+  Aform = forms$Aform
   Afit = glm(formula = Aform, data = data, family = binomial())
+  }
   
-  Sform = paste0("S ~ ", paste(covariates$covariates_S, collapse = "+"))
+  # Sform = paste0("S ~ ", paste(covariates$covariates_S, collapse = "+"))
+  Sform = forms$Sform
   Sfit = glm(formula = Sform, data = data, family = binomial())
   
   # propensity scores
   S_ps = predict(Sfit, type = 'response')
   PS0 = mean(data$S == 0)
-  A_ps = predict(Afit, type = 'response')
+  if (is.null(RCT)) A_ps = predict(Afit, type = 'response') else A_ps = RCT
   Z_ps = predict(Zfit, type = 'response')
   ZS0_ps = predict(Zfit, newdata = df_ZS0, type = 'response')
   # might as well predict for S = 1 on whole data because only S = 1 subset is relevant
@@ -475,14 +484,15 @@ mediation.step1_glm = function(initdata, Y_preds, data, gstarM_astar, a) {
   
 
 #' @export
-mediation.step2_glm = function(data, sl, Qstar_M, Qstar_Mg, covariates_QZ, Hm, A_ps, a, tmle = TRUE,
-                         EE = FALSE, bootstrap = FALSE) {
+mediation.step2_glm = function(data, Qstar_M, Qstar_Mg, Hm, A_ps, a, tmle = TRUE,
+                         EE = FALSE, bootstrap = FALSE, form) {
 
   PS0 = mean(data$S==0)
   df_QZ = data
   df_QZ$Qstar_Mg = Qstar_Mg
   
-  QZform = formula(paste0("Qstar_Mg ~ ", paste(covariates$covariates_QZ, collapse = "+")))
+  # QZform = formula(paste0("Qstar_Mg ~ ", paste(covariates$covariates_QZ, collapse = "+")))
+  QZform = form
   QZfit = glm(formula = QZform, data = df_QZ[df_QZ$A==a, ], family = binomial())
   # compute the clever covariate and update if tmle
   if (tmle) {

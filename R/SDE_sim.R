@@ -76,7 +76,7 @@ SDE_tmle4 = function(data, sl, V=10, covariates, truth = NULL,
   # bootstrap from the data and thus the gstarM_astar1 and gstarM_astar0
   n = nrow(data)
   if (!is.null(B)) {
-    boot_ests = lapply(1:B, FUN = function(x) {
+  boot_ests = lapply(1:B, FUN = function(x) {
     inds = sample(1:n, replace = TRUE)
     data = data[inds,]
     init_info = get.mediation.initdata(data = data, covariates = covariates, sl = sl)
@@ -86,7 +86,6 @@ SDE_tmle4 = function(data, sl, V=10, covariates, truth = NULL,
     
     est_info = lapply(0:1, FUN = function(astar) {
       return(lapply(0:1, FUN = function(a) {
-        
         update = mediation.step1(initdata = init_info$initdata, Y_preds = Y_preds, data = data, 
                                  gstarM_astar[[astar+1]], a)
         iptw_info = update$est_iptw
@@ -105,7 +104,7 @@ SDE_tmle4 = function(data, sl, V=10, covariates, truth = NULL,
                                     a = a, tmle = TRUE,
                                     EE = FALSE, bootstrap = TRUE)
         # compile all estimates
-        return(list(tmle_est = tmle_info, EE_est = EE_mle_info[1], iptw_est = iptw_info, 
+        return(list(tmle_est = tmle_info, EE_est = EE_mle_info[1], iptw_est = iptw_info,
                     mle_est = EE_mle_info[2]))
       }))
     })
