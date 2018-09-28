@@ -91,7 +91,7 @@ forms = list(Sform = "S~W2", Aform = NULL, Zstarform = "Z ~ A+W2+S", Mstarform =
 # c(p$CI_SDE, p$CI_SDE_1s,p$CI_SDE_iptw, SDE_0 = p$SDE_0, SE_SDE_0 = p$SE_SDE_0)
 # 
 # c(p$CI_SIE, p$CI_SIE_1s,p$CI_SIE_iptw, SIE_0 = p$SIE_0, SE_SIE_0 = p$SE_SIE_0)
-
+# 
 # IC_info = get_trueIC(100000, truth = func_list, forms = forms)
 # max(IC_info$Hm_astar0a1_0)
 # max(IC_info$Hm_astar0a0_0)
@@ -134,7 +134,7 @@ n=100
 res100_well = mclapply(1:B, FUN = function(x) sim_kara(n=100, forms=forms, truth=func_list, B = NULL), 
                        mc.cores = getOption("mc.cores", 20L))
 
-save(res100_well, func_list, covariates, file = "results5/res100_well.RData")
+save(res100_well, func_list, forms, file = "results5/res100_well.RData")
 
 B = 1000
 n=500
@@ -142,7 +142,7 @@ n=500
 res500_well = mclapply(1:B, FUN = function(x) sim_kara(n=500, forms=forms, truth=func_list, B = NULL), 
                        mc.cores = getOption("mc.cores", 20L))
 
-save(res500_well, func_list, covariates, file = "results5/res500_well.RData")
+save(res500_well, func_list, forms, file = "results5/res500_well.RData")
 
 B = 1000
 n=5000
@@ -150,6 +150,6 @@ n=5000
 res5000_well = mclapply(1:B, FUN = function(x) sim_kara(n=5000, forms=forms, truth=func_list, B = NULL), 
                         mc.cores = getOption("mc.cores", 20L))
 
-save(res5000_well, func_list, covariates, file = "results5/res5000_well.RData")
+save(res5000_well, func_list, forms, file = "results5/res5000_well.RData")
 
 
