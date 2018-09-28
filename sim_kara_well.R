@@ -134,7 +134,7 @@ n=100
 res100_well = mclapply(1:B, FUN = function(x) sim_kara(n=100, forms=forms, truth=func_list, B = NULL), 
                        mc.cores = getOption("mc.cores", 20L))
 
-save(res100_well, func_list, forms, file = "results6/res100_well.RData")
+save(res100_well, func_list, forms, file = "results7/res100_well.RData")
 
 B = 1000
 n=500
@@ -142,7 +142,7 @@ n=500
 res500_well = mclapply(1:B, FUN = function(x) sim_kara(n=500, forms=forms, truth=func_list, B = NULL), 
                        mc.cores = getOption("mc.cores", 20L))
 
-save(res500_well, func_list, forms, file = "results6/res500_well.RData")
+save(res500_well, func_list, forms, file = "results7/res500_well.RData")
 
 B = 1000
 n=5000
@@ -150,6 +150,6 @@ n=5000
 res5000_well = mclapply(1:B, FUN = function(x) sim_kara(n=5000, forms=forms, truth=func_list, B = NULL), 
                         mc.cores = getOption("mc.cores", 20L))
 
-save(res5000_well, func_list, forms, file = "results6/res5000_well.RData")
+save(res5000_well, func_list, forms, file = "results7/res5000_well.RData")
 
 
