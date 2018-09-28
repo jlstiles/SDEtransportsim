@@ -37,7 +37,7 @@ mean(A)
 
 f_Z = function(A,S,W) {
   df = cbind(S=S, W, A = A)
-  with(df, plogis(A*log(40) - log(4)*W2 - log(10)*S))
+  with(df, plogis(A*log(10) - log(4)*W2 - log(6)*S))
 }
 
 pzscores = f_Z(A,S,W)
@@ -49,7 +49,7 @@ min(pzscores)
 
 f_M = function(Z,W,S) {
   df = cbind(S=S, W, Z = Z)
-  with(df, plogis(-log(3) + log(20)*Z - log(5)*W2 + .1*S))
+  with(df, plogis(-log(3) + log(10)*Z - log(5)*W2 + .1*S))
 }
 Mscores = f_M(Z,W,S)
 hist(Mscores, 200)
@@ -60,7 +60,7 @@ min(Mscores)
 
 f_Y = function(M,Z,W) {
   df = cbind(M=M, Z = Z, W)
-  with(df, plogis(log(1.2)  + log(40)*Z  - log(100)*M - log(1.2)*W2 - log(80)*W2*Z))
+  with(df, plogis(log(1.2)  + log(40)*Z  - log(30)*M - log(1.2)*W2 - log(20)*W2*Z))
 }
 
 Yscores = f_Y(M,Z,W)
@@ -87,7 +87,7 @@ forms = list(Sform = "S~W2", Aform = NULL, Zstarform = "Z ~ A+W2+S", Mstarform =
 
 # this gives CI's for tmle, EE and iptw for SDE and SIE as well as the truths'
 # debug(SDE_glm4)
-# p = sim_kara(5000, forms, truth = func_list, B=NULL)
+# p = sim_kara(100000, forms, truth = func_list, B=NULL)
 # c(p$CI_SDE, p$CI_SDE_1s,p$CI_SDE_iptw, SDE_0 = p$SDE_0, SE_SDE_0 = p$SE_SDE_0)
 # 
 # c(p$CI_SIE, p$CI_SIE_1s,p$CI_SIE_iptw, SIE_0 = p$SIE_0, SE_SIE_0 = p$SE_SIE_0)
@@ -134,7 +134,7 @@ n=100
 res100_well = mclapply(1:B, FUN = function(x) sim_kara(n=100, forms=forms, truth=func_list, B = NULL), 
                        mc.cores = getOption("mc.cores", 20L))
 
-save(res100_well, func_list, forms, file = "results5/res100_well.RData")
+save(res100_well, func_list, forms, file = "results6/res100_well.RData")
 
 B = 1000
 n=500
@@ -142,7 +142,7 @@ n=500
 res500_well = mclapply(1:B, FUN = function(x) sim_kara(n=500, forms=forms, truth=func_list, B = NULL), 
                        mc.cores = getOption("mc.cores", 20L))
 
-save(res500_well, func_list, forms, file = "results5/res500_well.RData")
+save(res500_well, func_list, forms, file = "results6/res500_well.RData")
 
 B = 1000
 n=5000
@@ -150,6 +150,6 @@ n=5000
 res5000_well = mclapply(1:B, FUN = function(x) sim_kara(n=5000, forms=forms, truth=func_list, B = NULL), 
                         mc.cores = getOption("mc.cores", 20L))
 
-save(res5000_well, func_list, forms, file = "results5/res5000_well.RData")
+save(res5000_well, func_list, forms, file = "results6/res5000_well.RData")
 
 
