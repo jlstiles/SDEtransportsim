@@ -74,7 +74,7 @@ max(Yscores)
 # pack these functions into a DGP
 func_list = list(f_W = f_W, f_S = f_S, f_A = f_A, f_Z = f_Z, f_M = f_M, f_Y = f_Y)
 
-forms = list(Sform = "S~W2", Aform = NULL, Zstarform = "Z ~ A", Mstarform = "M ~ Z+W2", 
+forms = list(Sform = "S~W2", Aform = NULL, Zstarform = "Z ~ A + W2", Mstarform = "M ~ Z+W2", 
              Yform = "Y ~ Z", QZform = "Qstar_Mg ~ W2 + S")
 # covariates = list(covariates_S = c("W1","W2"),
 #                   covariates_A = c("S","W1","W2"),
