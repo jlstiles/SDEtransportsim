@@ -385,7 +385,13 @@ get_gstarM_glm  = function(data, truth, forms)
                 Psi_astar0a1_0 = Psi_astar0a1_0, Psi_astar0a0_0 = Psi_astar0a0_0, 
                 Psi_astar1a1_0 = Psi_astar1a1_0, PS0_0 = PS0_0, 
                 D_astar0a1_0 = D_astar0a1_0, D_astar0a0_0 = D_astar0a0_0,
-                D_astar1a1_0 = D_astar1a1_0)) 
+                D_astar1a1_0 = D_astar1a1_0, 
+                Hm_astar0a1_0 = Hm_astar0a1_0, 
+                Hm_astar0a0_0 = Hm_astar0a0_0,
+                Hm_astar1a1_0 = Hm_astar1a1_0,
+                Hz_astar0a1_0 = Hz_astar0a1_0,
+                Hz_astar0a0_0 = Hz_astar0a0_0,
+                Hz_astar1a1_0 = Hz_astar1a1_0))
   } else return(list(gstarM_astar1 = gstarM_astar1, gstarM_astar0 = gstarM_astar0))
 }
 

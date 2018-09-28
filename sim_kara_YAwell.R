@@ -37,7 +37,7 @@ mean(A)
 
 f_Z = function(A,S,W) {
   df = cbind(S=S, W, A = A)
-  with(df, plogis(A*log(10) - log(2)*W2 - log(10)*S))
+  with(df, plogis(A*log(40) - log(4)*W2 - log(10)*S))
 }
 
 pzscores = f_Z(A,S,W)
@@ -49,7 +49,7 @@ min(pzscores)
 
 f_M = function(Z,W,S) {
   df = cbind(S=S, W, Z = Z)
-  with(df, plogis(-log(3) + log(10)*Z- log(40)*W2 + .1*S))
+  with(df, plogis(-log(3) + log(20)*Z - log(5)*W2 + .1*S))
 }
 Mscores = f_M(Z,W,S)
 hist(Mscores, 200)
@@ -60,7 +60,7 @@ min(Mscores)
 
 f_Y = function(M,Z,W) {
   df = cbind(M=M, Z = Z, W)
-  with(df, plogis(log(1.2)  + log(3)*Z  + 5*M - log(1.2)*W2 + log(1.2)*W2*Z))
+  with(df, plogis(log(1.2)  + log(40)*Z  - log(100)*M - log(1.2)*W2 - log(80)*W2*Z))
 }
 
 Yscores = f_Y(M,Z,W)
@@ -68,6 +68,7 @@ Y = rbinom(n, 1, Yscores)
 hist(Yscores, 200)
 min(Y*log(Yscores)+(1-Y)*log(1-Yscores))
 mean(Y)
+min(Yscores)
 max(Yscores)
 
 # pack these functions into a DGP
