@@ -37,7 +37,7 @@ mean(A)
 
 f_Z = function(A,S,W) {
   df = cbind(S=S, W, A = A)
-  with(df, plogis(A*log(10) - log(4)*W2 - log(6)*S))
+  with(df, plogis(A*log(20) - log(4)*W2 - log(6)*S))
 }
 
 pzscores = f_Z(A,S,W)
@@ -49,7 +49,7 @@ min(pzscores)
 
 f_M = function(Z,W,S) {
   df = cbind(S=S, W, Z = Z)
-  with(df, plogis(-log(3) + log(10)*Z - log(5)*W2 + .1*S))
+  with(df, plogis(-log(3) + log(15)*Z - log(5)*W2 + .1*S))
 }
 Mscores = f_M(Z,W,S)
 hist(Mscores, 200)
@@ -60,7 +60,7 @@ min(Mscores)
 
 f_Y = function(M,Z,W) {
   df = cbind(M=M, Z = Z, W)
-  with(df, plogis(log(1.2)  + log(40)*Z  - log(30)*M - log(1.2)*W2 - log(20)*W2*Z))
+  with(df, plogis(log(1.2)  + log(40)*Z  - log(60)*M - log(1.2)*W2 - log(50)*W2*Z))
 }
 
 Yscores = f_Y(M,Z,W)
@@ -86,20 +86,20 @@ forms = list(Sform = "S~W2", Aform = NULL, Zstarform = "Z ~ A+W2+S", Mstarform =
 
 
 # this gives CI's for tmle, EE and iptw for SDE and SIE as well as the truths'
-# debug(SDE_glm4)
-# p = sim_kara(100000, forms, truth = func_list, B=NULL)
-# c(p$CI_SDE, p$CI_SDE_1s,p$CI_SDE_iptw, SDE_0 = p$SDE_0, SE_SDE_0 = p$SE_SDE_0)
-# 
-# c(p$CI_SIE, p$CI_SIE_1s,p$CI_SIE_iptw, SIE_0 = p$SIE_0, SE_SIE_0 = p$SE_SIE_0)
-# 
-# IC_info = get_trueIC(100000, truth = func_list, forms = forms)
-# max(IC_info$Hm_astar0a1_0)
-# max(IC_info$Hm_astar0a0_0)
-# max(IC_info$Hm_astar0a0_0)
-# 
-# max(IC_info$Hz_astar0a1_0)
-# max(IC_info$Hz_astar0a0_0)
-# max(IC_info$Hz_astar0a0_0)
+# undebug(get_gstarM_glm)
+p = sim_kara(100000, forms, truth = func_list, B=NULL)
+c(p$CI_SDE, p$CI_SDE_1s,p$CI_SDE_iptw, SDE_0 = p$SDE_0, SE_SDE_0 = p$SE_SDE_0)
+
+c(p$CI_SIE, p$CI_SIE_1s,p$CI_SIE_iptw, SIE_0 = p$SIE_0, SE_SIE_0 = p$SE_SIE_0)
+#
+IC_info = get_trueIC(100000, truth = func_list, forms = forms)
+max(IC_info$Hm_astar0a1_0)
+max(IC_info$Hm_astar0a0_0)
+max(IC_info$Hm_astar0a0_0)
+
+max(IC_info$Hz_astar0a1_0)
+max(IC_info$Hz_astar0a0_0)
+max(IC_info$Hz_astar0a0_0)
 
 sim_kara = function(n, forms, truth, B = NULL) {
 

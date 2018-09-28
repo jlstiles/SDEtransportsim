@@ -258,7 +258,7 @@ get_gstarM_glm  = function(data, truth, forms)
   # Mstarform = paste0("M ~ ", paste(covariates$covariates_M, collapse = "+"))
   Mstarfit = glm(formula = Mstarform, data = data[data$S==1,], family = binomial())
   # Zstarform = paste0("Z ~ ", paste(covariates$covariates_Z, collapse = "+"))
-  Zstarfit = glm(formula = Zstarform, data = data[data$S==1,], family = binomial())
+  Zstarfit = glm(formula = Zstarform, data = data, family = binomial())
   
   # find the truth if simulating
   f_truth0 = function(Z, W, S) {

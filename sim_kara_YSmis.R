@@ -37,7 +37,7 @@ mean(A)
 
 f_Z = function(A,S,W) {
   df = cbind(S=S, W, A = A)
-  with(df, plogis(A*log(10) - log(4)*W2 - log(6)*S))
+  with(df, plogis(A*log(20) - log(4)*W2 - log(6)*S))
 }
 
 pzscores = f_Z(A,S,W)
@@ -49,7 +49,7 @@ min(pzscores)
 
 f_M = function(Z,W,S) {
   df = cbind(S=S, W, Z = Z)
-  with(df, plogis(-log(3) + log(10)*Z - log(5)*W2 + .1*S))
+  with(df, plogis(-log(3) + log(15)*Z - log(5)*W2 + .1*S))
 }
 Mscores = f_M(Z,W,S)
 hist(Mscores, 200)
@@ -60,7 +60,7 @@ min(Mscores)
 
 f_Y = function(M,Z,W) {
   df = cbind(M=M, Z = Z, W)
-  with(df, plogis(log(1.2)  + log(40)*Z  - log(30)*M - log(1.2)*W2 - log(20)*W2*Z))
+  with(df, plogis(log(1.2)  + log(40)*Z  - log(60)*M - log(1.2)*W2 - log(50)*W2*Z))
 }
 
 Yscores = f_Y(M,Z,W)
@@ -73,9 +73,6 @@ max(Yscores)
 
 # pack these functions into a DGP
 func_list = list(f_W = f_W, f_S = f_S, f_A = f_A, f_Z = f_Z, f_M = f_M, f_Y = f_Y)
-
-forms = list(Sform = "S~1", Aform = NULL, Zstarform = "Z ~ A+W2+S", Mstarform = "M ~ Z + W2", 
-             Yform = "Y ~ Z", QZform = "Qstar_Mg ~ W2 + S")
 # 
 # covariates = list(covariates_S = c("W1","W2"),
 #                   covariates_A = c("S","W1","W2"),
@@ -87,7 +84,7 @@ forms = list(Sform = "S~1", Aform = NULL, Zstarform = "Z ~ A+W2+S", Mstarform = 
 
 # this gives CI's for tmle, EE and iptw for SDE and SIE as well as the truths'
 # debug(SDE_glm4)
-# p = sim_kara(5000, forms, truth = func_list, B=NULL)
+# p = sim_kara(100000, forms, truth = func_list, B=NULL)
 # c(p$CI_SDE, p$CI_SDE_1s,p$CI_SDE_iptw, SDE_0 = p$SDE_0, SE_SDE_0 = p$SE_SDE_0)
 # 
 # c(p$CI_SIE, p$CI_SIE_1s,p$CI_SIE_iptw, SIE_0 = p$SIE_0, SE_SIE_0 = p$SE_SIE_0)
