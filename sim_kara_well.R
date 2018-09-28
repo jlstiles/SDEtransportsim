@@ -87,19 +87,19 @@ forms = list(Sform = "S~W2", Aform = NULL, Zstarform = "Z ~ A+W2+S", Mstarform =
 
 # this gives CI's for tmle, EE and iptw for SDE and SIE as well as the truths'
 # undebug(get_gstarM_glm)
-p = sim_kara(100000, forms, truth = func_list, B=NULL)
-c(p$CI_SDE, p$CI_SDE_1s,p$CI_SDE_iptw, SDE_0 = p$SDE_0, SE_SDE_0 = p$SE_SDE_0)
-
-c(p$CI_SIE, p$CI_SIE_1s,p$CI_SIE_iptw, SIE_0 = p$SIE_0, SE_SIE_0 = p$SE_SIE_0)
-#
-IC_info = get_trueIC(100000, truth = func_list, forms = forms)
-max(IC_info$Hm_astar0a1_0)
-max(IC_info$Hm_astar0a0_0)
-max(IC_info$Hm_astar0a0_0)
-
-max(IC_info$Hz_astar0a1_0)
-max(IC_info$Hz_astar0a0_0)
-max(IC_info$Hz_astar0a0_0)
+# p = sim_kara(100000, forms, truth = func_list, B=NULL)
+# c(p$CI_SDE, p$CI_SDE_1s,p$CI_SDE_iptw, SDE_0 = p$SDE_0, SE_SDE_0 = p$SE_SDE_0)
+# 
+# c(p$CI_SIE, p$CI_SIE_1s,p$CI_SIE_iptw, SIE_0 = p$SIE_0, SE_SIE_0 = p$SE_SIE_0)
+# #
+# IC_info = get_trueIC(100000, truth = func_list, forms = forms)
+# max(IC_info$Hm_astar0a1_0)
+# max(IC_info$Hm_astar0a0_0)
+# max(IC_info$Hm_astar0a0_0)
+# 
+# max(IC_info$Hz_astar0a1_0)
+# max(IC_info$Hz_astar0a0_0)
+# max(IC_info$Hz_astar0a0_0)
 
 sim_kara = function(n, forms, truth, B = NULL) {
 
