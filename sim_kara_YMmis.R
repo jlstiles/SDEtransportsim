@@ -35,9 +35,9 @@ mean(A)
 # make an intermediate confounder model
 
 
-f_Z = function(A,S,W) {
-  df = cbind(S=S, W, A = A)
-  with(df, plogis(A*log(20) - log(4)*W2 - log(6)*S))
+f_Z = function (A, S, W) {
+  df = cbind(S = S, W, A = A)
+  with(df, plogis(A * log(20) + log(10)*W2 - log(16) * S-.2))
 }
 
 pzscores = f_Z(A,S,W)
@@ -59,8 +59,9 @@ max(Mscores)
 min(Mscores)
 
 f_Y = function(M,Z,W) {
-  df = cbind(M=M, Z = Z, W)
-  with(df, plogis(log(1.2)  + log(40)*Z  - log(60)*M - log(1.2)*W2 - log(50)*W2*Z))
+  df = cbind(M = M, Z = Z, W)
+  with(df, plogis(log(1.2) + log(40) * Z - log(60) * M - log(1.2) * 
+                    W2 - log(50) * W2 * Z))
 }
 
 Yscores = f_Y(M,Z,W)
@@ -74,7 +75,7 @@ max(Yscores)
 # pack these functions into a DGP
 func_list = list(f_W = f_W, f_S = f_S, f_A = f_A, f_Z = f_Z, f_M = f_M, f_Y = f_Y)
 
-forms = list(Sform = "S~W2", Aform = NULL, Zstarform = "Z ~ A+W2+S", Mstarform = "M ~ Z", 
+forms = list(Sform = "S~W2", Aform = NULL, Zstarform = "Z ~ A + A:W2 + W2 + S", Mstarform = "M ~ Z", 
              Yform = "Y ~ Z", QZform = "Qstar_Mg ~ W2 + S")
 # 
 # covariates = list(covariates_S = c("W1","W2"),
@@ -114,7 +115,7 @@ n=100
 res100_YMmis = mclapply(1:B, FUN = function(x) sim_kara(n=100, forms=forms, truth=func_list, B = NULL), 
                        mc.cores = getOption("mc.cores", 20L))
 
-save(res100_YMmis, func_list, forms, file = "results7/res100_YMmis.RData")
+save(res100_YMmis, func_list, forms, file = "results8/res100_YMmis.RData")
 
 B = 1000
 n=500
@@ -122,7 +123,7 @@ n=500
 res500_YMmis = mclapply(1:B, FUN = function(x) sim_kara(n=500, forms=forms, truth=func_list, B = NULL), 
                        mc.cores = getOption("mc.cores", 20L))
 
-save(res500_YMmis, func_list, forms, file = "results7/res500_YMmis.RData")
+save(res500_YMmis, func_list, forms, file = "results8/res500_YMmis.RData")
 
 B = 1000
 n=5000
@@ -130,4 +131,4 @@ n=5000
 res5000_YMmis = mclapply(1:B, FUN = function(x) sim_kara(n=5000, forms=forms, truth=func_list, B = NULL), 
                         mc.cores = getOption("mc.cores", 20L))
 
-save(res5000_YMmis, func_list, forms, file = "results7/res5000_YMmis.RData")
+save(res5000_YMmis, func_list, forms, file = "results8/res5000_YMmis.RData")

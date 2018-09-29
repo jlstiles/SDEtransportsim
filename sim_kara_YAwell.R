@@ -35,9 +35,9 @@ mean(A)
 # make an intermediate confounder model
 
 
-f_Z = function(A,S,W) {
-  df = cbind(S=S, W, A = A)
-  with(df, plogis(A*log(20) - log(4)*W2 - log(6)*S))
+f_Z = function (A, S, W) {
+  df = cbind(S = S, W, A = A)
+  with(df, plogis(A * log(20) + log(10)*W2 - log(16) * S-.2))
 }
 
 pzscores = f_Z(A,S,W)
@@ -59,8 +59,9 @@ max(Mscores)
 min(Mscores)
 
 f_Y = function(M,Z,W) {
-  df = cbind(M=M, Z = Z, W)
-  with(df, plogis(log(1.2)  + log(40)*Z  - log(60)*M - log(1.2)*W2 - log(50)*W2*Z))
+  df = cbind(M = M, Z = Z, W)
+  with(df, plogis(log(1.2) + log(40) * Z - log(60) * M - log(1.2) * 
+                    W2 - log(50) * W2 * Z))
 }
 
 Yscores = f_Y(M,Z,W)
@@ -74,7 +75,7 @@ max(Yscores)
 # pack these functions into a DGP
 func_list = list(f_W = f_W, f_S = f_S, f_A = f_A, f_Z = f_Z, f_M = f_M, f_Y = f_Y)
 
-forms = list(Sform = "S~1", Aform = NULL, Zstarform = "Z ~ A + W2", Mstarform = "M ~ Z", 
+forms = list(Sform = "S~1", Aform = NULL, Zstarform = "Z ~ A", Mstarform = "M ~ Z", 
              Yform = "Y ~ Z*W2 + M", QZform = "Qstar_Mg ~ W2 + S")
 # 
 # covariates = list(covariates_S = c("W1","W2"),
@@ -91,7 +92,6 @@ forms = list(Sform = "S~1", Aform = NULL, Zstarform = "Z ~ A + W2", Mstarform = 
 # c(p$CI_SDE, p$CI_SDE_1s,p$CI_SDE_iptw, SDE_0 = p$SDE_0, SE_SDE_0 = p$SE_SDE_0)
 # 
 # c(p$CI_SIE, p$CI_SIE_1s,p$CI_SIE_iptw, SIE_0 = p$SIE_0, SE_SIE_0 = p$SE_SIE_0)
-
 
 sim_kara = function(n, forms, truth, B = NULL) {
   
@@ -115,7 +115,7 @@ n=100
 res100_YAwell = mclapply(1:B, FUN = function(x) sim_kara(n=100, forms=forms, truth=func_list, B = NULL), 
                        mc.cores = getOption("mc.cores", 20L))
 
-save(res100_YAwell, func_list, forms, file = "results7/res100_YAwell.RData")
+save(res100_YAwell, func_list, forms, file = "results8/res100_YAwell.RData")
 
 B = 1000
 n=500
@@ -123,7 +123,7 @@ n=500
 res500_YAwell = mclapply(1:B, FUN = function(x) sim_kara(n=500, forms=forms, truth=func_list, B = NULL), 
                        mc.cores = getOption("mc.cores", 20L))
 
-save(res500_YAwell, func_list, forms, file = "results7/res500_YAwell.RData")
+save(res500_YAwell, func_list, forms, file = "results8/res500_YAwell.RData")
 
 B = 1000
 n=5000
@@ -131,4 +131,4 @@ n=5000
 res5000_YAwell = mclapply(1:B, FUN = function(x) sim_kara(n=5000, forms=forms, truth=func_list, B = NULL), 
                         mc.cores = getOption("mc.cores", 20L))
 
-save(res5000_YAwell, func_list, forms, file = "results7/res5000_YAwell.RData")
+save(res5000_YAwell, func_list, forms, file = "results8/res5000_YAwell.RData")
