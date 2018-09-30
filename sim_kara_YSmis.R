@@ -44,7 +44,7 @@ for (h in 1:2)
   res500_YSmis = mclapply(1:B, FUN = function(x) sim_kara(n=500, forms=forms, truth=func_list, B = NULL), 
                           mc.cores = getOption("mc.cores", 20L))
   
-  save(res500_YSmis, func_list, forms, file = paste0("results", nn, "/res100_YSmis.RData"))
+  save(res500_YSmis, func_list, forms, file = paste0("results", nn, "/res500_YSmis.RData"))
   
   B = 1000
   n=5000
@@ -52,6 +52,6 @@ for (h in 1:2)
   res5000_YSmis = mclapply(1:B, FUN = function(x) sim_kara(n=5000, forms=forms, truth=func_list, B = NULL), 
                            mc.cores = getOption("mc.cores", 20L))
   
-  save(res5000_YSmis, func_list, forms, file = paste0("results", nn, "/res100_YSmis.RData"))
+  save(res5000_YSmis, func_list, forms, file = paste0("results", nn, "/res5000_YSmis.RData"))
   
 }
