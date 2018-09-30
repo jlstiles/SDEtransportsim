@@ -2,8 +2,8 @@
 library(SDEtransport)
 
 load("func_lists9.RData")
-func_list = func_listYZmis
-forms = formsYAwell
+func_list = func_forms9$func_listYZmis
+forms = func_forms9$formsYAwell
 
 sim_kara = function(n, forms, truth, B = NULL) {
   
