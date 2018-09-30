@@ -93,7 +93,7 @@ sim_kara = function(n, forms, truth, B = NULL) {
 
 
 # this gives CI's for tmle, EE and iptw for SDE and SIE as well as the truths'
-p = sim_kara(n = 5000, forms, truth = func_list, B = NULL)
+p = sim_kara(n = 100000, forms, truth = func_list, B = NULL)
 c(p$CI_SDE, p$CI_SDE_1s,p$CI_SDE_iptw, SDE_0 = p$SDE_0, SE_SDE_0 = p$SE_SDE_0)
 
 c(p$CI_SIE, p$CI_SIE_1s,p$CI_SIE_iptw, SIE_0 = p$SIE_0, SE_SIE_0 = p$SE_SIE_0)
