@@ -39,7 +39,7 @@ save(res500_YZmis, func_list, forms, file = "results9/res500_YZmis.RData")
 B = 100
 n=5000
 
-res5000_YZmis = mclapply(1:B, FUN = function(x) sim_kara(n=5000, forms=forms, truth=func_listYZmis, B = NULL), 
+res5000_YZmis = mclapply(1:B, FUN = function(x) sim_kara(n=5000, forms=forms, truth=func_list, B = NULL), 
                         mc.cores = getOption("mc.cores", 20L))
 
 
