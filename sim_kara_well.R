@@ -1,19 +1,10 @@
 library(SDEtransport)
 
+load("func_listsYM.RData")
+func_list = func_formsYM$func_listYMmis
+forms = func_formsYM$formswell
+nn=12
 
-for (h in 1:2)
-{
-  if (h == 1) {
-    load("func_lists9.RData")
-    func_list = func_forms9$func_listYSmis
-    forms = func_forms9$formswell
-    nn=10
-  } else {
-    load("func_lists9.RData")
-    func_list = func_forms9$func_listYMmis
-    forms = func_forms9$formswell
-    nn=11
-  }
   sim_kara = function(n, forms, truth, B = NULL) {
     
     data = gendata.SDEtransport(n, 
@@ -46,6 +37,8 @@ for (h in 1:2)
   
   save(res500_well, func_list, forms, file =  paste0("results", nn, "/res500_well.RData"))
   
+  rm("res100_well", "res500_well")
+  
   B = 1000
   n=5000
   
@@ -54,4 +47,4 @@ for (h in 1:2)
   
   save(res5000_well, func_list, forms, file = paste0("results", nn, "/res5000_well.RData"))
   
-}
+

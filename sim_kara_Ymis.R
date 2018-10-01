@@ -1,19 +1,9 @@
 library(SDEtransport)
 
-
-for (h in 1:2)
-{
-  if (h == 1) {
-    load("func_lists9.RData")
-    func_list = func_forms9$func_listYSmis
-    forms = func_forms9$formsYmis
-    nn=10
-  } else {
-    load("func_lists9.RData")
-    func_list = func_forms9$func_listYMmis
-    forms = func_forms9$formsYmis 
-    nn=11
-  }
+load("func_listsYM.RData")
+func_list = func_formsYM$func_listYMmis
+forms = func_formsYM$formsYmis
+nn=12
   
   sim_kara = function(n, forms, truth, B = NULL) {
     
@@ -47,6 +37,8 @@ for (h in 1:2)
   
   save(res500_Ymis, func_list, forms, file = paste0("results" ,nn,"/res500_Ymis.RData"))
   
+  rm("res100_Ymis", "res500_Ymis")
+  
   B = 1000
   n=5000
   
@@ -54,4 +46,4 @@ for (h in 1:2)
                           mc.cores = getOption("mc.cores", 20L))
   
   save(res5000_Ymis, func_list, forms, file = paste0("results" ,nn,"/res5000_Ymis.RData"))
-}
+
