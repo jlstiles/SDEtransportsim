@@ -7,8 +7,10 @@ func_list = func_formsYM$func_listYMmis
 forms = func_formsYM$formsYAwell
 nn=12
   
+unique(data[data$M==1 &data$S ==0, c(2,4,5)])
   sim_kara = function(n, forms, truth, B = NULL) {
-    
+    # truth = func_list
+    # n=100
     data = gendata.SDEtransport(n, 
                                 f_W = truth$f_W, 
                                 f_S = truth$f_S, 
@@ -42,9 +44,9 @@ nn=12
   # rm("res100_YAwell", "res500_YAwell")
   
   B = 100
-  n=5000
+  n=10000
   
-  res5000_YAwell = mclapply(1:B, FUN = function(x) sim_kara(n=5000, forms=forms, truth=func_list, B = NULL), 
+  res10000_YAwell = mclapply(1:B, FUN = function(x) sim_kara(n=5000, forms=forms, truth=func_list, B = NULL), 
                             mc.cores = getOption("mc.cores", 20L))
   
-  save(res5000_YAwell, func_list, forms, file = paste0("results",nn,"/res5000_YAwell.RData"))
+  save(res10000_YAwell, func_list, forms, file = paste0("results",nn,"/res10000_YAwell.RData"))
