@@ -7,7 +7,7 @@ func_list = func_formsYM$func_listYMmis
 forms = func_formsYM$formsYAwell
 nn=12
   
-unique(data[data$M==1 &data$S ==0, c(2,4,5)])
+# unique(data[data$M==1 &data$S ==0, c(2,4,5)])
   sim_kara = function(n, forms, truth, B = NULL) {
     # truth = func_list
     # n=100
