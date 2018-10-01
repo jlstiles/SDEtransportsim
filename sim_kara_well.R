@@ -39,7 +39,7 @@ nn=12
   # 
   # rm("res100_well", "res500_well")
   
-  B = 1000
+  B = 100
   n=5000
   
   res5000_well = mclapply(1:B, FUN = function(x) sim_kara(n=5000, forms=forms, truth=func_list, B = NULL), 

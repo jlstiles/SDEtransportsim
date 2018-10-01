@@ -40,7 +40,7 @@ library(parallel)
 # 
 # rm("res100_YSmis", "res500_YSmis")
 
-B = 1000
+B = 100
 n=5000
 
 res5000_YSmis = mclapply(1:B, FUN = function(x) sim_kara(n=5000, forms=forms, truth=func_list, B = NULL), 
