@@ -21,23 +21,23 @@ sim_kara = function(n, forms, truth, B = NULL) {
 
 library(parallel)
 
-B = 1000
-n=100
-
-res100_YZmis = mclapply(1:B, FUN = function(x) sim_kara(n=100, forms=forms, truth=func_list, B = NULL),
-                        mc.cores = getOption("mc.cores", 20L))
-
-save(res100_YZmis, func_list, forms, file = paste0("results", nn, "/res100_YZmis.RData"))
-
-B = 1000
-n=500
-
-res500_YZmis = mclapply(1:B, FUN = function(x) sim_kara(n=500, forms=forms, truth=func_list, B = NULL),
-                        mc.cores = getOption("mc.cores", 20L))
-
-save(res500_YZmis, func_list, forms, file = paste0("results", nn, "/res500_YZmis.RData"))
-
-rm("res100_YZmis", "res500_YZmis")
+# B = 1000
+# n=100
+# 
+# res100_YZmis = mclapply(1:B, FUN = function(x) sim_kara(n=100, forms=forms, truth=func_list, B = NULL),
+#                         mc.cores = getOption("mc.cores", 20L))
+# 
+# save(res100_YZmis, func_list, forms, file = paste0("results", nn, "/res100_YZmis.RData"))
+# 
+# B = 1000
+# n=500
+# 
+# res500_YZmis = mclapply(1:B, FUN = function(x) sim_kara(n=500, forms=forms, truth=func_list, B = NULL),
+#                         mc.cores = getOption("mc.cores", 20L))
+# 
+# save(res500_YZmis, func_list, forms, file = paste0("results", nn, "/res500_YZmis.RData"))
+# 
+# rm("res100_YZmis", "res500_YZmis")
 
 B = 1000
 n=5000
