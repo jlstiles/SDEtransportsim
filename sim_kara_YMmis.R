@@ -1,12 +1,27 @@
 library(SDEtransport)
 
 
-load("func_listsYM.RData")
-func_list = func_formsYM$func_listYMmis
-forms = func_formsYM$formsYZmis
-nn=12
+type = "YMmis"
+load("func_forms.RData")
 
-  sim_kara = function(n, forms, truth, B = NULL) {
+if (type == "YMmis") {
+  func_list = func_formsYM$func_listYMmis
+  forms = func_formsYM$formsYMmis
+}
+
+if (type == "YSmis") {
+  func_list = func_formsYS$func_listYSmis
+  forms = func_formsYS$formsYMmis
+}
+
+if (type == "YZmis") {
+  func_list = func_formsYZ$func_listYZmis
+  forms = func_formsYZ$formsYMmis
+}
+
+system(paste0("mkdir -p ", paste0("results", type)))
+
+  sim_kara = function(n, forms, truth, B = 500) {
     
     data = gendata.SDEtransport(n, 
                                 f_W = truth$f_W, 
@@ -22,23 +37,23 @@ nn=12
   
   library(parallel)
   
-  # B = 1000
-  # n=100
-  # 
-  # res100_YMmis = mclapply(1:B, FUN = function(x) sim_kara(n=100, forms=forms, truth=func_list, B = NULL), 
-  #                         mc.cores = getOption("mc.cores", 20L))
-  # 
-  # save(res100_YMmis, func_list, forms, file = paste0("results",nn ,"/res100_YMmis.RData"))
-  # 
-  # B = 1000
-  # n=500
-  # 
-  # res500_YMmis = mclapply(1:B, FUN = function(x) sim_kara(n=500, forms=forms, truth=func_list, B = NULL), 
-  #                         mc.cores = getOption("mc.cores", 20L))
-  # 
-  # save(res500_YMmis, func_list, forms, file = paste0("results",nn ,"/res500_YMmis.RData"))
-  # 
-  # rm("res100_YMmis", "res500_YMmis")
+  B = 1000
+  n=100
+
+  res100_YMmis = mclapply(1:B, FUN = function(x) sim_kara(n=100, forms=forms, truth=func_list, B = NULL),
+                          mc.cores = getOption("mc.cores", 20L))
+
+  save(res100_YMmis, func_list, forms, file = paste0("results",type ,"/res100_YMmis.RData"))
+
+  B = 1000
+  n=500
+
+  res500_YMmis = mclapply(1:B, FUN = function(x) sim_kara(n=500, forms=forms, truth=func_list, B = NULL),
+                          mc.cores = getOption("mc.cores", 20L))
+
+  save(res500_YMmis, func_list, forms, file = paste0("results",type ,"/res500_YMmis.RData"))
+
+  rm("res100_YMmis", "res500_YMmis")
   
   B = 100
   n=5000
@@ -46,4 +61,4 @@ nn=12
   res5000_YMmis = mclapply(1:B, FUN = function(x) sim_kara(n=5000, forms=forms, truth=func_list, B = NULL), 
                            mc.cores = getOption("mc.cores", 20L))
   
-  save(res5000_YMmis, func_list, forms, file = paste0("results",nn ,"/res5000_YMmis.RData"))
+  save(res5000_YMmis, func_list, forms, file = paste0("results",type ,"/res5000_YMmis.RData"))
