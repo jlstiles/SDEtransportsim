@@ -152,6 +152,93 @@ else
 	${R} $< ${OUTPUT_DIR}/$<.out &
 endif
 
+simkaraYMmis1: sim_kara_YMmis1.R
+ifeq (${JOB_ENGINE},slurm)
+	${SBATCH} --nodes 1 --cpus-per-task=24 --job-name=$< ${SCRIPT_DIR}/sbatch-r.sh --file=$< --dir=${OUTPUT_DIR}
+else
+	${R} $< ${OUTPUT_DIR}/$<.out &
+endif
+
+simkaraYZmis1: sim_kara_YZmis1.R
+ifeq (${JOB_ENGINE},slurm)
+	${SBATCH} --nodes 1 --cpus-per-task=24 --job-name=$< ${SCRIPT_DIR}/sbatch-r.sh --file=$< --dir=${OUTPUT_DIR}
+else
+	${R} $< ${OUTPUT_DIR}/$<.out &
+endif
+
+simkaraYSmis1: sim_kara_YSmis1.R
+ifeq (${JOB_ENGINE},slurm)
+	${SBATCH} --nodes 1 --cpus-per-task=24 --job-name=$< ${SCRIPT_DIR}/sbatch-r.sh --file=$< --dir=${OUTPUT_DIR}
+else
+	${R} $< ${OUTPUT_DIR}/$<.out &
+endif
+
+simkarawell1: sim_kara_well1.R
+ifeq (${JOB_ENGINE},slurm)
+	${SBATCH} --nodes 1 --cpus-per-task=24 --job-name=$< ${SCRIPT_DIR}/sbatch-r.sh --file=$< --dir=${OUTPUT_DIR}
+else
+	${R} $< ${OUTPUT_DIR}/$<.out &
+endif
+
+simkaraYAwell1: sim_kara_YAwell1.R
+ifeq (${JOB_ENGINE},slurm)
+	${SBATCH} --nodes 1 --cpus-per-task=24 --job-name=$< ${SCRIPT_DIR}/sbatch-r.sh --file=$< --dir=${OUTPUT_DIR}
+else
+	${R} $< ${OUTPUT_DIR}/$<.out &
+endif
+
+simkaraYmis1: sim_kara_Ymis1.R
+ifeq (${JOB_ENGINE},slurm)
+	${SBATCH} --nodes 1 --cpus-per-task=24 --job-name=$< ${SCRIPT_DIR}/sbatch-r.sh --file=$< --dir=${OUTPUT_DIR}
+else
+	${R} $< ${OUTPUT_DIR}/$<.out &
+endif
+
+
+simkaraYMmis2: sim_kara_YMmis2.R
+ifeq (${JOB_ENGINE},slurm)
+	${SBATCH} --nodes 1 --cpus-per-task=24 --job-name=$< ${SCRIPT_DIR}/sbatch-r.sh --file=$< --dir=${OUTPUT_DIR}
+else
+	${R} $< ${OUTPUT_DIR}/$<.out &
+endif
+
+simkaraYZmis2: sim_kara_YZmis2.R
+ifeq (${JOB_ENGINE},slurm)
+	${SBATCH} --nodes 1 --cpus-per-task=24 --job-name=$< ${SCRIPT_DIR}/sbatch-r.sh --file=$< --dir=${OUTPUT_DIR}
+else
+	${R} $< ${OUTPUT_DIR}/$<.out &
+endif
+
+simkaraYSmis2: sim_kara_YSmis2.R
+ifeq (${JOB_ENGINE},slurm)
+	${SBATCH} --nodes 1 --cpus-per-task=24 --job-name=$< ${SCRIPT_DIR}/sbatch-r.sh --file=$< --dir=${OUTPUT_DIR}
+else
+	${R} $< ${OUTPUT_DIR}/$<.out &
+endif
+
+simkarawell2: sim_kara_well2.R
+ifeq (${JOB_ENGINE},slurm)
+	${SBATCH} --nodes 1 --cpus-per-task=24 --job-name=$< ${SCRIPT_DIR}/sbatch-r.sh --file=$< --dir=${OUTPUT_DIR}
+else
+	${R} $< ${OUTPUT_DIR}/$<.out &
+endif
+
+simkaraYAwell2: sim_kara_YAwell2.R
+ifeq (${JOB_ENGINE},slurm)
+	${SBATCH} --nodes 1 --cpus-per-task=24 --job-name=$< ${SCRIPT_DIR}/sbatch-r.sh --file=$< --dir=${OUTPUT_DIR}
+else
+	${R} $< ${OUTPUT_DIR}/$<.out &
+endif
+
+simkaraYmis2: sim_kara_Ymis2.R
+ifeq (${JOB_ENGINE},slurm)
+	${SBATCH} --nodes 1 --cpus-per-task=24 --job-name=$< ${SCRIPT_DIR}/sbatch-r.sh --file=$< --dir=${OUTPUT_DIR}
+else
+	${R} $< ${OUTPUT_DIR}/$<.out &
+endif
+
+
+
 # Options customized based on "7. GPU job script" at:
 # http://research-it.berkeley.edu/services/high-performance-computing/running-your-jobs
 gpu-test: gpu-test.Rmd
