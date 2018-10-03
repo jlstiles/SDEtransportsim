@@ -20,7 +20,7 @@ if (type == "YZmis") {
   forms = func_formsYZ$formsYAwell
 }
 
-system(paste0("mkdir -p ", paste0("results", type)))
+# system(paste0("mkdir -p ", paste0("results", type)))
   
 # unique(data[data$M==1 &data$S ==0, c(2,4,5)])
   sim_kara = function(n, forms, truth, B = 500) {

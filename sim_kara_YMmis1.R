@@ -19,7 +19,7 @@ if (type == "YZmis") {
   forms = func_formsYZ$formsYMmis
 }
 
-system(paste0("mkdir -p ", paste0("results", type)))
+# system(paste0("mkdir -p ", paste0("results", type)))
 
   sim_kara = function(n, forms, truth, B = 500) {
     
