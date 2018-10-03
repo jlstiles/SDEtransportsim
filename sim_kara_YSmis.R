@@ -1,5 +1,6 @@
 library(SDEtransport)
 
+boots = 500
 type = "YMmis"
 load("func_forms.RData")
 
@@ -39,7 +40,7 @@ library(parallel)
 B = 1000
 n=100
 
-res100_YSmis = mclapply(1:B, FUN = function(x) sim_kara(n=100, forms=forms, truth=func_list, B = NULL),
+res100_YSmis = mclapply(1:B, FUN = function(x) sim_kara(n=100, forms=forms, truth=func_list, B = boots),
                         mc.cores = getOption("mc.cores", 20L))
 
 save(res100_YSmis, func_list, forms, file = paste0("results", type, "/res100_YSmis.RData"))
@@ -47,7 +48,7 @@ save(res100_YSmis, func_list, forms, file = paste0("results", type, "/res100_YSm
 B = 1000
 n=500
 
-res500_YSmis = mclapply(1:B, FUN = function(x) sim_kara(n=500, forms=forms, truth=func_list, B = NULL),
+res500_YSmis = mclapply(1:B, FUN = function(x) sim_kara(n=500, forms=forms, truth=func_list, B = boots),
                         mc.cores = getOption("mc.cores", 20L))
 
 save(res500_YSmis, func_list, forms, file = paste0("results", type, "/res500_YSmis.RData"))
@@ -57,7 +58,7 @@ rm("res100_YSmis", "res500_YSmis")
 B = 100
 n=5000
 
-res5000_YSmis = mclapply(1:B, FUN = function(x) sim_kara(n=5000, forms=forms, truth=func_list, B = NULL), 
+res5000_YSmis = mclapply(1:B, FUN = function(x) sim_kara(n=5000, forms=forms, truth=func_list, B = boots), 
                          mc.cores = getOption("mc.cores", 20L))
 
 save(res5000_YSmis, func_list, forms, file = paste0("results", type, "/res5000_YSmis.RData"))

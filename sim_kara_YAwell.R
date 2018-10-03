@@ -1,6 +1,7 @@
 
 library(SDEtransport)
 
+boots = 500
 type = "YMmis"
 load("func_forms.RData")
 
@@ -42,7 +43,7 @@ system(paste0("mkdir -p ", paste0("results", type)))
   B = 1000
   n=100
 
-  res100_YAwell = mclapply(1:B, FUN = function(x) sim_kara(n=100, forms=forms, truth=func_list, B = NULL),
+  res100_YAwell = mclapply(1:B, FUN = function(x) sim_kara(n=100, forms=forms, truth=func_list, B = boots),
                            mc.cores = getOption("mc.cores", 20L))
 
   save(res100_YAwell, func_list, forms, file = paste0("results", type,"/res100_YAwell.RData"))
@@ -50,7 +51,7 @@ system(paste0("mkdir -p ", paste0("results", type)))
   B = 1000
   n=500
 
-  res500_YAwell = mclapply(1:B, FUN = function(x) sim_kara(n=500, forms=forms, truth=func_list, B = NULL),
+  res500_YAwell = mclapply(1:B, FUN = function(x) sim_kara(n=500, forms=forms, truth=func_list, B = boots),
                            mc.cores = getOption("mc.cores", 20L))
 
   save(res500_YAwell, func_list, forms, file = paste0("results", type,"/res500_YAwell.RData"))
@@ -60,7 +61,7 @@ system(paste0("mkdir -p ", paste0("results", type)))
   B = 100
   n=10000
   
-  res10000_YAwell = mclapply(1:B, FUN = function(x) sim_kara(n=5000, forms=forms, truth=func_list, B = NULL), 
+  res10000_YAwell = mclapply(1:B, FUN = function(x) sim_kara(n=5000, forms=forms, truth=func_list, B = boots), 
                             mc.cores = getOption("mc.cores", 20L))
   
   save(res10000_YAwell, func_list, forms, file = paste0("results", type,"/res10000_YAwell.RData"))

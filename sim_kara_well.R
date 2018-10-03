@@ -1,5 +1,6 @@
 library(SDEtransport)
 
+boots = 500
 type = "YMmis"
 load("func_forms.RData")
 
@@ -38,7 +39,7 @@ system(paste0("mkdir -p ", paste0("results", type)))
   B = 1000
   n=100
 
-  res100_well = mclapply(1:B, FUN = function(x) sim_kara(n=100, forms=forms, truth=func_list, B = NULL),
+  res100_well = mclapply(1:B, FUN = function(x) sim_kara(n=100, forms=forms, truth=func_list, B = boots),
                          mc.cores = getOption("mc.cores", 20L))
 
   save(res100_well, func_list, forms, file = paste0("results", type, "/res100_well.RData"))
@@ -46,7 +47,7 @@ system(paste0("mkdir -p ", paste0("results", type)))
   B = 1000
   n=500
 
-  res500_well = mclapply(1:B, FUN = function(x) sim_kara(n=500, forms=forms, truth=func_list, B = NULL),
+  res500_well = mclapply(1:B, FUN = function(x) sim_kara(n=500, forms=forms, truth=func_list, B = boots),
                          mc.cores = getOption("mc.cores", 20L))
 
   save(res500_well, func_list, forms, file =  paste0("results", type, "/res500_well.RData"))
@@ -56,7 +57,7 @@ system(paste0("mkdir -p ", paste0("results", type)))
   B = 100
   n=5000
   
-  res5000_well = mclapply(1:B, FUN = function(x) sim_kara(n=5000, forms=forms, truth=func_list, B = NULL), 
+  res5000_well = mclapply(1:B, FUN = function(x) sim_kara(n=5000, forms=forms, truth=func_list, B = boots), 
                           mc.cores = getOption("mc.cores", 20L))
   
   save(res5000_well, func_list, forms, file = paste0("results", type, "/res5000_well.RData"))
