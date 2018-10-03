@@ -90,7 +90,7 @@ SDE_glm4 = function(data, truth = NULL, truncate = list(lower =.0001, upper = .9
                                       a = a, tmle = FALSE,
                                       EE = TRUE, bootstrap = TRUE, form = forms$QZform)
         
-        Qstar_Mg = get.stochasticM(gstarM_astar[[astar+1]], update$Qstar_M1, update$Qstar_M1) 
+        Qstar_Mg = get.stochasticM(gstarM_astar[[astar+1]], update$Qstar_M1, update$Qstar_M0) 
         # compute Qstar_Mg here
         tmle_info = mediation.step2_glm(data = data, Qstar_M = update$Qstar_M, 
                                     Qstar_Mg = Qstar_Mg, Hm = update$Hm, A_ps = A_ps, 
@@ -104,7 +104,6 @@ SDE_glm4 = function(data, truth = NULL, truncate = list(lower =.0001, upper = .9
   })
   
     boot_ests = lapply(boot_ests, FUN = function(boot) {
-      unlist(boot[[1]][[2]]) - unlist(boot[[1]][[1]])
       SDE = unlist(boot[[1]][[2]]) - unlist(boot[[1]][[1]])
       SIE = unlist(boot[[2]][[2]]) - unlist(boot[[1]][[2]])
       return(list(SDE, SIE))
