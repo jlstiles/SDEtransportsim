@@ -59,9 +59,9 @@ system(paste0("mkdir -p ", paste0("results", type)))
   rm("res100_YAwell", "res500_YAwell")
   
   B = 1000
-  n=10000
+  n=1000
   
-  res10000_YAwell = mclapply(1:B, FUN = function(x) sim_kara(n=5000, forms=forms, truth=func_list, B = boots), 
+  res5000_YAwell = mclapply(1:B, FUN = function(x) sim_kara(n=5000, forms=forms, truth=func_list, B = boots), 
                             mc.cores = getOption("mc.cores", 20L))
   
-  save(res10000_YAwell, func_list, forms, file = paste0("results", type,"/res10000_YAwell.RData"))
+  save(res5000_YAwell, func_list, forms, file = paste0("results", type,"/res5000_YAwell.RData"))
