@@ -75,7 +75,7 @@ SDE_glm4 = function(data, truth = NULL, truncate = list(lower =.0001, upper = .9
     data = data[inds,]
     init_info = get.mediation.initdata_glm(data = data, forms = forms, RCT = RCT)
     Y_preds = init_info$Y_preds
-    gstarM_astar = list(gstarM_astar1[inds], gstarM_astar0[inds])
+    gstarM_astar = list(gstarM_astar0[inds], gstarM_astar1[inds])
     
     est_info = lapply(0:1, FUN = function(astar) {
       return(lapply(0:1, FUN = function(a) {
