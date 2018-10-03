@@ -55,7 +55,7 @@ save(res500_YZmis, func_list, forms, file = paste0("results", type, "/res500_YZm
 
 rm("res100_YZmis", "res500_YZmis")
 
-B = 100
+B = 1000
 n=5000
 
 res5000_YZmis = mclapply(1:B, FUN = function(x) sim_kara(n=5000, forms=forms, truth=func_list, B = boots), 

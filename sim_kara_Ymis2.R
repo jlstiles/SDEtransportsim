@@ -55,7 +55,7 @@ system(paste0("mkdir -p ", paste0("results", type)))
 
   rm("res100_Ymis", "res500_Ymis")
   
-  B = 100
+  B = 1000
   n=5000
   
   res5000_Ymis = mclapply(1:B, FUN = function(x) sim_kara(n=5000, forms=forms, truth=func_list, B = boots), 
