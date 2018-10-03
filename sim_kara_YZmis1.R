@@ -40,7 +40,6 @@ library(parallel)
 B = 1000
 n=100
 
-debug(SDE_glm4)
 res100_YZmis = mclapply(1:B, FUN = function(x) sim_kara(n=100, forms=forms, truth=func_list, B = boots),
                         mc.cores = getOption("mc.cores", 20L))
 
