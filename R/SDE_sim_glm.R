@@ -103,9 +103,10 @@ SDE_glm4 = function(data, truth = NULL, truncate = list(lower =.0001, upper = .9
     })
   })
   
-    boot_ests = lapply(boots, FUN = function(boot) {
-      SDE = unlist(boot[[1]]) - unlist(boot[[2]])
-      SIE = unlist(boot[[3]]) - unlist(boot[[1]])
+    boot_ests = lapply(boot_ests, FUN = function(boot) {
+      unlist(boot[[1]][[2]]) - unlist(boot[[1]][[1]])
+      SDE = unlist(boot[[1]][[2]]) - unlist(boot[[1]][[1]])
+      SIE = unlist(boot[[2]][[2]]) - unlist(boot[[1]][[2]])
       return(list(SDE, SIE))
     })
     
