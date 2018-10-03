@@ -1,4 +1,4 @@
-for (i in 1:1e6) {
-  sum(rnorm(1e6)) 
+for (i in 1:1e2) {
+  print("fun")
 }
-print("done")
+print("fun")
