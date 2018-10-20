@@ -24,7 +24,7 @@
 #' the Y model and the QZ model (SL_coef)
 #' @export
 SDE_glm4 = function(data, truth = NULL, truncate = list(lower =.0001, upper = .9999), 
-                    B = 500, forms, RCT = RCT) 
+                    B = 500, forms, RCT = 0.5) 
 {
   L = truncate$lower
   U = truncate$upper

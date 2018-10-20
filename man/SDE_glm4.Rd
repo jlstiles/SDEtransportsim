@@ -5,7 +5,7 @@
 \title{SDE_tmle3}
 \usage{
 SDE_glm4(data, truth = NULL, truncate = list(lower = 1e-04, upper = 0.9999),
-  B = 500, forms, RCT = RCT)
+  B = 500, forms, RCT = 0.5)
 }
 \arguments{
 \item{data, }{data.frame of variables in time ordering from left to right}
