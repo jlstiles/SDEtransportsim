@@ -37,7 +37,7 @@ library("SDEtransport")
 library(sl3)
 
 #Set up data generating process:
-# data generating process for 1-d W
+# data generating process for 2-d W
 f_W = function(n) {
   W1 = rnorm(n)
   W2 = rbinom(n, 1, 0.72)
@@ -80,9 +80,9 @@ forms=list(Aform = formula("A ~ W2 + W1"),
            Mstarform = formula("M ~ Z + W1 +W2"),
            Yform = formula("Y ~ M + Z + W1 + W2"))
 
-# run the tmle, specifying 2 bootstraps for bootstrap inference but obviously 2 is way too few.
+# run the tmle, no bootstrapping inference (bad for lasso anyway)
 testres = SDE_tmle_lasso(data=data, truth = NULL, truncate = list(lower =.0001, upper = .9999), 
-                        B = 2, forms, RCT = NULL) 
+                        B = NULL, forms, RCT = NULL) 
 
 
 testres

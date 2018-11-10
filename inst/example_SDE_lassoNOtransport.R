@@ -4,7 +4,7 @@ library("SDEtransport")
 library(sl3)
 
 #Set up data generating process:
-# data generating process for 1-d W
+# data generating process for 2-d W
 f_W = function(n) {
   W1 = rnorm(n)
   W2 = rbinom(n, 1, 0.72)
