@@ -19,7 +19,7 @@
 #' @return  a list with a CI's for SDE and SIE as well as the bootstrap inference for both
 #' point estimates for the means under (a*,a) combos (0,0), (0,1), (1,1) and the epsilons for
 #' both sequential regressions for those three parameters
-#' @example /inst/SDE_glm.R 
+#' @example /inst/example_SDE_glm.R 
 #' @export
 SDE_tmle_glm = function(data, truth = NULL, truncate = list(lower =.0001, upper = .9999), 
                     B = 500, forms, RCT = 0.5) 
@@ -61,11 +61,12 @@ SDE_tmle_glm = function(data, truth = NULL, truncate = list(lower =.0001, upper 
   
   # run the bootstrap 500 times
   # bootstrap from the data and thus the gstarM_astar1 and gstarM_astar0
-  n = nrow(data)
+  n = nrow(data$W)
   if (!is.null(B)) {
     boot_ests = lapply(1:B, FUN = function(x) {
     inds = sample(1:n, replace = TRUE)
-    data = data[inds,]
+    data = list(W=data$W[inds, ], S=data$S[inds], A=data$A[inds], Z=data$Z[inds], 
+                M=data$M[inds], Y=data$Y[inds])
     init_info = get.mediation.initdata_glm(data = data, forms = forms, RCT = RCT)
     Y_preds = init_info$Y_preds
     gstarM_astar = list(gstarM_astar0[inds], gstarM_astar1[inds])
@@ -195,12 +196,11 @@ SDE_tmle_glm = function(data, truth = NULL, truncate = list(lower =.0001, upper 
 #' @export
 get_gstarM_glm  = function(data, truth, forms) 
 {
-  W = data[,grep("W", colnames(data))]
-  W = as.data.frame(W)
+  W = data$W
   Mstarform = forms$Mstarform
   Zstarform = forms$Zstarform
   # fit M for S = 1
-  # Mstarform = paste0("M ~ ", paste(covariates$covariates_M, collapse = "+"))
+  data = cbind(W,S=data$S, A=data$A, Z=data$Z, M=data$M, Y=data$Y)
   Mstarfit = glm(formula = Mstarform, data = data[data$S==1,], family = binomial())
   # Zstarform = paste0("Z ~ ", paste(covariates$covariates_Z, collapse = "+"))
   Zstarfit = glm(formula = Zstarform, data = data, family = binomial())
@@ -343,8 +343,8 @@ get_gstarM_glm  = function(data, truth, forms)
 
 #' @export
 get.mediation.initdata_glm = function(data, forms, RCT = 0.5) {
-  
-  W = data[,grep("W", colnames(data))]
+
+  data = cbind(W,S=data$S, A=data$A, Z=data$Z, M=data$M, Y=data$Y)
   df_YM1S1 = data
   df_YM1S1$M = 1
   df_YM1S1$S = 1
@@ -439,6 +439,7 @@ mediation.step1_glm = function(initdata, Y_preds, data, gstarM_astar, a, iptw = 
 mediation.step2_glm = function(data, Qstar_M, Qstar_Mg, Hm, A_ps, a, tmle = TRUE,
                                EE = FALSE, bootstrap = FALSE, form) {
   
+  data = cbind(W,S=data$S, A=data$A, Z=data$Z, M=data$M, Y=data$Y)
   PS0 = mean(data$S==0)
   df_QZ = data
   df_QZ$Qstar_Mg = Qstar_Mg
