@@ -2,6 +2,7 @@
 #' @export
 gendata.SDEtransport = function(n, f_W, f_S, f_A, f_Z, f_M, f_Y) {
   W = f_W(n)
+  W = as.data.frame(W)
   P_SW = f_S(W)
   S = rbinom(n,1,P_SW)
   
@@ -21,7 +22,7 @@ gendata.SDEtransport = function(n, f_W, f_S, f_A, f_Z, f_M, f_Y) {
   Yscores = f_Y(M=M,Z=Z,W=W)
   Y = rbinom(n, 1, Yscores)
   
-  return(cbind(W, S = S, A = A, Z = Z, M = M, Y = Y))
+  return(as.data.frame(cbind(W, S = S, A = A, Z = Z, M = M, Y = Y)))
 }
 
 #' @export

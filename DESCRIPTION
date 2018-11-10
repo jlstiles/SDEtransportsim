@@ -1,6 +1,6 @@
 Package: SDEtransport
 type: Package
-Title: CATE Survival
+Title: SDEtransport
 Version: 0.1.0
 Author: Jonathan Levy <jlstilesmusic@gmail.com>
 Maintainer: Jonathan Levy <jlstilesmusic@gmail.com>
@@ -54,7 +54,8 @@ Suggests:
     rJava,
     bartMachine,
     hal9001,
-    devel
+    devel,
+    R.rsp
 Remotes:
     github::osofr/condensier,
     github::tlverse/delayed,

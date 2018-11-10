@@ -1,5 +1,4 @@
 
-#' @title SDE_tmle3
 #' @description computes the sequential regression, targeted maximum likelihood estimate
 #' for the stochastic direct effect or stochastic indirect effect when the outcome and 
 #' mediator model are only available on site 1 (S = 1).  This is a data adaptive parameter
@@ -254,7 +253,6 @@ SDE_tmle4 = function(data, sl, V=10, covariates, truth = NULL,
   }
 } 
 
-#' @title get_gstarM
 #' @export
 get_gstarM  = function(data, sl, V=10, covariates, truth) 
 {
@@ -455,7 +453,6 @@ get_gstarM  = function(data, sl, V=10, covariates, truth)
 }
 
 
-#' @export
 get.mediation.initdata = function(data, covariates, sl) {
   W = data[,grep("W", colnames(data))]
   df_YM1S1 = data
