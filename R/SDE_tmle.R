@@ -1,3 +1,4 @@
+#' @title SDE_tmle
 #' @description computes the sequential regression, targeted maximum likelihood estimate
 #' for the stochastic direct effect or stochastic indirect effect when the outcome and 
 #' mediator model are only available on site 1 (S = 1).  This is a data adaptive parameter
@@ -22,7 +23,7 @@
 #' the Y model and the QZ model (SL_coef)
 #' @example /inst/example_SDE_sl3.R 
 #' @export
-SDE_tmle4 = function(data, sl, V=10, covariates, truth = NULL, 
+SDE_tmle = function(data, sl, V=10, covariates, truth = NULL, 
                      truncate = list(lower =.0001, upper = .9999), glm_only = TRUE,
                      iptw = TRUE, onestep = TRUE, B = 500) 
 {
