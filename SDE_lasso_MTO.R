@@ -49,12 +49,16 @@ df$M2 = df$M
 df$M3 = df$M
 df$M4 = df$M
 
+# These can be easily gotten from your data.frame 
+Wnames = c("W1", "W2")
+
+# make formulas with main terms and interactions
 forms = list(
   Aform = NULL, 
-  Zstarform = formula(paste0("Z ~ (", paste(c(colnames(W), "A"), "", collapse = "+"), ")^2")), 
-  Mstarform = formula(paste0("M~ (", paste(c(colnames(W), "Z"), "", collapse = "+"), ")^2")),
-  QZform = formula(paste0("Qstar_Mg ~ (", paste(c(colnames(W)), "", collapse = "+"), ")^2")), 
-  Yform = formula(paste0("Y ~ (", paste(c(colnames(W), "Z", "M"), "", collapse = "+"), ")^2")) 
+  Zstarform = formula(paste0("Z ~ (", paste(c(Wnames, "A"), "", collapse = "+"), ")^2")), 
+  Mstarform = formula(paste0("M~ (", paste(c(Wnames, "Z"), "", collapse = "+"), ")^2")),
+  QZform = formula(paste0("Qstar_Mg ~ (", paste(c(Wnames), "", collapse = "+"), ")^2")), 
+  Yform = formula(paste0("Y ~ (", paste(c(Wnames, "Z", "M"), "", collapse = "+"), ")^2")) 
 )
 
 # The variables for subsetting and for different mediator-oc combos
