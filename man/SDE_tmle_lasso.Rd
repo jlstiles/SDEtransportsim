@@ -32,7 +32,7 @@ a non-transport parameter.
 }
 \examples{
 # devtools::install_github("jeremyrcoyle/sl3")
-devtools::install_github("jlstiles/SDE_transport")
+# devtools::install_github("jlstiles/SDE_transport")
 library("SDEtransport")
 library(sl3)
 

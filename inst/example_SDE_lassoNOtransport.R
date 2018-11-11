@@ -1,5 +1,5 @@
 # devtools::install_github("jeremyrcoyle/sl3")
-devtools::install_github("jlstiles/SDE_transport")
+# devtools::install_github("jlstiles/SDE_transport")
 library("SDEtransport")
 library(sl3)
 
@@ -38,7 +38,7 @@ set.seed(1)
 data = gendata.SDEtransport_alt(n, f_W = f_W, f_A = f_A, f_Z = f_Z, f_M = f_M, f_Y = f_Y)
 W = data[,grep("W", colnames(data))]
 
-data = list(W=W, A=data$A, Z=data$Z, M=data$M, Y=data$Y)
+data = cbind(W, A=data$A, Z=data$Z, M=data$M, Y=data$Y)
 
 # define the forms for all the regressions
 forms=list(Aform = formula("A ~ W2 + W1"),

@@ -9,7 +9,8 @@ Depends: R (>= 2.14.0),
     mvtnorm,
     origami,
     hal9001,
-    sl3
+    sl3,
+    glmnet
 Imports:
     parallel,
     foreach,

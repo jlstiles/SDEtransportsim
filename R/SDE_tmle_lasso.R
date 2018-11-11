@@ -56,12 +56,11 @@ SDE_tmle_lasso = function(data, truth = NULL, truncate = list(lower =.0001, uppe
   
   # run the bootstrap 500 times
   # bootstrap from the data and thus the gstarM_astar1 and gstarM_astar0
-  n = nrow(data$W)
+  n = nrow(data)
   if (!is.null(B)) {
     boot_ests = lapply(1:B, FUN = function(x) {
     inds = sample(1:n, replace = TRUE)
-    data = list(W=data$W[inds, ], A=data$A[inds], Z=data$Z[inds], 
-                M=data$M[inds], Y=data$Y[inds])
+    data = data[inds, ]
     init_info = get.mediation.initdata_lasso(data = data, forms = forms, RCT = RCT)
     Y_preds = init_info$Y_preds
     gstarM_astar = list(gstarM_astar0[inds], gstarM_astar1[inds])
@@ -182,16 +181,18 @@ SDE_tmle_lasso = function(data, truth = NULL, truncate = list(lower =.0001, uppe
 #' @export
 get_gstarM_lasso  = function(data, truth, forms) 
 {
-  W = data$W
-  nn = nrow(W)
+  # W = data$W
+  # nn = nrow(W)
+  nn = nrow(data)
   Mstarform = forms$Mstarform
   Zstarform = forms$Zstarform
   # fit M for S = 1
-  data = cbind(W,A=data$A, Z=data$Z, M=data$M, Y=data$Y)
-  dataZ1 = cbind(W,A=data$A, Z=1, M=data$M, Y=data$Y)
-  dataZ0 = cbind(W,A=data$A, Z=0, M=data$M, Y=data$Y)
-  dataA1 = cbind(W,A=1, Z=data$Z, M=data$M, Y=data$Y)
-  dataA0 = cbind(W,A=0, Z=data$Z, M=data$M, Y=data$Y)
+  # data = cbind(W,A=data$A, Z=data$Z, M=data$M, Y=data$Y)
+  dataZ1 = dataZ0 = dataA1 = dataA0 = data
+  dataZ1$Z = 1
+  dataZ0$Z = 0
+  dataA1$A = 1
+  dataA0$A = 0
   
   dataMstar = model.matrix(Mstarform, data)[,-1]
   Mstarfit = cv.glmnet(dataMstar, data$M, family = "binomial")
@@ -221,7 +222,7 @@ get_gstarM_lasso  = function(data, truth, forms)
 #' @export
 get.mediation.initdata_lasso = function(data, forms, RCT = 0.5) {
 
-  data = cbind(W,A=data$A, Z=data$Z, M=data$M, Y=data$Y)
+  # data = cbind(data$W,A=data$A, Z=data$Z, M=data$M, Y=data$Y)
   df_YM1 = data
   df_YM1$M = 1
   
@@ -308,7 +309,7 @@ mediation.step2_lasso = function(data, Qstar_M, Qstar_Mg, Hm, A_ps, a, tmle = TR
                                EE = FALSE, bootstrap = FALSE, form) {
   QZform = form
   Qstar_Mg = as.vector(Qstar_Mg)
-  df = cbind(W,A=data$A, Z=data$Z, M=data$M, Qstar_Mg = Qstar_Mg, Y = data$Y)
+  df = cbind(data, Qstar_Mg = Qstar_Mg)
   
   # QZform = formula(paste0("Qstar_Mg ~ ", paste(covariates$covariates_QZ, collapse = "+")))
   df_QZ = model.matrix(QZform, df)[,-1]

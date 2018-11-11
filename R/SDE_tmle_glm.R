@@ -344,7 +344,7 @@ get_gstarM_glm  = function(data, truth, forms)
 #' @export
 get.mediation.initdata_glm = function(data, forms, RCT = 0.5) {
 
-  data = cbind(W,S=data$S, A=data$A, Z=data$Z, M=data$M, Y=data$Y)
+  data = cbind(data$W,S=data$S, A=data$A, Z=data$Z, M=data$M, Y=data$Y)
   df_YM1S1 = data
   df_YM1S1$M = 1
   df_YM1S1$S = 1
@@ -439,7 +439,7 @@ mediation.step1_glm = function(initdata, Y_preds, data, gstarM_astar, a, iptw = 
 mediation.step2_glm = function(data, Qstar_M, Qstar_Mg, Hm, A_ps, a, tmle = TRUE,
                                EE = FALSE, bootstrap = FALSE, form) {
   
-  data = cbind(W,S=data$S, A=data$A, Z=data$Z, M=data$M, Y=data$Y)
+  data = cbind(data$W,S=data$S, A=data$A, Z=data$Z, M=data$M, Y=data$Y)
   PS0 = mean(data$S==0)
   df_QZ = data
   df_QZ$Qstar_Mg = Qstar_Mg
