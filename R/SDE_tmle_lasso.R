@@ -7,20 +7,16 @@
 #' @param forms, list of formulas. Include for each necessary model for outcome, 
 #' called Yform for outcome Y, QZform for outcome Qstar_Mg, Mform, Zform, Aform (can be NULL if RCT)
 #' is selected as TRUE. 
-#' @param truncate, a list with elements lower and upper to truncate the various p-scores  
-#' not functional at present
+#' @param RCT either NULL or a value, if null, then the Aform is used to fit the propensity score, 
+#' otherwise propensity scores are set to RCT.
 #' @param B, the number of bootstraps, default is NULL and should not be changed since this will
-#' be invalid for use with lasso
+#' be invalid for use with lasso anyway.
 #' @return  a list with a CI's for SDE and SIE for the means under (a*,a) combos (0,0), (0,1), (1,1) 
 #' and the epsilons for both sequential regressions for those three parameters
 #' @example /inst/example_SDE_lassoNOtransport.R 
 #' @export
-SDE_tmle_lasso = function(data, truth = NULL, truncate = list(lower =.0001, upper = .9999), 
-                    B = NULL, forms, RCT = 0.5) 
+SDE_tmle_lasso = function(data, forms, RCT = 0.5, B = NULL, truth = NULL) 
 {
-  L = truncate$lower
-  U = truncate$upper
-  
   # get the stochastic dist of M and true params if you want 
   gstar_info = get_gstarM_lasso(data = data,forms = forms)
   gstarM_astar1 = gstar_info$gstarM_astar1
@@ -250,14 +246,12 @@ get.mediation.initdata_lasso = function(data, forms, RCT = 0.5) {
   dataZ = model.matrix(Zform, data)[,-1]
   Zfit = cv.glmnet(dataZ, data$Z, family = "binomial")
   
-  # Aform = paste0("A ~ ", paste(covariates$covariates_A, collapse = "+"))
+  # propensity scores
   if (is.null(RCT)) { 
     dataA = model.matrix(Aform, data)[,-1]
     Afit = cv.glmnet(dataA, data$A, family = "binomial")
-  }
-
-  # propensity scores
-  if (is.null(RCT)) A_ps = predict(Afit, newx = dataA, type = 'response') else A_ps = RCT
+    A_ps = predict(Afit, newx = dataA, type = 'response')
+  } else A_ps = RCT
 
   # as clev cov is 0 otherwise 
   M_ps = predict(Mfit, newx = dataM, type = 'response')

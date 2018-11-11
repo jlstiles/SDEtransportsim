@@ -76,8 +76,7 @@ results = lapply(gender, FUN = function(g) {
         # replace colnames so formulas all work
         colnames(data)[5:6] = c("M", "Y")
         # the main function here
-        res = SDE_tmle_lasso(data=data, truth = NULL, truncate = list(lower =.0001, upper = .9999), 
-                                 B = NULL, forms, RCT = .5)
+        res = SDE_tmle_lasso(data, forms, RCT = 0.5, B = NULL, truth = NULL)
         return(res)
       })
     })

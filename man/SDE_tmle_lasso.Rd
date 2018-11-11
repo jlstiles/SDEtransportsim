@@ -4,22 +4,21 @@
 \alias{SDE_tmle_lasso}
 \title{SDE_tmle_lasso}
 \usage{
-SDE_tmle_lasso(data, truth = NULL, truncate = list(lower = 1e-04, upper =
-  0.9999), B = NULL, forms, RCT = 0.5)
+SDE_tmle_lasso(data, forms, RCT = 0.5, B = NULL, truth = NULL)
 }
 \arguments{
 \item{data, }{data.frame where confounders have any names but the following, which must be
 reserved as follows: A = treatment, Z = intermediate confounder, M = mediator and Y is the outcome.}
 
-\item{truncate, }{a list with elements lower and upper to truncate the various p-scores
-not functional at present}
-
-\item{B, }{the number of bootstraps, default is NULL and should not be changed since this will
-be invalid for use with lasso}
-
 \item{forms, }{list of formulas. Include for each necessary model for outcome,
 called Yform for outcome Y, QZform for outcome Qstar_Mg, Mform, Zform, Aform (can be NULL if RCT)
 is selected as TRUE.}
+
+\item{RCT}{either NULL or a value, if null, then the Aform is used to fit the propensity score,
+otherwise propensity scores are set to RCT.}
+
+\item{B, }{the number of bootstraps, default is NULL and should not be changed since this will
+be invalid for use with lasso anyway.}
 }
 \value{
 a list with a CI's for SDE and SIE for the means under (a*,a) combos (0,0), (0,1), (1,1)
