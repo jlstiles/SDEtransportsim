@@ -72,10 +72,6 @@ results = lapply(gender, FUN = function(g) {
   lapply(site, FUN = function(s) {
     lapply(mediator, FUN = function(med) {
       lapply(outcome, FUN = function(oc) {
-        s = site[1]
-        g = gender[1]
-        med = mediator[1]
-        oc = outcome[1]
         data = subset(df, Wgender==g & S==s, select = c("W1", "W2", "A", "Z", med, oc))
         # replace colnames so formulas all work
         colnames(data)[5:6] = c("M", "Y")
