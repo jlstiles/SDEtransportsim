@@ -1,5 +1,5 @@
 # devtools::install_github("jeremyrcoyle/sl3")
-# devtools::install_github("jlstiles/SDE_transport")
+devtools::install_github("jlstiles/SDE_transport")
 library("SDEtransport")
 #Set up data generating process:
 # data generating process for 2-d W
@@ -36,17 +36,18 @@ n = 1e4
 # set.seed(1)
 df = gendata.SDEtransport_alt(n, f_W = f_W, f_A = f_A, f_Z = f_Z, f_M = f_M, f_Y = f_Y)
 
+# setting up a multinomial site variable
 df$S = apply(rmultinom(n, 1, c(.25,.25,.25,.25)), 2, FUN = function(x) which(x==1))
+
+# adding two more outcome cols so three total
 df$Y1 = df$Y
 df$Y2 = df$Y
 
+# adding four more mediator cols so 5 total
 df$M1 = df$M
 df$M2 = df$M
 df$M3 = df$M
 df$M4 = df$M
-
-W = df[, grep("W", colnames(df)[1:2])]
-head(W)
 
 forms = list(
   Aform = NULL, 
@@ -56,20 +57,25 @@ forms = list(
   Yform = formula(paste0("Y ~ (", paste(c(colnames(W), "Z", "M"), "", collapse = "+"), ")^2")) 
 )
 
-# 1st subset by gender
+# The variables for subsetting and for different mediator-oc combos
 gender = c(0,1)
 site = c(1,2,3,4)
 mediator = c("M", "M1", "M2", "M3", "M4")
 outcome = c("Y", "Y1", "Y2")
 
-
+# get all the results in a nested list
 results = lapply(gender, FUN = function(g) {
   lapply(site, FUN = function(s) {
     lapply(mediator, FUN = function(med) {
       lapply(outcome, FUN = function(oc) {
-        df_tmp = subset(df, Wgender==g & S==s, select = c("W1", "W2", "A", "Z", med, oc))
-        W = df_tmp[,grep("W", colnames(df_tmp))]
-        data = cbind(W, A=df_tmp[,"A"], Z=df_tmp[,"Z"], M=df_tmp[,med], Y=df_tmp[,oc])
+        s = site[1]
+        g = gender[1]
+        med = mediator[1]
+        oc = outcome[1]
+        data = subset(df, Wgender==g & S==s, select = c("W1", "W2", "A", "Z", med, oc))
+        # replace colnames so formulas all work
+        colnames(data)[5:6] = c("M", "Y")
+        # the main function here
         res = SDE_tmle_lasso(data=data, truth = NULL, truncate = list(lower =.0001, upper = .9999), 
                                  B = NULL, forms, RCT = .5)
         return(res)
@@ -78,6 +84,7 @@ results = lapply(gender, FUN = function(g) {
   })
 })
 
+# name the list easily as you like
 gender = c("female", "male")
 site = c("s1", "s2", "s3", "s4")
 mediator = c("M1", "M2", "M3", "M4", "M5")
@@ -95,3 +102,4 @@ for (a in 1:2) {
 }
 
 results$female$s1$M4$Y2
+

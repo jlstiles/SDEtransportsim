@@ -2,8 +2,8 @@
 #' @description computes the sequential regression, targeted maximum likelihood estimate
 #' for the stochastic direct effect or stochastic indirect effect using lasso. Note, this is
 #' a non-transport parameter.
-#' @param data, List containing elements with the following names: W is a data.frame of confounders 
-#' A = treatment, Z = intermediate confounder, M = mediator and Y is the outcome.
+#' @param data, data.frame where confounders have any names but the following, which must be 
+#' reserved as follows: A = treatment, Z = intermediate confounder, M = mediator and Y is the outcome.
 #' @param forms, list of formulas. Include for each necessary model for outcome, 
 #' called Yform for outcome Y, QZform for outcome Qstar_Mg, Mform, Zform, Aform (can be NULL if RCT)
 #' is selected as TRUE. 

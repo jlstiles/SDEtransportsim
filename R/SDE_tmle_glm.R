@@ -1,5 +1,4 @@
 
-#' @title SDE_tmle_glm
 #' @description computes the sequential regression, targeted maximum likelihood estimate
 #' for the stochastic direct effect or stochastic indirect effect when the outcome and 
 #' mediator model are only available on site 1 (S = 1).  This is a data adaptive parameter

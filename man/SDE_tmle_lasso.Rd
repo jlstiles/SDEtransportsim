@@ -8,8 +8,8 @@ SDE_tmle_lasso(data, truth = NULL, truncate = list(lower = 1e-04, upper =
   0.9999), B = NULL, forms, RCT = 0.5)
 }
 \arguments{
-\item{data, }{List containing elements with the following names: W is a data.frame of confounders
-A = treatment, Z = intermediate confounder, M = mediator and Y is the outcome.}
+\item{data, }{data.frame where confounders have any names but the following, which must be
+reserved as follows: A = treatment, Z = intermediate confounder, M = mediator and Y is the outcome.}
 
 \item{truncate, }{a list with elements lower and upper to truncate the various p-scores
 not functional at present}
@@ -71,7 +71,7 @@ set.seed(1)
 data = gendata.SDEtransport_alt(n, f_W = f_W, f_A = f_A, f_Z = f_Z, f_M = f_M, f_Y = f_Y)
 W = data[,grep("W", colnames(data))]
 
-data = list(W=W, A=data$A, Z=data$Z, M=data$M, Y=data$Y)
+data = cbind(W, A=data$A, Z=data$Z, M=data$M, Y=data$Y)
 
 # define the forms for all the regressions
 forms=list(Aform = formula("A ~ W2 + W1"),
