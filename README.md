@@ -1,2 +1,2 @@
 # SDE_transport
-transporting parameter SDE to new site
+simulations for transporting parameter SDE to new site

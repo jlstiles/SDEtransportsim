@@ -56,7 +56,7 @@ get.mediation.initdata_lasso = function(data, forms, RCT = 0.5) {
   df_YM1 = model.matrix(Yform, df_YM1)[,-1]
   df_YM0 = model.matrix(Yform, df_YM0)[,-1]
   
-  df_Z = data
+  # df_Z = data
   
   Yform = forms$Yform
   dataY = model.matrix(Yform, data)[,-1]
@@ -67,8 +67,8 @@ get.mediation.initdata_lasso = function(data, forms, RCT = 0.5) {
   Mfit = cv.glmnet(dataM, data$M, family = "binomial")
   
   # Zform = paste0("Z ~ ", paste(covariates$covariates_Z, collapse = "+"))
-  dataZ = model.matrix(Zform, data)[,-1]
-  Zfit = cv.glmnet(dataZ, data$Z, family = "binomial")
+  # dataZ = model.matrix(Zform, data)[,-1]
+  # Zfit = cv.glmnet(dataZ, data$Z, family = "binomial")
   
   # propensity scores
   if (is.null(RCT)) { 
