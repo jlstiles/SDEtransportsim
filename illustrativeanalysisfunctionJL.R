@@ -118,7 +118,7 @@ results = lapply(gender, FUN = function(g) {
 
 results_df = data.frame(matrix(rep(NA, 120*8), nrow = 120))
 # store results in a dataframe
-j=0
+j=1
 for (g in 1:length(gender)) {
   for (s in 1:length(site)) {
     for (med in 1:length(mediator)) {
