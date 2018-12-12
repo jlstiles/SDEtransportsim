@@ -11,11 +11,15 @@
 #' otherwise propensity scores are set to RCT.
 #' @param B, the number of bootstraps, default is NULL and should not be changed since this will
 #' be invalid for use with lasso anyway.
+#' @param Wnames
+#' @param Wnamesalways
+#' @param transport if true you are transporting to site S=0
+#' @param truth set permanently to NULL, not used
 #' @return  a list with a CI's for SDE and SIE for the means under (a*,a) combos (0,0), (0,1), (1,1) 
 #' and the epsilons for both sequential regressions for those three parameters
-#' @example /inst/example_SDE_lassoNOtransport.R 
+#' @example /inst/example_SDE_lasso.R 
 #' @export
-SDE_tmle_lasso = function(data, forms, RCT = 0.5, B = NULL, Wnames, Wnamesalways, transport = TRUE, 
+SDE_tmle_lasso = function(data, forms, RCT = 0.5, B = NULL, Wnames, Wnamesalways, transport = TRUE,
                           truth = NULL) 
 {
     # get the stochastic dist of M and true params if you want 
@@ -26,13 +30,9 @@ SDE_tmle_lasso = function(data, forms, RCT = 0.5, B = NULL, Wnames, Wnamesalways
     gstarM_astar = list(gstarM_astar0 = gstarM_astar0, gstarM_astar1 = gstarM_astar1)
     
     # perform initial fits for the first regression
-    if (!transport) {
-    init_info = get.mediation.initdata_lassoNT(data = data, forms = forms, RCT = RCT, Wnames = Wnames, 
-                                             Wnamesalways = Wnamesalways)
-    } else {
-      init_info = get.mediation.initdata_lasso(data = data, forms = forms, RCT = RCT, Wnames = Wnames, 
-                                               Wnamesalways = Wnamesalways)
-    }
+    
+    init_info = get.mediation.initdata_lasso(data = data, forms = forms, RCT = RCT, Wnames = Wnames, 
+                                             Wnamesalways = Wnamesalways, transport = transport)
     
     Y_preds = init_info$Y_preds
     
@@ -67,13 +67,9 @@ SDE_tmle_lasso = function(data, forms, RCT = 0.5, B = NULL, Wnames, Wnamesalways
       boot_ests = lapply(1:B, FUN = function(x) {
         inds = sample(1:n, replace = TRUE)
         data = data[inds, ]
-        if (!transport) {
-          init_info = get.mediation.initdata_lassoNT(data = data, forms = forms, RCT = RCT, Wnames = Wnames, 
-                                                     Wnamesalways = Wnamesalways)
-        } else {
-          init_info = get.mediation.initdata_lasso(data = data, forms = forms, RCT = RCT, Wnames = Wnames, 
-                                                   Wnamesalways = Wnamesalways)
-        }
+      
+        init_info = get.mediation.initdata_lassoNT(data = data, forms = forms, RCT = RCT, Wnames = Wnames, 
+                                                     Wnamesalways = Wnamesalways, transport = transport)
         Y_preds = init_info$Y_preds
         gstarM_astar = list(gstarM_astar0[inds], gstarM_astar1[inds],
                             Wnames = Wnames, Wnamesalways = Wnamesalways, 

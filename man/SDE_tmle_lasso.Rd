@@ -20,6 +20,10 @@ otherwise propensity scores are set to RCT.}
 
 \item{B, }{the number of bootstraps, default is NULL and should not be changed since this will
 be invalid for use with lasso anyway.}
+
+\item{transport}{if true you are transporting to site S=0}
+
+\item{truth}{set permanently to NULL, not used}
 }
 \value{
 a list with a CI's for SDE and SIE for the means under (a*,a) combos (0,0), (0,1), (1,1)
