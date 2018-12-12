@@ -96,35 +96,6 @@ site = c(1,2,3,4)
 mediator = c("M", "M1", "M2", "M3", "M4")
 outcome = c("Y", "Y1", "Y2")
 
-# get all the results in a nested list
-for (g in 1:length(gender)) {
-  
-  for (s in 1:length(site)) {
- 
-    for (med in 1:length(mediator)) {
-
-      for (oc in 1:length(outcome)) {
-        data = subset(df, Wgender==gender[g] & S==site[s], 
-                      select = c(mediator[med], outcome[oc], Wnames, "A", "Z", "weights"))
-        #data = subset(df, Wgender==g & S==s, select = c("W1", "W2", "A", "Z", med, oc))
-        # replace colnames so formulas all work
-        
-        colnames(data)[1:2] = c("M", "Y")
-        # the main function here
-        print(c(g,s,med,oc))
-        res = SDE_tmle_lasso(data, forms, RCT = 0.5, B = NULL, Wnames = Wnames, Wnamesalways = Wnamesalways,
-                             transport = FALSE)
-        results_df[(2*j-1),] = c(res$CI_SDE, gender[g], site[s], mediator[med], outcome[oc], "SDE") 
-        results_df[(2*j),] = c(res$CI_SIE, gender[g], site[s], mediator[med], outcome[oc], "SIE") 
-        # 1) point estimates, 2) lower CI, 3) upper CI, 4) gender, 5) site, 6) SDE or SIE, 7) mediator, 8) outcome
-        # results = append(results, res)
-        j = j + 1
-      }
-    }
-  }
-}
-results_df    
-
 results = lapply(gender, FUN = function(g) {
   lapply(site, FUN = function(s) {
     lapply(mediator, FUN = function(med) {
@@ -162,6 +133,10 @@ for (g in 1:length(gender)) {
     }
   }
 }
+
+results_df[,1:3] = apply(results_df[,1:3], 2, FUN = function(x) round(as.numeric(x), 5))    
+colnames(results_df) = c("est", "left", "right", "gender", "site", "mediator", "outcome", "param")
+subset(results_df, param=="SDE"&gender=="female")
 
 # name the list easily as you like
 gender = c("female", "male")
