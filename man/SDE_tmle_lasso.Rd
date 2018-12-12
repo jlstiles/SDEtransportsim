@@ -40,6 +40,15 @@ library("doParallel")
 #Set up data generating process:
 data(example_dgp)
 data = data_example
+
+# forms for non-transporting
+formsNT=list(Aform = formula("A ~ W2 + W1"),
+             Zstarform = formula("Z ~  A + W1 + W2"),
+             QZform = formula("Qstar_Mg ~ Z + W2 + W1"),
+             Mstarform = formula("M ~ Z + W1 + W2"),
+             Yform = formula("Y ~ M + Z + W1 + W2"))
+
+# forms for transporting
 forms=list(Sform = formula("S ~  W1 + W2"),
            Aform = formula("A ~ W2 + W1 + S"),
            Zstarform = formula("Z ~  A + W1 + W2 + S"),
@@ -47,11 +56,6 @@ forms=list(Sform = formula("S ~  W1 + W2"),
            Mstarform = formula("M ~ Z + W1 + W2"),
            Yform = formula("Y ~ M + Z + W1 + W2"))
 
-formsNT=list(Aform = formula("A ~ W2 + W1"),
-           Zstarform = formula("Z ~  A + W1 + W2"),
-           QZform = formula("Qstar_Mg ~ Z + W2 + W1"),
-           Mstarform = formula("M ~ Z + W1 + W2"),
-           Yform = formula("Y ~ M + Z + W1 + W2"))
 
 W = data[,grep("W", colnames(data))]
 head(data)
@@ -69,9 +73,13 @@ testresNT = SDE_tmle_lasso(data, forms, RCT = 0.5, Wnames = Wnames, Wnamesalways
 testres = SDE_tmle_lasso(data, forms, RCT = 0.5, Wnames = Wnames, Wnamesalways = Wnamesalways, 
                          B = NULL, transport = TRUE) 
 
-testres
+testresNT$CI_SDE
+testres$CI_SDE
+
+testresNT$CI_SIE
+testres$CI_SIE
 
 # debug(SDE_tmle_lasso)
 # debug(SDE_tmle_lassoNT)
-debug(get_gstarM_lasso)
+# debug(get_gstarM_lasso)
 }
