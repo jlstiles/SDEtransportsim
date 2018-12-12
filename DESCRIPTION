@@ -1,6 +1,6 @@
-Package: SDEtransport
+Package: SDEtransportsim
 type: Package
-Title: SDEtransport
+Title: SDEtransportsim
 Version: 0.1.0
 Author: Jonathan Levy <jlstilesmusic@gmail.com>
 Maintainer: Jonathan Levy <jlstilesmusic@gmail.com>

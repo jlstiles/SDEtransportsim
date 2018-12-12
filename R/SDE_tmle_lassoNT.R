@@ -1,38 +1,18 @@
-#' @title SDE_tmle_lasso
-#' @description computes the sequential regression, targeted maximum likelihood estimate
-#' for the stochastic direct effect or stochastic indirect effect using lasso. Note, this is
-#' a non-transport parameter.
-#' @param data, data.frame where confounders have any names but the following, which must be 
-#' reserved as follows: A = treatment, Z = intermediate confounder, M = mediator and Y is the outcome.
-#' @param forms, list of formulas. Include for each necessary model for outcome, 
-#' called Yform for outcome Y, QZform for outcome Qstar_Mg, Mform, Zform, Aform (can be NULL if RCT)
-#' is selected as TRUE. 
-#' @param RCT either NULL or a value, if null, then the Aform is used to fit the propensity score, 
-#' otherwise propensity scores are set to RCT.
-#' @param B, the number of bootstraps, default is NULL and should not be changed since this will
-#' be invalid for use with lasso anyway.
-#' @return  a list with a CI's for SDE and SIE for the means under (a*,a) combos (0,0), (0,1), (1,1) 
-#' and the epsilons for both sequential regressions for those three parameters
-#' @example /inst/example_SDE_lassoNOtransport.R 
 #' @export
-SDE_tmle_lasso = function(data, forms, RCT = 0.5, B = NULL, Wnames, Wnamesalways, transport = TRUE, 
-                          truth = NULL) 
+SDE_tmle_lassoNT = function(data, forms, RCT = 0.5, B = NULL, Wnames = Wnames, Wnamesalways = Wnamesalways,
+                            truth = NULL) 
 {
-  
-  if (!transport) {
-    info = SDE_tmle_lassoNT(data, forms, RCT = 0.5, B = NULL, Wnames = Wnames, Wnamesalways = Wnamesalways) 
-    return(info)
-  } else {
     # get the stochastic dist of M and true params if you want 
-    gstar_info = get_gstarM_lasso(data = data, forms = forms, Wnames = Wnames, Wnamesalways = Wnamesalways, 
-                                  transport = TRUE)
+    gstar_info = get_gstarM_lasso(data = data,forms = forms,
+                                  Wnames = Wnames, Wnamesalways = Wnamesalways,
+                                  transport = FALSE)
     gstarM_astar1 = gstar_info$gstarM_astar1
     gstarM_astar0 = gstar_info$gstarM_astar0
     gstarM_astar = list(gstarM_astar0 = gstarM_astar0, gstarM_astar1 = gstarM_astar1)
     
     # perform initial fits for the first regression
-    init_info = get.mediation.initdata_lasso(data = data, forms = forms, RCT = RCT, Wnames = Wnames, 
-                                             Wnamesalways = Wnamesalways)
+    init_info = get.mediation.initdata_lassoNT(data = data, forms = forms, RCT = RCT, 
+                                               Wnames = Wnames, Wnamesalways = Wnamesalways)
     Y_preds = init_info$Y_preds
     
     est_info = lapply(0:1, FUN = function(astar) {
@@ -40,7 +20,7 @@ SDE_tmle_lasso = function(data, forms, RCT = 0.5, B = NULL, Wnames, Wnamesalways
         # get tmle info
         # get iptw here while I'm at it
         update = mediation.step1_lasso(initdata = init_info$initdata, init_info$Y_preds, data = data, 
-                                       gstarM_astar[[astar+1]], a, transport = TRUE)
+                                       gstarM_astar[[astar+1]], a, transport = FALSE)
         
         Y_Mg = get.stochasticM(gstarM_astar[[astar+1]], Y_preds[[2]], Y_preds[[3]]) 
         A_ps = init_info$initdata$A_ps
@@ -51,7 +31,7 @@ SDE_tmle_lasso = function(data, forms, RCT = 0.5, B = NULL, Wnames, Wnamesalways
                                           Qstar_Mg = Qstar_Mg, Hm = update$Hm, A_ps = A_ps, 
                                           a = a, tmle = TRUE,
                                           EE = FALSE, bootstrap = FALSE, form = forms$QZform,
-                                          transport = TRUE)
+                                          transport = FALSE)
         
         # compile all estimates
         tmle_info$eps1 = update$eps
@@ -66,17 +46,17 @@ SDE_tmle_lasso = function(data, forms, RCT = 0.5, B = NULL, Wnames, Wnamesalways
       boot_ests = lapply(1:B, FUN = function(x) {
         inds = sample(1:n, replace = TRUE)
         data = data[inds, ]
-        init_info = get.mediation.initdata_lasso(data = data, forms = forms, RCT = RCT, 
-                                                 Wnames = Wnames, Wnamesalways = Wnamesalways)
+        init_info = get.mediation.initdata_lassoNT(data = data, forms = forms, RCT = RCT, 
+                                                   Wnames = Wnames, Wnamesalways = Wnamesalways)
         Y_preds = init_info$Y_preds
-        gstarM_astar = list(gstarM_astar0[inds], gstarM_astar1[inds],
+        gstarM_astar = list(gstarM_astar0[inds], gstarM_astar1[inds], 
                             Wnames = Wnames, Wnamesalways = Wnamesalways, 
-                            transport = TRUE)
+                            transport = FALSE)
         
         est_info = lapply(0:1, FUN = function(astar) {
           return(lapply(0:1, FUN = function(a) {
             update = mediation.step1_lasso(initdata = init_info$initdata, Y_preds = Y_preds, data = data, 
-                                           gstarM_astar[[astar+1]], a, transport = TRUE)
+                                           gstarM_astar[[astar+1]], a, transport = FALSE)
             
             Y_Mg = get.stochasticM(gstarM_astar[[astar+1]], Y_preds[[2]], Y_preds[[3]]) 
             A_ps = init_info$initdata$A_ps
@@ -87,7 +67,7 @@ SDE_tmle_lasso = function(data, forms, RCT = 0.5, B = NULL, Wnames, Wnamesalways
                                               Qstar_Mg = Qstar_Mg, Hm = update$Hm, A_ps = A_ps, 
                                               a = a, tmle = TRUE,
                                               EE = FALSE, bootstrap = TRUE, form = forms$QZform,
-                                              transport = TRUE)
+                                              transport = FALSE)
             # compile all estimates
             return(tmle_info)
           }))
@@ -185,6 +165,4 @@ SDE_tmle_lasso = function(data, forms, RCT = 0.5, B = NULL, Wnames, Wnamesalways
       ))
       
     }
-  } 
-}
-
+} 
