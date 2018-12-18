@@ -9,7 +9,7 @@ get_gstarM_lasso  = function(data, forms, Wnames, Wnamesalways, transport = TRUE
   # fit M for S = 1
   # data = cbind(W,A=data$A, Z=data$Z, M=data$M, Y=data$Y)
   # in case data$M = NA for S=1, we make sure model.matrix works on full data set
-  if (transport) data$M[data$S==0] = 2 
+  if (transport & !pooledM) data$M[data$S==0] = 2 
   dataZ1 = dataZ0 = dataA1 = dataA0 = data
   dataZ1$Z = 1
   dataZ0$Z = 0

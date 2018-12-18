@@ -15,12 +15,20 @@ formsNT=list(Aform = formula("A ~ W2 + W1"),
              Mstarform = formula("M ~ Z + W1 + W2"),
              Yform = formula("Y ~ M + Z + W1 + W2"))
 
-# forms for transporting
-forms=list(Sform = formula("S ~  W1 + W2"),
+# forms for transporting without a pooled M
+formsNP=list(Sform = formula("S ~  W1 + W2"),
            Aform = formula("A ~ W2 + W1 + S"),
            Zstarform = formula("Z ~  A + W1 + W2 + S"),
            QZform = formula("Qstar_Mg ~ Z + W2 + W1 + S"),
            Mstarform = formula("M ~ Z + W1 + W2"),
+           Yform = formula("Y ~ M + Z + W1 + W2"))
+
+# forms for transporting with a pooled M
+forms=list(Sform = formula("S ~  W1 + W2"),
+           Aform = formula("A ~ W2 + W1 + S"),
+           Zstarform = formula("Z ~  A + W1 + W2 + S"),
+           QZform = formula("Qstar_Mg ~ Z + W2 + W1 + S"),
+           Mstarform = formula("M ~ Z + W1 + W2 + S"),
            Yform = formula("Y ~ M + Z + W1 + W2"))
 
 
@@ -34,17 +42,22 @@ Wnames = c("W1", "W2")
 Wnamesalways = c("W1")
 # run the tmle, no bootstrapping inference (bad for lasso anyway)
 data$weights = rep(1,nrow(data))
-testresNT = SDE_tmle_lasso(data, forms, RCT = 0.5, Wnames = Wnames, Wnamesalways = Wnamesalways, 
-                         B = NULL, transport = FALSE) 
+testresNT = SDE_tmle_lasso(data, formsNT, RCT = 0.5, Wnames = Wnames, Wnamesalways = Wnamesalways, 
+                         B = NULL, transport = FALSE, pooledM = TRUE) 
 
 testres = SDE_tmle_lasso(data, forms, RCT = 0.5, Wnames = Wnames, Wnamesalways = Wnamesalways, 
-                         B = NULL, transport = TRUE) 
+                         B = NULL, transport = TRUE, pooledM = TRUE) 
+
+testresNP = SDE_tmle_lasso(data, formsNP, RCT = 0.5, Wnames = Wnames, Wnamesalways = Wnamesalways, 
+                         B = NULL, transport = TRUE, pooledM = FALSE) 
 
 testresNT$CI_SDE
 testres$CI_SDE
+testresNP$CI_SDE
 
 testresNT$CI_SIE
 testres$CI_SIE
+testresNP$CI_SIE
 
 # debug(SDE_tmle_lasso)
 # debug(SDE_tmle_lassoNT)

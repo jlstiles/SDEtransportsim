@@ -3,7 +3,10 @@ get.mediation.initdata_lasso = function(data, forms, RCT = 0.5, Wnames, Wnamesal
   
   # data = cbind(data$W,A=data$A, Z=data$Z, M=data$M, Y=data$Y)
   if (transport) {
-    data$Y[data$S!=1] = data$M[data$S!=1] = 2
+    # if not pooled avoid NA's being a pain, we won't use these outcomes
+    if (!pooledM) data$M[data$S!=1] = 2
+    # This is to avoid NA's being a pain, we won't use these outcomes
+    data$Y[data$S!=1] = 2
     df_ZS0 = data
     df_ZS0$S = 0
     Zform = forms$Zstarform

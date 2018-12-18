@@ -23,6 +23,10 @@ be invalid for use with lasso anyway.}
 
 \item{transport}{if true you are transporting to site S=0}
 
+\item{pooledM}{set to TRUE if you wish to define the stochastic intervention by the mechanism for
+the mediator defined by pooling the regression across both sites.  Otherwise the stochastic intervention
+will only be defined by the fit for S = 1.}
+
 \item{truth}{set permanently to NULL, not used}
 }
 \value{
@@ -44,6 +48,42 @@ library("doParallel")
 #Set up data generating process:
 data(example_dgp)
 data = data_example
+f_W = function(n) {
+  W1 = rnorm(n)
+  gender = rbinom(n, 1, 0.5)
+  W2 = rnorm(n)
+  data.frame(W1=W1, W2=W2, Wgender = gender)
+}
+
+f_S = function(W) {
+  with(W, plogis(-.7*W1 + 0.1*W2 + .17))
+}
+
+# make a pscore model
+f_A = function(S,W) {
+  with(W, plogis(-.7*W1 + 0.1*W2 + .17))
+}
+# make a intermediate confounder model
+f_Z = function(A,S,W) {
+  df = as.data.frame(cbind(W, A = A))
+  with(df, plogis(.4*W1 - W2 + .2*Wgender + 1*A*Wgender -.3 - .5*S))
+}
+# make an M model according to the restrictions
+f_M = function(Z,W,S) {
+  df = as.data.frame(cbind(Z=Z, W, S))
+  with(df, plogis(1*W1 - W2 + .2*Wgender- 1.2*Z + S + .1))
+}
+# make a Y model according to the restrictions, main terms linear logistic reg.
+# plug-in is biased and not robust like tmle
+f_Y = function(M,Z,W) {
+  df = as.data.frame(cbind(M = M, Z = Z, W))
+  with(df, plogis(W2*M + 3*cos(W1)*Z-.4*Wgender - .4))
+}
+
+n=1000
+data = gendata.SDEtransport(n, f_W, f_S, f_A, f_Z, f_M, f_Y)
+truths = get_gstarM_glm(data, truth, formsNP)
+debug(SDEtransportsim:::get_gstarM_glm)
 
 # forms for non-transporting
 formsNT=list(Aform = formula("A ~ W2 + W1"),
@@ -52,12 +92,20 @@ formsNT=list(Aform = formula("A ~ W2 + W1"),
              Mstarform = formula("M ~ Z + W1 + W2"),
              Yform = formula("Y ~ M + Z + W1 + W2"))
 
-# forms for transporting
-forms=list(Sform = formula("S ~  W1 + W2"),
+# forms for transporting without a pooled M
+formsNP=list(Sform = formula("S ~  W1 + W2"),
            Aform = formula("A ~ W2 + W1 + S"),
            Zstarform = formula("Z ~  A + W1 + W2 + S"),
            QZform = formula("Qstar_Mg ~ Z + W2 + W1 + S"),
            Mstarform = formula("M ~ Z + W1 + W2"),
+           Yform = formula("Y ~ M + Z + W1 + W2"))
+
+# forms for transporting with a pooled M
+forms=list(Sform = formula("S ~  W1 + W2"),
+           Aform = formula("A ~ W2 + W1 + S"),
+           Zstarform = formula("Z ~  A + W1 + W2 + S"),
+           QZform = formula("Qstar_Mg ~ Z + W2 + W1 + S"),
+           Mstarform = formula("M ~ Z + W1 + W2 + S"),
            Yform = formula("Y ~ M + Z + W1 + W2"))
 
 
@@ -71,19 +119,23 @@ Wnames = c("W1", "W2")
 Wnamesalways = c("W1")
 # run the tmle, no bootstrapping inference (bad for lasso anyway)
 data$weights = rep(1,nrow(data))
-testresNT = SDE_tmle_lasso(data, forms, RCT = 0.5, Wnames = Wnames, Wnamesalways = Wnamesalways, 
-                         B = NULL, transport = FALSE) 
+testresNT = SDE_tmle_lasso(data, formsNT, RCT = 0.5, Wnames = Wnames, Wnamesalways = Wnamesalways, 
+                         B = NULL, transport = FALSE, pooledM = TRUE) 
 
 testres = SDE_tmle_lasso(data, forms, RCT = 0.5, Wnames = Wnames, Wnamesalways = Wnamesalways, 
-                         B = NULL, transport = TRUE) 
+                         B = NULL, transport = TRUE, pooledM = TRUE) 
+
+testresNP = SDE_tmle_lasso(data, formsNP, RCT = 0.5, Wnames = Wnames, Wnamesalways = Wnamesalways, 
+                         B = NULL, transport = TRUE, pooledM = FALSE) 
 
 testresNT$CI_SDE
 testres$CI_SDE
+testresNP$CI_SDE
 
 testresNT$CI_SIE
 testres$CI_SIE
-
-# debug(SDE_tmle_lasso)
+testresNP$CI_SIE
+debug(SDE_tmle_lasso)
 # debug(SDE_tmle_lassoNT)
 # debug(get_gstarM_lasso)
 }

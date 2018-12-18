@@ -2,7 +2,6 @@
 
 export(SDE_glm4)
 export(SDE_tmle4)
-export(SDE_tmle_glm)
 export(SDE_tmle_lasso)
 export(bound)
 export(gendata.SDEtransport)

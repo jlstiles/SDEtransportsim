@@ -14,6 +14,9 @@
 #' @param Wnames
 #' @param Wnamesalways
 #' @param transport if true you are transporting to site S=0
+#' @param pooledM set to TRUE if you wish to define the stochastic intervention by the mechanism for 
+#' the mediator defined by pooling the regression across both sites.  Otherwise the stochastic intervention
+#' will only be defined by the fit for S = 1.
 #' @param truth set permanently to NULL, not used
 #' @return  a list with a CI's for SDE and SIE for the means under (a*,a) combos (0,0), (0,1), (1,1) 
 #' and the epsilons for both sequential regressions for those three parameters
