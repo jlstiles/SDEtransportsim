@@ -5,7 +5,7 @@
 \title{SDE_tmle_lasso}
 \usage{
 SDE_tmle_lasso(data, forms, RCT = 0.5, B = NULL, Wnames, Wnamesalways,
-  transport = TRUE, truth = NULL)
+  transport = TRUE, pooledM = TRUE, truth = NULL)
 }
 \arguments{
 \item{data, }{data.frame where confounders have any names but the following, which must be

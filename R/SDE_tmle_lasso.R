@@ -20,11 +20,11 @@
 #' @example /inst/example_SDE_lasso.R 
 #' @export
 SDE_tmle_lasso = function(data, forms, RCT = 0.5, B = NULL, Wnames, Wnamesalways, transport = TRUE,
-                          truth = NULL) 
+                          pooledM = TRUE, truth = NULL) 
 {
     # get the stochastic dist of M and true params if you want 
     gstar_info = get_gstarM_lasso(data = data, forms = forms, Wnames = Wnames, Wnamesalways = Wnamesalways, 
-                                  transport = transport)
+                                  transport = transport, pooledM = pooledM)
     gstarM_astar1 = gstar_info$gstarM_astar1
     gstarM_astar0 = gstar_info$gstarM_astar0
     gstarM_astar = list(gstarM_astar0 = gstarM_astar0, gstarM_astar1 = gstarM_astar1)
@@ -32,7 +32,8 @@ SDE_tmle_lasso = function(data, forms, RCT = 0.5, B = NULL, Wnames, Wnamesalways
     # perform initial fits for the first regression
     
     init_info = get.mediation.initdata_lasso(data = data, forms = forms, RCT = RCT, Wnames = Wnames, 
-                                             Wnamesalways = Wnamesalways, transport = transport)
+                                             Wnamesalways = Wnamesalways, transport = transport,
+                                             pooledM = pooledM)
     
     Y_preds = init_info$Y_preds
     
@@ -67,13 +68,14 @@ SDE_tmle_lasso = function(data, forms, RCT = 0.5, B = NULL, Wnames, Wnamesalways
       boot_ests = lapply(1:B, FUN = function(x) {
         inds = sample(1:n, replace = TRUE)
         data = data[inds, ]
-      
-        init_info = get.mediation.initdata_lassoNT(data = data, forms = forms, RCT = RCT, Wnames = Wnames, 
-                                                     Wnamesalways = Wnamesalways, transport = transport)
+        
+        init_info = get.mediation.initdata_lasso(data = data, forms = forms, RCT = RCT, Wnames = Wnames, 
+                                                 Wnamesalways = Wnamesalways, transport = transport, 
+                                                 pooledM = pooledM)
         Y_preds = init_info$Y_preds
         gstarM_astar = list(gstarM_astar0[inds], gstarM_astar1[inds],
                             Wnames = Wnames, Wnamesalways = Wnamesalways, 
-                            transport = transport)
+                            transport = transport, pooledM = pooledM)
         
         est_info = lapply(0:1, FUN = function(astar) {
           return(lapply(0:1, FUN = function(a) {

@@ -1,5 +1,5 @@
 #' @export
-get.mediation.initdata_lasso = function(data, forms, RCT = 0.5, Wnames, Wnamesalways, transport) {
+get.mediation.initdata_lasso = function(data, forms, RCT = 0.5, Wnames, Wnamesalways, transport, pooledM) {
   
   # data = cbind(data$W,A=data$A, Z=data$Z, M=data$M, Y=data$Y)
   if (transport) {
@@ -44,14 +44,13 @@ get.mediation.initdata_lasso = function(data, forms, RCT = 0.5, Wnames, Wnamesal
     weights = data$weights
   }
 
-  Yfit = cv.glmnet(x, y, family = "binomial", weights=weights, 
-                   penalty.factor=pfac, parallel=TRUE)
+  Yfit = cv.glmnet(x, y, family = "binomial", penalty.factor=pfac, parallel=TRUE)
   
   dataM = model.matrix(Mform, data)[,-1]
   pfac<-rep(1, ncol(dataM))
   pfac[which( colnames(dataM[,c("Z", Wnames)]) %in% c("Z", Wnamesalways) )]<-0
   
-  if (transport) {
+  if (transport & !pooledM) {
     x = dataM[data$S==1, ]
     y = data$M[data$S==1]
   } else {
@@ -59,20 +58,18 @@ get.mediation.initdata_lasso = function(data, forms, RCT = 0.5, Wnames, Wnamesal
     y = data$M
   }
   
-  Mfit = cv.glmnet(x, y, family = "binomial", weights=weights, 
-                   penalty.factor=pfac, parallel=TRUE)
+  Mfit = cv.glmnet(x, y, family = "binomial", penalty.factor=pfac, parallel=TRUE)
   
   if (transport) {
     dataZ = model.matrix(Zform, data)[,-1]
     pfac<-rep(1, ncol(dataZ))
     pfac[which( colnames(dataZ[,c("A", Wnames)]) %in% c("A", Wnamesalways) )]<-0
-    Zfit = cv.glmnet(dataZ, data$Z, family = "binomial", weights=data$weights, 
-                     penalty.factor=pfac, parallel=TRUE)
+    Zfit = cv.glmnet(dataZ, data$Z, family = "binomial", penalty.factor=pfac, parallel=TRUE)
     Z_ps = predict(Zfit, newx = dataZ, type = 'response', s="lambda.1se")
     dataZS0 = model.matrix(Zform, df_ZS0)[,-1]
     ZS0_ps = predict(Zfit, newx = dataZS0, type = 'response', s="lambda.1se")
     dataS = model.matrix(Sform, data)[,-1]
-    Sfit = cv.glmnet(dataS, data$S, family = "binomial", weights=data$weights, parallel=TRUE)
+    Sfit = cv.glmnet(dataS, data$S, family = "binomial", parallel=TRUE)
     S_ps = predict(Sfit, newx = dataS, type = 'response', s="lambda.1se")
     PS0 = mean(data$S==0)
    }

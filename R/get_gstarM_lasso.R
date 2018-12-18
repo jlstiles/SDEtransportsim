@@ -1,5 +1,5 @@
 #' @export
-get_gstarM_lasso  = function(data, forms, Wnames, Wnamesalways, transport = TRUE) 
+get_gstarM_lasso  = function(data, forms, Wnames, Wnamesalways, transport = TRUE, pooledM) 
 {
   # W = data$W
   # nn = nrow(W)
@@ -28,12 +28,11 @@ get_gstarM_lasso  = function(data, forms, Wnames, Wnamesalways, transport = TRUE
 
   pfac<-rep(1, ncol(dataMstar))
   pfac[which(colnames(dataMstar) %in% c("Z", Wnamesalways) )]<-0
-  if (transport) {
+  if (transport & !pooledM) {
     Mstarfit = cv.glmnet(dataMstar[data$S==1, ], data$M[data$S==1], family = "binomial", 
-                         weights=wts[data$S==1], 
                          penalty.factor=pfac, parallel=TRUE)
   } else {
-    Mstarfit = cv.glmnet(dataMstar, data$M, family = "binomial", weights=wts, 
+    Mstarfit = cv.glmnet(dataMstar, data$M, family = "binomial", 
                          penalty.factor=pfac, parallel=TRUE)
   }
 
@@ -46,7 +45,7 @@ get_gstarM_lasso  = function(data, forms, Wnames, Wnamesalways, transport = TRUE
   #Ker
   pfac<-rep(1, ncol(dataZstar))
   pfac[which( colnames(dataZstar) %in% c("A", Wnamesalways) )]<-0
-  Zstarfit = cv.glmnet(dataZstar, data$Z, family = "binomial", weights=data$weights, 
+  Zstarfit = cv.glmnet(dataZstar, data$Z, family = "binomial", 
                        penalty.factor=pfac, parallel=TRUE)
   #Zstarfit = cv.glmnet(dataZstar, data$Z, family = "binomial")
   
