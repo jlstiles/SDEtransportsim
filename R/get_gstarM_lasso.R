@@ -23,7 +23,6 @@ get_gstarM_lasso  = function(data, forms, Wnames, Wnamesalways, transport = TRUE
   registerDoParallel(cl)
   #dataMstar=data.matrix(data[,c("Z", Wnames)])
   #
-  wts = data$weights
   dataMstar = model.matrix(Mstarform, data)[,-1]
 
   pfac<-rep(1, ncol(dataMstar))

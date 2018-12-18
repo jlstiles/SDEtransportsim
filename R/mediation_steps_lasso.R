@@ -88,7 +88,7 @@ mediation.step2_lasso = function(data, Qstar_M, Qstar_Mg, Hm, A_ps, a, tmle = TR
       init_est = mean(QZstar_a*wts)
     }
     D_Y1s = with(data, Hm*(Y - Qstar_M))
-    Hz = with(data, ((A == a)*data$weights)/(A*A_ps + (1 - A)*(1 - A_ps)))
+    Hz = with(data, ((A == a)*wts)/(A*A_ps + (1 - A)*(1 - A_ps)))
     D_Z1s = Hz*(Qstar_Mg - QZstar_a)
     if (transport) {
       D_W1s = with(data, (QZstar_a*wts - init_est)*(S ==0)/PS0)
