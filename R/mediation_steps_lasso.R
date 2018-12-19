@@ -62,9 +62,9 @@ mediation.step2_lasso = function(data, Qstar_M, Qstar_Mg, Hm, A_ps, a, tmle = TR
     
     QZstar_a = plogis(qlogis(QZ_preds_a) + eps2)
     if (transport) {
-      est = mean((QZstar_a*wts)[data$S==0])
+      est = sum((QZstar_a*wts)[data$S==0])
     } else {
-      est = mean(QZstar_a*wts)
+      est = sum(QZstar_a*wts)
     }
     
     if(!bootstrap) { 
@@ -83,9 +83,9 @@ mediation.step2_lasso = function(data, Qstar_M, Qstar_Mg, Hm, A_ps, a, tmle = TR
   if (EE) {
     QZstar_a = pmin(pmax(predict(QZfit, newx = df_QZ, s="lambda.1se"), .001), .999) 
     if (transport) {
-      init_est = mean((QZstar_a*wts)[data$S==0])
+      init_est = sum((QZstar_a*wts)[data$S==0])
     } else {
-      init_est = mean(QZstar_a*wts)
+      init_est = sum(QZstar_a*wts)
     }
     D_Y1s = with(data, Hm*(Y - Qstar_M))
     Hz = with(data, ((A == a)*wts)/(A*A_ps + (1 - A)*(1 - A_ps)))
