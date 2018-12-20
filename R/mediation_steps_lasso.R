@@ -2,7 +2,7 @@
 mediation.step1_lasso = function(initdata, Y_preds, data, gstarM_astar, a, transport) {
   
   if (!transport) {
-    H = with(data, with(initdata, ((A == a)*data$weights*((M == 1)*gstarM_astar + (M == 0)*(1 - gstarM_astar))/
+    H = with(data, with(initdata, ((A == a)*data$weights/sum(data$weights)*((M == 1)*gstarM_astar + (M == 0)*(1 - gstarM_astar))/
                                      (((M == 1)*M_ps + (M == 0)*(1 - M_ps))*(A_ps*A + (1 - A)*(1 - A_ps))))))
   } else {
     H = with(data, with(initdata, ((S == 1)*(A == a)*data$weights/sum(data$weights[data$S==1])*
