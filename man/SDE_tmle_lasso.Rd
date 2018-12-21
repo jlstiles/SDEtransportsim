@@ -82,7 +82,8 @@ data = cbind(W, A=data$A, S=data$S, Z=data$Z, M=data$M, Y=data$Y)
 Wnames = c("W1", "W2")
 Wnamesalways = c("W1")
 # run the tmle, no bootstrapping inference (bad for lasso anyway)
-data$weights = runif(nrow(data))
+data$weights = rep(1,nrow(data))
+
 testresNT = SDE_tmle_lasso(data, formsNT, RCT = 0.5, Wnames = Wnames, Wnamesalways = Wnamesalways, 
                          B = NULL, transport = FALSE, pooledM = TRUE) 
 
@@ -103,5 +104,5 @@ testresNP$CI_SIE
 # debug(SDE_tmle_lasso)
 # debug(SDE_tmle_lassoNT)
 # debug(get_gstarM_lasso)
-# undebug(mediation.step2_lasso)
+undebug(mediation.step2_lasso)
 }

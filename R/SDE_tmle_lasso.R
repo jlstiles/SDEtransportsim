@@ -117,8 +117,26 @@ SDE_tmle_lasso = function(data, forms, RCT = 0.5, B = NULL, Wnames, Wnamesalways
     D_SDE = est_info[[1]][[2]]$IC - est_info[[1]][[1]]$IC
     D_SIE = est_info[[2]][[2]]$IC- est_info[[1]][[2]]$IC
     
+    # weighted variance as per weights option in data matrix
+    
     SE_SDE = sd(D_SDE)/sqrt(n)
     SE_SIE = sd(D_SIE)/sqrt(n)
+    # if (transport) {
+    #   wts0 = sum(data$weights[data$S==0])
+    #   wts1 = sum(data$weights[data$S==1])
+    #   var_SDE = sum(D_SDE^2*((data$S==0)/wts0 + (data$S==1)/wts1))
+    #   var_SIE = sum(D_SIE^2*((data$S==0)/wts0 + (data$S==1)/wts1))
+    #   
+    #   SE_SDE = sqrt(var_SDE)
+    #   SE_SIE = sqrt(var_SIE)
+    # } else {
+    #   wts = sum(data$weights)
+    #   var_SDE = sum(D_SDE^2/wts)
+    #   var_SIE = sum(D_SIE^2/wts)
+    #   
+    #   SE_SDE = sqrt(var_SDE)
+    #   SE_SIE = sqrt(var_SIE)
+    # }
     
     if (!is.null(truth)) { 
       D_SDE_0 = gstar_info$D_astar0a1_0 - gstar_info$D_astar0a0_0

@@ -2,10 +2,10 @@
 mediation.step1_lasso = function(initdata, Y_preds, data, gstarM_astar, a, transport) {
   
   if (!transport) {
-    H = with(data, with(initdata, ((A == a)*data$weights/sum(data$weights)*((M == 1)*gstarM_astar + (M == 0)*(1 - gstarM_astar))/
+    H = with(data, with(initdata, ((A == a)*data$weights*((M == 1)*gstarM_astar + (M == 0)*(1 - gstarM_astar))/
                                      (((M == 1)*M_ps + (M == 0)*(1 - M_ps))*(A_ps*A + (1 - A)*(1 - A_ps))))))
   } else {
-    H = with(data, with(initdata, ((S == 1)*(A == a)*data$weights/sum(data$weights[data$S==1])*
+    H = with(data, with(initdata, ((S == 1)*(A == a)*data$weights*
                                      ((M == 1)*gstarM_astar + (M == 0)*(1 - gstarM_astar))*
                                      ((Z == 1)*ZS0_ps + (Z == 0)*(1 - ZS0_ps))*(1 - S_ps))/
                           (((M == 1)*M_ps + (M == 0)*(1 - M_ps))*
@@ -34,7 +34,10 @@ mediation.step1_lasso = function(initdata, Y_preds, data, gstarM_astar, a, trans
 mediation.step2_lasso = function(data, Qstar_M, Qstar_Mg, Hm, A_ps, a, tmle = TRUE,
                                  EE = FALSE, bootstrap = FALSE, form, transport) {
   
-  if (transport) PS0 = mean(data$S==0)
+  if (transport) PS0 = mean(data$S==0) 
+    # norm_wts = (data$S==0)*sum(data$weights[data$S==0]) + (data$S==1)*sum(data$weights[data$S==1])
+  # } else norm_wts = sum(data$weights)
+  
   QZform = form
   Qstar_Mg = as.vector(Qstar_Mg)
   df = cbind(data, Qstar_Mg = Qstar_Mg)
@@ -45,13 +48,12 @@ mediation.step2_lasso = function(data, Qstar_M, Qstar_Mg, Hm, A_ps, a, tmle = TR
   df_QZ = model.matrix(QZform, df)[,-1]
   QZfit = cv.glmnet(df_QZ[data$A==a, ], Qstar_Mg[data$A==a], family = "gaussian", parallel=TRUE)
   stopCluster(cl)
+  
   # compute the clever covariate and update if tmle
-  if (!transport) {
-    norm_wts = sum(data$weights)
-    Hz = data$weights/norm_wts*with(data, (A == a)/(A*A_ps + (1 - A)*(1 - A_ps)))
+  if (transport) {
+    Hz = data$weights*with(data, (A == a)*(S == 0)/(A*A_ps + (1 - A)*(1 - A_ps))/PS0) 
   } else {
-    norm_wts = sum(data$weights[data$S==0])
-    Hz = data$weights/norm_wts*with(data, (A == a)*(S == 0)/(A*A_ps + (1 - A)*(1 - A_ps))/PS0)  
+    Hz = data$weights*with(data, (A == a)/(A*A_ps + (1 - A)*(1 - A_ps)))
   }
   
   if (tmle) {
@@ -63,22 +65,25 @@ mediation.step2_lasso = function(data, Qstar_M, Qstar_Mg, Hm, A_ps, a, tmle = TR
     
     QZstar_a = plogis(qlogis(QZ_preds_a) + eps2)
     if (transport) {
-      est = mean(sum(data$S==0)*(QZstar_a*data$weights/norm_wts)*(data$S==0)/PS0)
+      scaling = sum(data$S==0)/sum(data$weights[data$S==0])
+      est_unscaled = mean((QZstar_a*data$weights)[data$S==0])
+      est = mean((QZstar_a*data$weights)[data$S==0])*scaling
     } else {
-      est = mean(nrow(data)*QZstar_a*data$weights/norm_wts)
+      scaling = nrow(data)/sum(data$weights)
+      est_unscaled = mean(QZstar_a*data$weights)
+      est = mean(QZstar_a*data$weights)*scaling
     }
     
     if(!bootstrap) { 
       D_Y = with(data, Hm*(Y - Qstar_M))
       D_Z = Hz*(Qstar_Mg - QZstar_a)
       if (transport) {
-        wts = data$weights/sum(data$weights[data$S==0])
-        D_W = with(data, (sum(data$S==0)*QZstar_a*data$weights/norm_wts - est)*(S ==0)/PS0)
+        D_W = with(data, (QZstar_a*data$weights - est_unscaled)*(S==0)/PS0)
       } else {
-        wts = data$weights/sum(data$weights)
-        D_W = with(data, (nrow(data)*QZstar_a*data$weights/norm_wts - est))
+        # wts = data$weights/sum(data$weights)
+        D_W = with(data, QZstar_a*data$weights - est_unscaled)
       }
-      D = D_Y + D_Z + D_W
+      D = (D_Y + D_Z + D_W)*scaling
     }
   } 
   
