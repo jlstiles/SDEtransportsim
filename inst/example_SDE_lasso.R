@@ -42,15 +42,16 @@ Wnames = c("W1", "W2")
 Wnamesalways = c("W1")
 # run the tmle, no bootstrapping inference (bad for lasso anyway)
 data$weights = rep(1,nrow(data))
+data$weights = runif(nrow(data))
 
 testresNT = SDE_tmle_lasso(data, formsNT, RCT = 0.5, Wnames = Wnames, Wnamesalways = Wnamesalways, 
-                         B = NULL, transport = FALSE, pooledM = TRUE) 
+                         B = NULL, transport = FALSE, pooledM = TRUE, gstar_S = c(1,1)) 
 
 testres = SDE_tmle_lasso(data, forms, RCT = 0.5, Wnames = Wnames, Wnamesalways = Wnamesalways, 
-                         B = NULL, transport = TRUE, pooledM = TRUE) 
+                         B = NULL, transport = TRUE, pooledM = TRUE, gstar_S = c(1,1)) 
 
 testresNP = SDE_tmle_lasso(data, formsNP, RCT = 0.5, Wnames = Wnames, Wnamesalways = Wnamesalways, 
-                         B = NULL, transport = TRUE, pooledM = FALSE) 
+                         B = NULL, transport = TRUE, pooledM = FALSE, gstar_S = c(1,1)) 
 
 testresNT$CI_SDE
 testres$CI_SDE

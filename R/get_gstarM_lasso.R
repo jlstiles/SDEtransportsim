@@ -1,5 +1,7 @@
 #' @export
-get_gstarM_lasso  = function(data, forms, Wnames, Wnamesalways, transport = TRUE, pooledM) 
+get_gstarM_lasso  = function(data, forms, Wnames, Wnamesalways, transport = TRUE, 
+                             pooledM, 
+                             gstar_S = c(1,1)) 
 {
   # W = data$W
   # nn = nrow(W)
@@ -11,6 +13,10 @@ get_gstarM_lasso  = function(data, forms, Wnames, Wnamesalways, transport = TRUE
   # in case data$M = NA for S=1, we make sure model.matrix works on full data set
   if (transport & !pooledM) data$M[data$S==0] = 2 
   dataZ1 = dataZ0 = dataA1 = dataA0 = data
+  # Here is where we need to define the parameter as to the mechanism used for M and Z
+  dataA1$S = dataA0$S = gstar_S[1]
+  dataZ1$S = dataZ0$S = gstar_S[2]
+  
   dataZ1$Z = 1
   dataZ0$Z = 0
   dataA1$A = 1

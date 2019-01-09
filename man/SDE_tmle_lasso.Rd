@@ -5,7 +5,7 @@
 \title{SDE_tmle_lasso}
 \usage{
 SDE_tmle_lasso(data, forms, RCT = 0.5, B = NULL, Wnames, Wnamesalways,
-  transport = TRUE, pooledM = TRUE, truth = NULL)
+  transport = TRUE, pooledM = TRUE, gstar_S = c(1, 1), truth = NULL)
 }
 \arguments{
 \item{data, }{data.frame where confounders have any names but the following, which must be
@@ -26,6 +26,11 @@ be invalid for use with lasso anyway.}
 \item{pooledM}{set to TRUE if you wish to define the stochastic intervention by the mechanism for
 the mediator defined by pooling the regression across both sites.  Otherwise the stochastic intervention
 will only be defined by the fit for S = 1.}
+
+\item{gstar_S}{a binary vector of length 2. The first entry is used to set the site for prob Z
+(intermediate confounder) is 1 and the second is used to set the site for prob M
+(intermediate confounder) is 1.  If pooledM is false then the second entry does not affect anything
+for S will not be part of M's predictions. Default is c(1,1)}
 
 \item{truth}{set permanently to NULL, not used}
 }
@@ -83,15 +88,16 @@ Wnames = c("W1", "W2")
 Wnamesalways = c("W1")
 # run the tmle, no bootstrapping inference (bad for lasso anyway)
 data$weights = rep(1,nrow(data))
+data$weights = runif(nrow(data))
 
 testresNT = SDE_tmle_lasso(data, formsNT, RCT = 0.5, Wnames = Wnames, Wnamesalways = Wnamesalways, 
-                         B = NULL, transport = FALSE, pooledM = TRUE) 
+                         B = NULL, transport = FALSE, pooledM = TRUE, gstar_S = c(1,1)) 
 
 testres = SDE_tmle_lasso(data, forms, RCT = 0.5, Wnames = Wnames, Wnamesalways = Wnamesalways, 
-                         B = NULL, transport = TRUE, pooledM = TRUE) 
+                         B = NULL, transport = TRUE, pooledM = TRUE, gstar_S = c(1,1)) 
 
 testresNP = SDE_tmle_lasso(data, formsNP, RCT = 0.5, Wnames = Wnames, Wnamesalways = Wnamesalways, 
-                         B = NULL, transport = TRUE, pooledM = FALSE) 
+                         B = NULL, transport = TRUE, pooledM = FALSE, gstar_S = c(1,1)) 
 
 testresNT$CI_SDE
 testres$CI_SDE
@@ -104,5 +110,5 @@ testresNP$CI_SIE
 # debug(SDE_tmle_lasso)
 # debug(SDE_tmle_lassoNT)
 # debug(get_gstarM_lasso)
-undebug(mediation.step2_lasso)
+# undebug(mediation.step2_lasso)
 }

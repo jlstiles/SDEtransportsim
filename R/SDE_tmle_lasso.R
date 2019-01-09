@@ -17,17 +17,21 @@
 #' @param pooledM set to TRUE if you wish to define the stochastic intervention by the mechanism for 
 #' the mediator defined by pooling the regression across both sites.  Otherwise the stochastic intervention
 #' will only be defined by the fit for S = 1.
+#' @param gstar_S a binary vector of length 2. The first entry is used to set the site for prob Z 
+#' (intermediate confounder) is 1 and the second is used to set the site for prob M 
+#' (intermediate confounder) is 1.  If pooledM is false then the second entry does not affect anything
+#' for S will not be part of M's predictions. Default is c(1,1)
 #' @param truth set permanently to NULL, not used
 #' @return  a list with a CI's for SDE and SIE for the means under (a*,a) combos (0,0), (0,1), (1,1) 
 #' and the epsilons for both sequential regressions for those three parameters
 #' @example /inst/example_SDE_lasso.R 
 #' @export
 SDE_tmle_lasso = function(data, forms, RCT = 0.5, B = NULL, Wnames, Wnamesalways, transport = TRUE,
-                          pooledM = TRUE, truth = NULL) 
+                          pooledM = TRUE, gstar_S = c(1,1), truth = NULL) 
 {
     # get the stochastic dist of M and true params if you want 
     gstar_info = get_gstarM_lasso(data = data, forms = forms, Wnames = Wnames, Wnamesalways = Wnamesalways, 
-                                  transport = transport, pooledM = pooledM)
+                                  transport = transport, pooledM = pooledM, gstar_S = gstar_S)
     gstarM_astar1 = gstar_info$gstarM_astar1
     gstarM_astar0 = gstar_info$gstarM_astar0
     gstarM_astar = list(gstarM_astar0 = gstarM_astar0, gstarM_astar1 = gstarM_astar1)
