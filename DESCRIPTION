@@ -7,14 +7,12 @@ Maintainer: Jonathan Levy <jlstilesmusic@gmail.com>
 Description: A package to compute TMLE's for various parameters of interest, keeping the books in the process for analysis.
 Depends: R (>= 2.14.0),
     mvtnorm,
-    origami,
-    hal9001,
-    sl3,
-    glmnet
-Imports:
+    glmnet,
     parallel,
-    foreach,
+    doParallel,
+Imports:
     doSNOW,
+    foreach,
     geepack,
     orthopolynom,
     ggplot2,
@@ -57,12 +55,8 @@ Suggests:
     hal9001,
     devel,
     R.rsp
-Remotes:
-    github::osofr/condensier,
-    github::tlverse/delayed,
-    github::jeremyrcoyle/hal9001
 License: GPL-3
-BugReports: https://github.com/jlstiles/cateSurvival/issues
+BugReports: https://github.com/jlstiles/SDEtransportsim/issues
 Encoding: UTF-8
 LazyData: yes
 LazyLoad: yes

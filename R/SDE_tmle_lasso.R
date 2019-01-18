@@ -14,12 +14,12 @@
 #' @param Wnames
 #' @param Wnamesalways
 #' @param transport if true you are transporting to site S=0
-#' @param pooledM set to TRUE if you wish to define the stochastic intervention by the mechanism for 
+#' @param pooled set to TRUE if you wish to define the stochastic intervention by the mechanism for 
 #' the mediator defined by pooling the regression across both sites.  Otherwise the stochastic intervention
-#' will only be defined by the fit for S = 1.
+#' will only be defined by the subset for S = gstar_S for both M and Z.   
 #' @param gstar_S a binary vector of length 2. The first entry is used to set the site for prob Z 
 #' (intermediate confounder) is 1 and the second is used to set the site for prob M 
-#' (intermediate confounder) is 1.  If pooledM is false then the second entry does not affect anything
+#' (intermediate confounder) is 1.  If pooled is false then the second entry does not affect anything
 #' for S will not be part of M's predictions. Default is c(1,1)
 #' @param truth set permanently to NULL, not used
 #' @return  a list with a CI's for SDE and SIE for the means under (a*,a) combos (0,0), (0,1), (1,1) 
@@ -27,11 +27,11 @@
 #' @example /inst/example_SDE_lasso.R 
 #' @export
 SDE_tmle_lasso = function(data, forms, RCT = 0.5, B = NULL, Wnames, Wnamesalways, transport = TRUE,
-                          pooledM = TRUE, gstar_S = c(1,1), truth = NULL) 
+                          pooled = TRUE, gstar_S = 1, truth = NULL) 
 {
     # get the stochastic dist of M and true params if you want 
     gstar_info = get_gstarM_lasso(data = data, forms = forms, Wnames = Wnames, Wnamesalways = Wnamesalways, 
-                                  transport = transport, pooledM = pooledM, gstar_S = gstar_S)
+                                  transport = transport, pooled = pooled, gstar_S = gstar_S)
     gstarM_astar1 = gstar_info$gstarM_astar1
     gstarM_astar0 = gstar_info$gstarM_astar0
     gstarM_astar = list(gstarM_astar0 = gstarM_astar0, gstarM_astar1 = gstarM_astar1)
@@ -39,8 +39,7 @@ SDE_tmle_lasso = function(data, forms, RCT = 0.5, B = NULL, Wnames, Wnamesalways
     # perform initial fits for the first regression
     
     init_info = get.mediation.initdata_lasso(data = data, forms = forms, RCT = RCT, Wnames = Wnames, 
-                                             Wnamesalways = Wnamesalways, transport = transport,
-                                             pooledM = pooledM)
+                                             Wnamesalways = Wnamesalways, transport = transport)
     
     Y_preds = init_info$Y_preds
     
@@ -77,12 +76,11 @@ SDE_tmle_lasso = function(data, forms, RCT = 0.5, B = NULL, Wnames, Wnamesalways
         data = data[inds, ]
         
         init_info = get.mediation.initdata_lasso(data = data, forms = forms, RCT = RCT, Wnames = Wnames, 
-                                                 Wnamesalways = Wnamesalways, transport = transport, 
-                                                 pooledM = pooledM)
+                                                 Wnamesalways = Wnamesalways, transport = transport)
         Y_preds = init_info$Y_preds
         gstarM_astar = list(gstarM_astar0[inds], gstarM_astar1[inds],
                             Wnames = Wnames, Wnamesalways = Wnamesalways, 
-                            transport = transport, pooledM = pooledM)
+                            transport = transport, pooled = pooled,gstar_S = gstar_S)
         
         est_info = lapply(0:1, FUN = function(astar) {
           return(lapply(0:1, FUN = function(a) {
@@ -125,22 +123,6 @@ SDE_tmle_lasso = function(data, forms, RCT = 0.5, B = NULL, Wnames, Wnamesalways
     
     SE_SDE = sd(D_SDE)/sqrt(n)
     SE_SIE = sd(D_SIE)/sqrt(n)
-    # if (transport) {
-    #   wts0 = sum(data$weights[data$S==0])
-    #   wts1 = sum(data$weights[data$S==1])
-    #   var_SDE = sum(D_SDE^2*((data$S==0)/wts0 + (data$S==1)/wts1))
-    #   var_SIE = sum(D_SIE^2*((data$S==0)/wts0 + (data$S==1)/wts1))
-    #   
-    #   SE_SDE = sqrt(var_SDE)
-    #   SE_SIE = sqrt(var_SIE)
-    # } else {
-    #   wts = sum(data$weights)
-    #   var_SDE = sum(D_SDE^2/wts)
-    #   var_SIE = sum(D_SIE^2/wts)
-    #   
-    #   SE_SDE = sqrt(var_SDE)
-    #   SE_SIE = sqrt(var_SIE)
-    # }
     
     if (!is.null(truth)) { 
       D_SDE_0 = gstar_info$D_astar0a1_0 - gstar_info$D_astar0a0_0

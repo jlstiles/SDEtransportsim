@@ -1,12 +1,13 @@
 #' @export
-get.mediation.initdata_lasso = function(data, forms, RCT = 0.5, Wnames, Wnamesalways, transport, pooledM) {
+get.mediation.initdata_lasso = function(data, forms, RCT = 0.5, Wnames, Wnamesalways, 
+                                        transport) {
   
   # data = cbind(data$W,A=data$A, Z=data$Z, M=data$M, Y=data$Y)
   if (transport) {
-    # if not pooled avoid NA's being a pain, we won't use these outcomes
-    if (!pooledM) data$M[data$S!=1] = 2
+    
     # This is to avoid NA's being a pain, we won't use these outcomes
     data$Y[data$S!=1] = 2
+    
     df_ZS0 = data
     df_ZS0$S = 0
     Zform = forms$Zstarform
@@ -26,11 +27,8 @@ get.mediation.initdata_lasso = function(data, forms, RCT = 0.5, Wnames, Wnamesal
   # convert to model matrices to match for prediction
   df_YM1 = model.matrix(Yform, df_YM1)[,-1]
   df_YM0 = model.matrix(Yform, df_YM0)[,-1]
-  
-  # df_Z = data
-  
+
   dataY = model.matrix(Yform, data)[,-1]
-  #KER:
   pfac<-rep(1, ncol(dataY))
   pfac[which( colnames(dataY[,c("Z", "M", Wnames)]) %in% c("Z", "M", Wnamesalways) )]<-0
   
@@ -52,15 +50,9 @@ get.mediation.initdata_lasso = function(data, forms, RCT = 0.5, Wnames, Wnamesal
   dataM = model.matrix(Mform, data)[,-1]
   pfac<-rep(1, ncol(dataM))
   pfac[which( colnames(dataM[,c("Z", Wnames)]) %in% c("Z", Wnamesalways) )]<-0
-  
-  if (transport & !pooledM) {
-    x = dataM[data$S==1, ]
-    y = data$M[data$S==1]
-  } else {
-    x = dataM
-    y = data$M
-  }
-  
+
+  x = dataM
+  y = data$M
   Mfit = cv.glmnet(x, y, family = "binomial", penalty.factor=pfac, parallel=TRUE)
   
   if (transport) {
