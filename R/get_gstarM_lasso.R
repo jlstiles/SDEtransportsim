@@ -19,7 +19,7 @@ get_gstarM_lasso  = function(data, forms, Wnames, Wnamesalways, transport,
   dataZ0$Z = 0
   dataA1$A = 1
   dataA0$A = 0
-  
+
   cl<-makePSOCKcluster(4)
   registerDoParallel(cl)
   

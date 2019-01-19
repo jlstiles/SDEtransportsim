@@ -9,7 +9,7 @@ Depends: R (>= 2.14.0),
     mvtnorm,
     glmnet,
     parallel,
-    doParallel,
+    doParallel
 Imports:
     doSNOW,
     foreach,

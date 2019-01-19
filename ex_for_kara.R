@@ -8,7 +8,8 @@ library("doParallel")
 # data(example_dgp)
 # data = data_example
 
-truth = list(f_W = function(n) {
+truth = list(
+  f_W = function(n) {
   W1 = rnorm(n)
   W2 = rnorm(n)
   data.frame(W1=W1, W2=W2)
@@ -37,7 +38,8 @@ truth = list(f_W = function(n) {
 }
 )
 
-truth_NT = list(f_W = function(n) {
+truth_NT = list(
+  f_W = function(n) {
   W1 = rnorm(n)
   W2 = rnorm(n)
   data.frame(W1=W1, W2=W2)
@@ -103,11 +105,13 @@ Wnames = c("W1", "W2")
 Wnamesalways = c("W1")
 
 
-check_sim = function(n) {
+check_sim = function(n, truth = truth, truth_NT = NULL) {
+  
   data = gendata.SDEtransport(n, truth$f_W, truth$f_S, truth$f_A, truth$f_Z, truth$f_M, truth$f_Y)
   
   data$weights = rep(1,nrow(data))
   
+  if (is.null(truth_NT)) truth = NULL
   test = SDE_tmle_lasso(data, formsNP, RCT = 0.5, Wnames = Wnames, Wnamesalways = Wnamesalways, 
                         transport = TRUE, pooled = FALSE, gstar_S = 0, truth = truth) 
   
@@ -122,12 +126,23 @@ check_sim = function(n) {
            testNT$SDE0, testNT$CI_SIE, testNT$SIE0))
 }
 
-check_truth = check_sim(100000)
-# SDE for transported from S =1 to S = 0 using S = 0 mechanism for gstar
-check_truth[c(1,4)]
-# SIE for transported from S =1 to S = 0 using S = 0 mechanism for gstar
-check_truth[c(5,8)]
-# SDE for transported for S = 0 mechanism for gstar
-check_truth[c(9,12)]
-# SIR for transported S = 0 mechanism for gstar
-check_truth[c(13,16)]
+# All should be the same
+check_truth = check_sim(1e5, truth, truth_NT)
+
+# each 2 by 2 below should contain all numbers very close to each other
+# Each shows transported to S = 0 using S = 0 mechanism for gstar and non-
+# transporting on subset with S = 0
+
+SDE_check = rbind(check_truth[c(1,4)], check_truth[c(9,12)])
+SIE_check = rbind(check_truth[c(5,8)],check_truth[c(13,16)])
+colnames(SDE_check) = colnames(SIE_check) = c("estimate", "truth")
+rownames(SDE_check) = rownames(SIE_check) = c("transported", "Not transported")
+SDE_check
+SIE_check
+
+# test for smaller samples as to similarity, here we won't check the truth'
+check_truth = check_sim(700, truth, NULL)
+SDE_SIE_smCheck = rbind(c(check_truth[1], check_truth[7]), c(check_truth[4], check_truth[10]))
+colnames(SDE_SIE_smCheck) = c("trans", "not trans")
+rownames(SDE_SIE_smCheck) = c("SDE", "SIE")
+SDE_SIE_smCheck
