@@ -140,9 +140,13 @@ rownames(SDE_check) = rownames(SIE_check) = c("transported", "Not transported")
 SDE_check
 SIE_check
 
-# test for smaller samples as to similarity, here we won't check the truth'
-check_truth = check_sim(700, truth, NULL)
-SDE_SIE_smCheck = rbind(c(check_truth[1], check_truth[7]), c(check_truth[4], check_truth[10]))
+# test for smaller samples as to similarity, here we won't check the truth'.  Just run this
+# a few times to see the differences between transporting to S = 0 and non-trans on S = 0 for 
+# n = 700
+check_truth_sm = check_sim(700, truth, NULL)
+SDE_SIE_smCheck = rbind(c(check_truth_sm[1], check_truth_sm[7]), 
+                        c(check_truth_sm[4], check_truth_sm[10]))
 colnames(SDE_SIE_smCheck) = c("trans", "not trans")
 rownames(SDE_SIE_smCheck) = c("SDE", "SIE")
 SDE_SIE_smCheck
+
