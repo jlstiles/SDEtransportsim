@@ -38,14 +38,13 @@ mediation.step2_lasso = function(data, Qstar_M, Qstar_Mg, Hm, A_ps, a, tmle = TR
     # norm_wts = (data$S==0)*sum(data$weights[data$S==0]) + (data$S==1)*sum(data$weights[data$S==1])
   # } else norm_wts = sum(data$weights)
   
-  QZform = form
   Qstar_Mg = as.vector(Qstar_Mg)
   df = cbind(data, Qstar_Mg = Qstar_Mg)
   
   cl<-makePSOCKcluster(4)
   registerDoParallel(cl)
-  # QZform = formula(paste0("Qstar_Mg ~ ", paste(covariates$covariates_QZ, collapse = "+")))
-  df_QZ = model.matrix(QZform, df)[,-1]
+  
+  df_QZ = model.matrix(form, df)[,-1]
   QZfit = cv.glmnet(df_QZ[data$A==a, ], Qstar_Mg[data$A==a], family = "gaussian", parallel=TRUE)
   stopCluster(cl)
   

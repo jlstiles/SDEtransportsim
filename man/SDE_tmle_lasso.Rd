@@ -4,8 +4,8 @@
 \alias{SDE_tmle_lasso}
 \title{SDE_tmle_lasso}
 \usage{
-SDE_tmle_lasso(data, forms, RCT = 0.5, B = NULL, Wnames, Wnamesalways,
-  transport = TRUE, pooled = TRUE, gstar_S = 1, truth = NULL)
+SDE_tmle_lasso(data, forms, RCT = 0.5, Wnames, Wnamesalways, transport,
+  pooled, gstar_S = 1, truth = NULL)
 }
 \arguments{
 \item{data, }{data.frame where confounders have any names but the following, which must be
@@ -17,9 +17,6 @@ is selected as TRUE.}
 
 \item{RCT}{either NULL or a value, if null, then the Aform is used to fit the propensity score,
 otherwise propensity scores are set to RCT.}
-
-\item{B, }{the number of bootstraps, default is NULL and should not be changed since this will
-be invalid for use with lasso anyway.}
 
 \item{transport}{if true you are transporting to site S=0}
 
@@ -44,12 +41,11 @@ for the stochastic direct effect or stochastic indirect effect using lasso. Note
 a non-transport parameter.
 }
 \examples{
-# devtools::install_github("jeremyrcoyle/sl3")
-# devtools::install_github("jlstiles/SDE_transport")
-library("SDEtransportsim")
-library("parallel")
-library("doParallel")
-library("glmnet")
+# uncomment these if testing the lasso functions without loading the package
+# library("parallel")
+# library("doParallel")
+# library("glmnet")
+
 #Set up data generating process:
 data(example_dgp)
 data = data_example
@@ -87,8 +83,10 @@ n=1000
 
 Wnames = c("W1", "W2")
 Wnamesalways = c("W1")
-# run the tmle, no bootstrapping inference (bad for lasso anyway)
+
+# choose no weights (all weights are 1)
 data$weights = rep(1,nrow(data))
+# choose randomly generated weights
 data$weights = runif(nrow(data))
 
 i=1

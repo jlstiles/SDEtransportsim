@@ -9,8 +9,6 @@
 #' is selected as TRUE. 
 #' @param RCT either NULL or a value, if null, then the Aform is used to fit the propensity score, 
 #' otherwise propensity scores are set to RCT.
-#' @param B, the number of bootstraps, default is NULL and should not be changed since this will
-#' be invalid for use with lasso anyway.
 #' @param Wnames
 #' @param Wnamesalways
 #' @param transport if true you are transporting to site S=0
@@ -26,20 +24,22 @@
 #' and the epsilons for both sequential regressions for those three parameters
 #' @example /inst/example_SDE_lasso.R 
 #' @export
-SDE_tmle_lasso = function(data, forms, RCT = 0.5, B = NULL, Wnames, Wnamesalways, transport = TRUE,
-                          pooled = TRUE, gstar_S = 1, truth = NULL) 
+SDE_tmle_lasso = function(data, forms, RCT = 0.5,Wnames, Wnamesalways, transport,
+                          pooled, gstar_S = 1, truth = NULL) 
 {
+    if (!transport) pooled = FALSE
     # get the stochastic dist of M and true params if you want 
     gstar_info = get_gstarM_lasso(data = data, forms = forms, Wnames = Wnames, Wnamesalways = Wnamesalways, 
-                                  transport = transport, pooled = pooled, gstar_S = gstar_S)
-    gstarM_astar1 = gstar_info$gstarM_astar1
+                                  transport = transport, pooled = pooled, gstar_S = gstar_S, truth= truth)
+    gstarM_astar1 = gstar_info$gstarM_astar1 
     gstarM_astar0 = gstar_info$gstarM_astar0
     gstarM_astar = list(gstarM_astar0 = gstarM_astar0, gstarM_astar1 = gstarM_astar1)
     
     # perform initial fits for the first regression
     
     init_info = get.mediation.initdata_lasso(data = data, forms = forms, RCT = RCT, Wnames = Wnames, 
-                                             Wnamesalways = Wnamesalways, transport = transport)
+                                             Wnamesalways = Wnamesalways, transport = transport, 
+                                             pooled = pooled)
     
     Y_preds = init_info$Y_preds
     
@@ -70,51 +70,6 @@ SDE_tmle_lasso = function(data, forms, RCT = 0.5, B = NULL, Wnames, Wnamesalways
     # run the bootstrap 500 times
     # bootstrap from the data and thus the gstarM_astar1 and gstarM_astar0
     n = nrow(data)
-    if (!is.null(B)) {
-      boot_ests = lapply(1:B, FUN = function(x) {
-        inds = sample(1:n, replace = TRUE)
-        data = data[inds, ]
-        
-        init_info = get.mediation.initdata_lasso(data = data, forms = forms, RCT = RCT, Wnames = Wnames, 
-                                                 Wnamesalways = Wnamesalways, transport = transport)
-        Y_preds = init_info$Y_preds
-        gstarM_astar = list(gstarM_astar0[inds], gstarM_astar1[inds],
-                            Wnames = Wnames, Wnamesalways = Wnamesalways, 
-                            transport = transport, pooled = pooled,gstar_S = gstar_S)
-        
-        est_info = lapply(0:1, FUN = function(astar) {
-          return(lapply(0:1, FUN = function(a) {
-            update = mediation.step1_lasso(initdata = init_info$initdata, Y_preds = Y_preds, data = data, 
-                                           gstarM_astar[[astar+1]], a, transport = transport)
-            
-            Y_Mg = get.stochasticM(gstarM_astar[[astar+1]], Y_preds[[2]], Y_preds[[3]]) 
-            A_ps = init_info$initdata$A_ps
-            
-            Qstar_Mg = get.stochasticM(gstarM_astar[[astar+1]], update$Qstar_M1, update$Qstar_M0) 
-            # compute Qstar_Mg here
-            tmle_info = mediation.step2_lasso(data = data, Qstar_M = update$Qstar_M, 
-                                              Qstar_Mg = Qstar_Mg, Hm = update$Hm, A_ps = A_ps, 
-                                              a = a, tmle = TRUE,
-                                              EE = FALSE, bootstrap = TRUE, form = forms$QZform,
-                                              transport = transport)
-            # compile all estimates
-            return(tmle_info)
-          }))
-        })
-      })
-      
-      boot_ests = lapply(boot_ests, FUN = function(boot) {
-        SDE = unlist(boot[[1]][[2]]) - unlist(boot[[1]][[1]])
-        SIE = unlist(boot[[2]][[2]]) - unlist(boot[[1]][[2]])
-        return(list(SDE, SIE))
-      })
-      
-      boots_SDE = do.call(rbind, lapply(boot_ests, FUN = function(boot) boot[[1]]))
-      boots_SIE = do.call(rbind, lapply(boot_ests, FUN = function(boot) boot[[2]]))
-      
-      bootSE_SDE = apply(boots_SDE, 2, sd)
-      bootSE_SIE = apply(boots_SIE, 2, sd)
-    }
     
     D_SDE = est_info[[1]][[2]]$IC - est_info[[1]][[1]]$IC
     D_SIE = est_info[[2]][[2]]$IC- est_info[[1]][[2]]$IC
@@ -123,53 +78,27 @@ SDE_tmle_lasso = function(data, forms, RCT = 0.5, B = NULL, Wnames, Wnamesalways
     
     SE_SDE = sd(D_SDE)/sqrt(n)
     SE_SIE = sd(D_SIE)/sqrt(n)
-    
-    if (!is.null(truth)) { 
-      D_SDE_0 = gstar_info$D_astar0a1_0 - gstar_info$D_astar0a0_0
-      D_SIE_0 = gstar_info$D_astar1a1_0 - gstar_info$D_astar0a1_0
-      
-      SE_SDE_0 = sd(D_SDE_0)/sqrt(n)
-      SE_SIE_0 = sd(D_SIE_0)/sqrt(n)
-      
-      Psi_astar0a1_0 = gstar_info$Psi_astar0a1_0
-      Psi_astar0a0_0 = gstar_info$Psi_astar0a0_0
-      Psi_astar1a1_0 = gstar_info$Psi_astar1a1_0
-      
-      SDE_0 = Psi_astar0a1_0 - Psi_astar0a0_0
-      SIE_0 = Psi_astar1a1_0 - Psi_astar0a1_0 
-      
-    } else {
-      D_SDE_0 = D_SIE_0 = SE_SDE_0 = SE_SIE_0 = Psi_astar0a1_0 = 
-        Psi_astar0a0_0 = Psi_astar1a1_0 = SDE_0 = SIE_0 = NULL
-    }
-    ests_astar0a1 =   c(tmle = est_info[[1]][[2]]$est,
-                        Psi_0 = Psi_astar0a1_0)
-    
-    ests_astar0a0 =   c(tmle = est_info[[1]][[1]]$est,
-                        Psi_0 = Psi_astar0a0_0)
-    
-    ests_astar1a1 =   c(tmle = est_info[[2]][[2]]$est,
-                        Psi_0 = Psi_astar1a1_0)
+
+    ests_astar0a1 =   est_info[[1]][[2]]$est
+    ests_astar0a0 =   est_info[[1]][[1]]$est
+    ests_astar1a1 =   est_info[[2]][[2]]$est
     
     SDE_ests = ests_astar0a1 - ests_astar0a0
     SIE_ests = ests_astar1a1 - ests_astar0a1
     
-    CI_SDE = c(SDE_ests[1], SDE_ests[1] - 1.96*SE_SDE, SDE_ests[1] + 1.96*SE_SDE)
-    CI_SIE = c(SIE_ests[1], SIE_ests[1] - 1.96*SE_SIE, SIE_ests[1] + 1.96*SE_SIE)
+    CI_SDE = c(SDE_ests, SDE_ests - 1.96*SE_SDE, SDE_ests + 1.96*SE_SDE)
+    CI_SIE = c(SIE_ests, SIE_ests - 1.96*SE_SIE, SIE_ests + 1.96*SE_SIE)
     
-    if (!is.null(B)) {
-      CI_SDE_boot = c(SDE_ests[1], SDE_ests[1] - 1.96*bootSE_SDE[1], SDE_ests[1] + 1.96*bootSE_SDE[1])
-      CI_SIE_boot = c(SIE_ests[1], SIE_ests[1] - 1.96*bootSE_SIE[1], SIE_ests[1] + 1.96*bootSE_SIE[1])
-      
-      return(list(CI_SDE = CI_SDE, CI_SIE = CI_SIE,
-                  CI_SDE_boot = CI_SDE_boot,
-                  CI_SIE_boot = CI_SIE_boot,
+    if (!is.null(truth)) {   
+      return(list(CI_SDE = CI_SDE, 
+                  CI_SIE = CI_SIE,
+                  SDE0 = gstar_info$SDE0,
+                  SIE0 = gstar_info$SIE0,
                   SE_SDE = SE_SDE, 
                   SE_SIE = SE_SIE, 
                   ests_astar0a1 = ests_astar0a1,
                   ests_astar0a0 = ests_astar0a0,
                   ests_astar1a1 = ests_astar1a1,
-                  
                   eps1_astar0a1 = est_info[[1]][[2]]$eps1,
                   eps2_astar0a1 = est_info[[1]][[2]]$eps2,
                   eps1_astar0a0 = est_info[[1]][[1]]$eps1,
@@ -186,7 +115,6 @@ SDE_tmle_lasso = function(data, forms, RCT = 0.5, B = NULL, Wnames, Wnamesalways
                   ests_astar0a1 = ests_astar0a1,
                   ests_astar0a0 = ests_astar0a0,
                   ests_astar1a1 = ests_astar1a1,
-                  
                   eps1_astar0a1 = est_info[[1]][[2]]$eps1,
                   eps2_astar0a1 = est_info[[1]][[2]]$eps2,
                   eps1_astar0a0 = est_info[[1]][[1]]$eps1,

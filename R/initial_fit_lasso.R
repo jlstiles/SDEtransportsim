@@ -1,16 +1,15 @@
 #' @export
 get.mediation.initdata_lasso = function(data, forms, RCT = 0.5, Wnames, Wnamesalways, 
-                                        transport) {
+                                        transport, pooled) {
   
   # data = cbind(data$W,A=data$A, Z=data$Z, M=data$M, Y=data$Y)
-  if (transport) {
-    
+  if (transport) { 
     # This is to avoid NA's being a pain, we won't use these outcomes
     data$Y[data$S!=1] = 2
     
     df_ZS0 = data
     df_ZS0$S = 0
-    Zform = forms$Zstarform
+    if (pooled) Zform = forms$Zstarform else Zform = forms$Zform
     Sform = forms$Sform
   }
   
@@ -21,7 +20,7 @@ get.mediation.initdata_lasso = function(data, forms, RCT = 0.5, Wnames, Wnamesal
   df_YM0$M = 0
 
   Yform = forms$Yform
-  Mform = forms$Mstarform
+  if (pooled | !transport) Mform = forms$Mstarform else Mform = forms$Mform
   Aform = forms$Aform
   
   # convert to model matrices to match for prediction

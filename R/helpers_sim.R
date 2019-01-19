@@ -27,7 +27,7 @@ gendata.SDEtransport = function(n, f_W, f_S, f_A, f_Z, f_M, f_Y) {
 
 
 #' @export
-gendata.SDEtransport_alt = function(n, f_W, f_A, f_Z, f_M, f_Y) {
+gendata.SDE = function(n, f_W, f_A, f_Z, f_M, f_Y) {
   W = f_W(n)
   # make a pscore model
   pscores = f_A(W=W)
