@@ -15,11 +15,9 @@
 #' @param pooled set to TRUE if you wish to define the stochastic intervention by the mechanism for 
 #' the mediator defined by pooling the regression across both sites.  Otherwise the stochastic intervention
 #' will only be defined by the subset for S = gstar_S for both M and Z.   
-#' @param gstar_S a binary vector of length 2. The first entry is used to set the site for prob Z 
-#' (intermediate confounder) is 1 and the second is used to set the site for prob M 
-#' (intermediate confounder) is 1.  If pooled is false then the second entry does not affect anything
-#' for S will not be part of M's predictions. Default is c(1,1)
-#' @param truth set permanently to NULL, not used
+#' @param gstar_S set to 0 or 1 depending on which site you want to use to define the stochastic
+#' intervention
+#' @param truth can use a truth generator to check matching the truth
 #' @return  a list with a CI's for SDE and SIE for the means under (a*,a) combos (0,0), (0,1), (1,1) 
 #' and the epsilons for both sequential regressions for those three parameters
 #' @example /inst/example_SDE_lasso.R 
