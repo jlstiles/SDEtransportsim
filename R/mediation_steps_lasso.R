@@ -56,7 +56,7 @@ mediation.step2_lasso = function(data, Qstar_M, Qstar_Mg, Hm, A_ps, a, tmle = TR
   }
   
   if (tmle) {
-    QZ_preds_a = pmin(pmax(predict(QZfit, newx = df_QZ,  s="lambda.1se"), .001), .999)
+    QZ_preds_a = pmin(pmax(predict(QZfit, newx = df_QZ,  s="lambda.min"), .001), .999)
     # update
     QZfit_tmle = try(glm(Qstar_Mg ~ 1 + offset(qlogis(QZ_preds_a)), family = binomial,
                          weights = Hz), silent = TRUE)
@@ -88,7 +88,7 @@ mediation.step2_lasso = function(data, Qstar_M, Qstar_Mg, Hm, A_ps, a, tmle = TR
   
   # regress if EE or mle, EE updates the estimate, mle does not
   if (EE) {
-    QZstar_a = pmin(pmax(predict(QZfit, newx = df_QZ, s="lambda.1se"), .001), .999) 
+    QZstar_a = pmin(pmax(predict(QZfit, newx = df_QZ, s="lambda.min"), .001), .999) 
     if (transport) {
       init_est = mean(sum(data$S==0)*(QZstar_a*data$weights/norm_wts)*(data$S==0)/PS0)
     } else {

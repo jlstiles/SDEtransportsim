@@ -49,16 +49,16 @@ get_gstarM_lasso  = function(data, forms, Wnames, Wnamesalways, transport,
   stopCluster(cl)
   
   dataMz1 = model.matrix(Mstarform, dataZ1)[,-1]
-  predMz1 = predict(Mstarfit, newx = dataMz1, type = 'response', s="lambda.1se")
+  predMz1 = predict(Mstarfit, newx = dataMz1, type = 'response', s="lambda.min")
   
   dataMz0 = model.matrix(Mstarform, dataZ0)[,-1]
-  predMz0 = predict(Mstarfit, newx = dataMz0, type = 'response', s="lambda.1se")
+  predMz0 = predict(Mstarfit, newx = dataMz0, type = 'response', s="lambda.min")
   
   dataZa0 = model.matrix(Zstarform, dataA0)[,-1]
-  predZa0 = predict(Zstarfit, newx = dataZa0, type = 'response', s="lambda.1se")
+  predZa0 = predict(Zstarfit, newx = dataZa0, type = 'response', s="lambda.min")
   
   dataZa1 = model.matrix(Zstarform, dataA1)[,-1]
-  predZa1 = predict(Zstarfit, newx = dataZa1, type = 'response', s="lambda.1se")
+  predZa1 = predict(Zstarfit, newx = dataZa1, type = 'response', s="lambda.min")
   
   gstarM_astar0 = predMz1*predZa0 + predMz0*(1 - predZa0)
   gstarM_astar1 = predMz1*predZa1 + predMz0*(1 - predZa1)
@@ -98,13 +98,13 @@ get_gstarM_lasso  = function(data, forms, Wnames, Wnamesalways, transport,
       # regardless of pooling or not the model.matrix will keep the vars according to the formula
       # so fine whether pooling or not
       popZastar = model.matrix(Zstarform, popAastar)[,-1]
-      pop_predZastar = predict(Zstarfit, newx = popZastar, type = 'response', s="lambda.1se")
+      pop_predZastar = predict(Zstarfit, newx = popZastar, type = 'response', s="lambda.min")
       
       popMz1 = model.matrix(Mstarform, popZ1)[,-1]
-      pop_predMz1 = predict(Mstarfit, newx = popMz1, type = 'response', s="lambda.1se")
+      pop_predMz1 = predict(Mstarfit, newx = popMz1, type = 'response', s="lambda.min")
       
       popMz0 = model.matrix(Mstarform, popZ0)[,-1]
-      pop_predMz0 = predict(Mstarfit, newx = popMz0, type = 'response', s="lambda.1se")
+      pop_predMz0 = predict(Mstarfit, newx = popMz0, type = 'response', s="lambda.min")
       
       gstarM = pop_predMz1*pop_predZastar + pop_predMz0*(1 - pop_predZastar)
       

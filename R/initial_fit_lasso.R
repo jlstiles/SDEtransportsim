@@ -59,12 +59,12 @@ get.mediation.initdata_lasso = function(data, forms, RCT = 0.5, Wnames, Wnamesal
     pfac<-rep(1, ncol(dataZ))
     pfac[which( colnames(dataZ[,c("A", Wnames)]) %in% c("A", Wnamesalways) )]<-0
     Zfit = cv.glmnet(dataZ, data$Z, family = "binomial", penalty.factor=pfac, parallel=TRUE)
-    Z_ps = predict(Zfit, newx = dataZ, type = 'response', s="lambda.1se")
+    Z_ps = predict(Zfit, newx = dataZ, type = 'response', s="lambda.min")
     dataZS0 = model.matrix(Zform, df_ZS0)[,-1]
-    ZS0_ps = predict(Zfit, newx = dataZS0, type = 'response', s="lambda.1se")
+    ZS0_ps = predict(Zfit, newx = dataZS0, type = 'response', s="lambda.min")
     dataS = model.matrix(Sform, data)[,-1]
     Sfit = cv.glmnet(dataS, data$S, family = "binomial", parallel=TRUE)
-    S_ps = predict(Sfit, newx = dataS, type = 'response', s="lambda.1se")
+    S_ps = predict(Sfit, newx = dataS, type = 'response', s="lambda.min")
     PS0 = mean(data$S==0)
    }
   stopCluster(cl)
@@ -72,16 +72,16 @@ get.mediation.initdata_lasso = function(data, forms, RCT = 0.5, Wnames, Wnamesal
   if (is.null(RCT)) { 
     dataA = model.matrix(Aform, data)[,-1]
     Afit = cv.glmnet(dataA, data$A, family = "binomial")
-    A_ps = predict(Afit, newx = dataA, type = 'response', s="lambda.1se")
+    A_ps = predict(Afit, newx = dataA, type = 'response', s="lambda.min")
   } else A_ps = RCT
   
   # as clev cov is 0 otherwise 
-  M_ps = predict(Mfit, newx = dataM, type = 'response', s="lambda.1se")
+  M_ps = predict(Mfit, newx = dataM, type = 'response', s="lambda.min")
   
   # Predict Y for whole data, also with M = 1 and 0
-  Y_init = pmin(pmax(predict(Yfit, newx = dataY, type = 'response', s="lambda.1se"), 0.001), .999)
-  Y_init_M1 = pmin(pmax(predict(Yfit, newx = df_YM1, type = 'response', s="lambda.1se"), 0.001), .999)
-  Y_init_M0 = pmin(pmax(predict(Yfit, newx = df_YM0, type = 'response', s="lambda.1se"), 0.001), .999)
+  Y_init = pmin(pmax(predict(Yfit, newx = dataY, type = 'response', s="lambda.min"), 0.001), .999)
+  Y_init_M1 = pmin(pmax(predict(Yfit, newx = df_YM1, type = 'response', s="lambda.min"), 0.001), .999)
+  Y_init_M0 = pmin(pmax(predict(Yfit, newx = df_YM0, type = 'response', s="lambda.min"), 0.001), .999)
   
   if (transport) {
     return(list(initdata = list(M_ps = M_ps, ZS0_ps = ZS0_ps, Z_ps = Z_ps, A_ps = A_ps, 
