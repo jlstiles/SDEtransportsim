@@ -69,7 +69,7 @@ res = lapply(1:334, FUN = function(x){
   return(list(res, p, data))
 })
 
-save(res, file = "res2.RData")
+save(res, file = "res.RData")
 
 
 
