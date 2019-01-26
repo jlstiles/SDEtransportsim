@@ -53,19 +53,22 @@ formsNT=list(Aform = formula("A ~ W1 + W2"),
 Wnames = c("W1", "W2")
 Wnamesalways = c("W1")
 
-res = lapply(1:334, FUN = function(x) {
+res = lapply(1:334, FUN = function(x){
+  p = sample(1:1e6, 1)
+  set.seed(p)
   data = gendata.SDE(1000, truth_NT$f_W, truth_NT$f_A, 
                      truth_NT$f_Z, truth_NT$f_M, truth_NT$f_Y)
   data$weights = rep(1,nrow(data))
-  res = SDE_tmle_lasso(data, formsNT, RCT = 0.5, Wnames = Wnames, Wnamesalways = Wnamesalways, 
-                       transport = FALSE, pooled = FALSE, gstar_S = 0, truth = truth_NT) 
-  res = c(res$CI_SDE, res$SDE0, res$CI_SIE, res$SIE0)
-  return(res)
-}
-)
+  res1 = try(suppressWarnings(SDE_tmle_lasso(data, formsNT, RCT = 0.5, Wnames = Wnames, Wnamesalways = Wnamesalways, 
+                                             transport = FALSE, pooled = FALSE, gstar_S = 0, truth = truth_NT))) 
+  if (class(res1)[1]=="try-error") {
+    res = rep(0,8)
+  } else {
+    res = c(res1$CI_SDE, res1$SDE0, res1$CI_SIE, res1$SIE0)
+  }
+  return(c(res, p, data))
+})
 
-
-res = do.call(rbind, res)
 save(res, file = "res2.RData")
 
 
