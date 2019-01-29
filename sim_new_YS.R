@@ -1,4 +1,4 @@
-library(SDEtransport)
+library(SDEtransportsim)
 
 boots = 500
 type = "YSmis"
@@ -38,6 +38,7 @@ sim_kara = function(n, forms, truth, B = 500) {
 library(parallel)
 
 for (simmie in 1:6) {
+  # simmie = 1
   if (simmie == 1) {
     suffix = "well"
     func_list = func_formsYS$func_listYSmis
@@ -73,7 +74,7 @@ for (simmie in 1:6) {
   n=100
   
   res100 = mclapply(1:B, FUN = function(x) sim_kara(n=100, forms=forms, truth=func_list, B = boots),
-                          mc.cores = getOption("mc.cores", 24L))
+                          mc.cores = getOption("mc.cores", 4L))
   
   save(res100, func_list, forms, file = paste0("results",type ,"/res100_", suffix ,".RData"))
   

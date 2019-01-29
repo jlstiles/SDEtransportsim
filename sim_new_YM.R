@@ -1,4 +1,4 @@
-library(SDEtransport)
+library(SDEtransportsim)
 
 boots = 500
 type = "YMmis"
