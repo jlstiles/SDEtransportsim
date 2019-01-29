@@ -63,8 +63,14 @@ get.mediation.initdata_lasso = function(data, forms, RCT = 0.5, Wnames, Wnamesal
     dataZS0 = model.matrix(Zform, df_ZS0)[,-1]
     ZS0_ps = predict(Zfit, newx = dataZS0, type = 'response', s="lambda.min")
     dataS = model.matrix(Sform, data)[,-1]
+    if (is.vector(dataS)) {
+      dataS = data.frame(S = data$S, W = dataS)
+      Sfit = glm(formula = S~., data = dataS, family = binomial())
+      S_ps = predict(Sfit, type = 'response')
+    } else {
     Sfit = cv.glmnet(dataS, data$S, family = "binomial", parallel=TRUE)
     S_ps = predict(Sfit, newx = dataS, type = 'response', s="lambda.min")
+    }
     PS0 = mean(data$S==0)
    }
   stopCluster(cl)

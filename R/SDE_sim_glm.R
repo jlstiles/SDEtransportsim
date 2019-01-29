@@ -455,8 +455,8 @@ mediation.step1_glm = function(initdata, Y_preds, data, gstarM_astar, a) {
   
   if (class(Qfit)=="try-error") eps = 0 else eps = Qfit$coefficients
   
-  est_iptw = mean(data$Y*H)
-  IC_iptw = data$Y*H - est_iptw
+  est_iptw = mean(data$Y*H/mean(H))
+  IC_iptw = H/mean(H)*(data$Y - est_iptw*mean(H))
   return(list(Qstar_M  = plogis(qlogis(Y_preds$Y_init) + eps),
               Qstar_M1 = plogis(qlogis(Y_preds$Y_init_M1) + eps),
               Qstar_M0 = plogis(qlogis(Y_preds$Y_init_M0) + eps),
