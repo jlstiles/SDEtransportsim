@@ -108,9 +108,28 @@ results = lapply(gender, FUN = function(g) {
 
         colnames(data)[1:2] = c("M", "Y")
         # the main function here
-        res = SDE_tmle_lasso(data, forms, RCT = 0.5, B = NULL, Wnames = Wnames, Wnamesalways = Wnamesalways,
-                             transport = FALSE)
-        return(res)
+        res = try(suppressWarnings(SDE_tmle_lasso(data, forms, RCT = 0.5, B = NULL, Wnames = Wnames, Wnamesalways = Wnamesalways,
+                             transport = FALSE), silent = TRUE))
+        
+        if (class(res)[1]=="try-error") {
+          return(list(CI_SDE = rep(10,3), 
+               CI_SIE = rep(10,3), 
+               SE_SDE = 10, 
+               SE_SIE = 10, 
+               ests_astar0a1 = 10,
+               ests_astar0a0 = 10,
+               ests_astar1a1 = 10,
+               eps1_astar0a1 = 10,
+               eps2_astar0a1 = 10,
+               eps1_astar0a0 = 10,
+               eps2_astar0a0 = 10,
+               eps1_astar1a1 = 10,
+               eps2_astar1a1 = 10 
+          ))
+          } else {
+            return(res)
+          }
+        
       })
     })
   })
