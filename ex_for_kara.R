@@ -105,48 +105,67 @@ Wnames = c("W1", "W2")
 Wnamesalways = c("W1")
 
 
-check_sim = function(n, truth = truth, truth_NT = NULL) {
-  
+check_sim = function(n, truth, truth_NT, forms, pooled, gstar_S) {
+  # n=1e5
+  # truth_NT = NULL
   data = gendata.SDEtransport(n, truth$f_W, truth$f_S, truth$f_A, truth$f_Z, truth$f_M, truth$f_Y)
   
   data$weights = rep(1,nrow(data))
   
   if (is.null(truth_NT)) truth = NULL
-  test = SDE_tmle_lasso(data, formsNP, RCT = 0.5, Wnames = Wnames, Wnamesalways = Wnamesalways, 
-                        transport = TRUE, pooled = FALSE, gstar_S = 0, truth = truth) 
+  test = SDE_tmle_lasso(data, forms, RCT = 0.5, Wnames = Wnames, Wnamesalways = Wnamesalways, 
+                        transport = TRUE, pooled = pooled, gstar_S = gstar_S, truth = truth) 
   
+  test1 = SDE_tmle_lasso_eff(data, forms, RCT = 0.5, Wnames = Wnames, Wnamesalways = Wnamesalways, 
+                        transport = TRUE, pooled = pooled, gstar_S = gstar_S, truth = truth) 
   
-  dataNT = data[data$S==0,]
+  dataG = data
+  dataG$weights = NULL
+  res3 = SDE_glm4(dataG, truth = truth, truncate = list(lower =.0001, upper = .9999), 
+                  B = NULL, forms, RCT = 0.5) 
+  
+  res4 = SDE_glm_eff(dataG, truth = truth, truncate = list(lower =.0001, upper = .9999), 
+                     B = NULL, forms, RCT = 0.5) 
+  
+  dataNT = data[data$S==1,]
   dataNT$S = NULL
   
   testNT = SDE_tmle_lasso(dataNT, formsNT, RCT = 0.5, Wnames = Wnames, Wnamesalways = Wnamesalways, 
-                          transport = FALSE, pooled = FALSE, gstar_S = 0, truth = truth_NT) 
+                          transport = FALSE, pooled = FALSE, gstar_S = 1, truth = truth_NT) 
   
-  return(c(test$CI_SDE, test$SDE0, test$CI_SIE, test$SIE0, testNT$CI_SDE,
-           testNT$SDE0, testNT$CI_SIE, testNT$SIE0))
+  testNT1 = SDE_tmle_lasso_eff(dataNT, formsNT, RCT = 0.5, Wnames = Wnames, Wnamesalways = Wnamesalways, 
+                          transport = FALSE, pooled = FALSE, gstar_S = 1, truth = truth_NT) 
+  
+  res = rbind(c(test$CI_SDE, test$SDE0), c(test1$CI_SDE, test1$SDE0),
+              c(test$CI_SIE, test$SIE0), c(test1$CI_SIE, test1$SIE0),
+              c(testNT$CI_SDE, testNT$SDE0), c(testNT1$CI_SDE,testNT1$SDE0),
+              c(testNT$CI_SIE, testNT$SIE0), c(testNT1$CI_SIE, testNT1$SIE0),
+              c(res3$CI_SDE, res3$SDE0), c(res4$CI_SDE, res4$SDE0),
+              c(res3$CI_SIE, res3$SIE0), c(res4$CI_SIE, res4$SIE0))
+  colnames(res) = c("est", "left", "right","truth")
+  rownames(res) = c("SDE_lasso_trans", "SDE_lasso_trans_eff", "SIE_lasso_trans", "SIE_lasso_trans_eff",
+                    "SDE_lasso", "SDE_lasso_eff", "SIE_lasso", "SIE_lasso_eff",
+                    "SDE_glm_trans", "SDE_glm_trans_eff", "SIE_glm_trans", "SIE_glm_trans_eff")
+  
+  return(res)
 }
 
-# All should be the same
-check_truth = check_sim(1e5, truth, truth_NT)
+check_truth = check_sim(1e5, truth = truth, truth_NT=truth_NT, forms = formsNP, pooled = FALSE, gstar_S = 0)
+check_truth
+check_truth[,3] - check_truth[,2]
 
-# each 2 by 2 below should contain all numbers very close to each other
-# Each shows transported to S = 0 using S = 0 mechanism for gstar and non-
-# transporting on subset with S = 0
+check_truth = check_sim(1e5, truth, truth_NT=truth_NT, forms = forms, pooled = TRUE, gstar_S = 0)
+check_truth
+check_truth[,3] - check_truth[,2]
 
-SDE_check = rbind(check_truth[c(1,4)], check_truth[c(9,12)])
-SIE_check = rbind(check_truth[c(5,8)],check_truth[c(13,16)])
-colnames(SDE_check) = colnames(SIE_check) = c("estimate", "truth")
-rownames(SDE_check) = rownames(SIE_check) = c("transported", "Not transported")
-SDE_check
-SIE_check
+check_truth = check_sim(1e5, truth, truth_NT=truth_NT, forms = formsNP, pooled = FALSE, gstar_S = 1)
+check_truth
+check_truth[,3] - check_truth[,2]
 
-# test for smaller samples as to similarity, here we won't check the truth'.  Just run this
-# a few times to see the differences between transporting to S = 0 and non-trans on S = 0 for 
-# n = 700
-check_truth_sm = check_sim(700, truth, NULL)
-SDE_SIE_smCheck = rbind(c(check_truth_sm[1], check_truth_sm[7]), 
-                        c(check_truth_sm[4], check_truth_sm[10]))
-colnames(SDE_SIE_smCheck) = c("trans", "not trans")
-rownames(SDE_SIE_smCheck) = c("SDE", "SIE")
-SDE_SIE_smCheck
+check_truth = check_sim(1e5, truth, truth_NT=truth_NT, forms = forms, pooled = TRUE, gstar_S = 1)
+check_truth
+check_truth[,3] - check_truth[,2]
 
+undebug(check_sim)
+undebug(SDE_tmle_lasso)
+undebug(get.mediation.initdata_lasso)
