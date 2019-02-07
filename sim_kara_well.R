@@ -36,6 +36,7 @@ system(paste0("mkdir -p ", paste0("results", type)))
   
   library(parallel)
 
+  for ()
   B = 1000
   n=100
 
