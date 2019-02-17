@@ -30,7 +30,7 @@ sim_kara = function(n, forms, truth, B = 500) {
                               f_Z = truth$f_Z, 
                               f_M = truth$f_M, 
                               f_Y = truth$f_Y)
-  res = SDE_glm(data, truth = truth,
+  res = SDE_glm4(data, truth = truth,
                 truncate = list(lower =.0001, upper = .9999),
                 B=B, forms = forms, RCT = 0.5)
   res_eff = SDE_glm_eff(data, truth = truth,
