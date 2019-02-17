@@ -53,7 +53,7 @@ compile_SDE = function(res_list, func_list, forms)
 {  
   # res_list = res10000_YAwell
   # res_list = res500_Ymis1
-  # res_list = res100_Ymis1
+  # res_list = res100
   res = lapply(res_list, FUN = function(x) {
     if (is.numeric(x[[1]][1])) unlist(x) else return(0)
   })
@@ -94,15 +94,16 @@ compile_SDE = function(res_list, func_list, forms)
   res_SE_SIEboot = res_SEboot[,c(2,4,6)]
   
   res_SE_0 = res[,45:46]
-  efficiency_SDE = colMeans(apply(res_SE_SDE, 2, FUN = function(x) x/res_SE_0[,1]))
-  efficiency_SIE = colMeans(apply(res_SE_SIE, 2, FUN = function(x) x/res_SE_0[,2]))
+  res_SE_eff0 = res[,47:48]
+  efficiency_SDE = colMeans(apply(res_SE_SDE, 2, FUN = function(x) x/res_SE_eff0[,1]))
+  efficiency_SIE = colMeans(apply(res_SE_SIE, 2, FUN = function(x) x/res_SE_eff0[,2]))
   # efficiency_SDE
   # efficiency_SIE
   
-  efficiency_SDEboot = colMeans(apply(res_SE_SDEboot, 2, FUN = function(x) x/res_SE_0[,1]))
-  efficiency_SIEboot = colMeans(apply(res_SE_SIEboot, 2, FUN = function(x) x/res_SE_0[,2]))
-  efficiency_SDEboot
-  efficiency_SIEboot
+  efficiency_SDEboot = colMeans(apply(res_SE_SDEboot, 2, FUN = function(x) x/res_SE_eff0[,1]))
+  efficiency_SIEboot = colMeans(apply(res_SE_SIEboot, 2, FUN = function(x) x/res_SE_eff0[,2]))
+  # efficiency_SDEboot
+  # efficiency_SIEboot
   
   res_ests_SDE = res[,c(1,7,13,37)]
   res_ests_SIE = res[,c(4,10,16,38)]
