@@ -2,7 +2,7 @@ library(SDEtransportsim)
 
 boots = 500
 type = "YZmis"
-load("func_forms.RData")
+load("func_forms1.RData")
 
 if (type == "YMmis") {
   func_list = func_formsYM$func_listYMmis
