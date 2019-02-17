@@ -115,8 +115,14 @@ SDE_glm4 = function(data, truth = NULL, truncate = list(lower =.0001, upper = .9
     D_SDE_0 = gstar_info$D_astar0a1_0 - gstar_info$D_astar0a0_0
     D_SIE_0 = gstar_info$D_astar1a1_0 - gstar_info$D_astar0a1_0
     
+    D_SDE_eff0 = gstar_info$D_astar0a1_eff0 - gstar_info$D_astar0a0_eff0
+    D_SIE_eff0 = gstar_info$D_astar1a1_eff0 - gstar_info$D_astar0a1_eff0
+    
     SE_SDE_0 = sd(D_SDE_0)/sqrt(n)
     SE_SIE_0 = sd(D_SIE_0)/sqrt(n)
+    
+    SE_SDE_eff0 = sd(D_SDE_eff0)/sqrt(n)
+    SE_SIE_eff0 = sd(D_SIE_eff0)/sqrt(n)
     
     Psi_astar0a1_0 = gstar_info$Psi_astar0a1_0
     Psi_astar0a0_0 = gstar_info$Psi_astar0a0_0
@@ -124,6 +130,7 @@ SDE_glm4 = function(data, truth = NULL, truncate = list(lower =.0001, upper = .9
     
   } else {
     D_SDE_0 = D_SIE_0 = SE_SDE_0 = SE_SIE_0 = NULL
+    D_SDE_eff0 = D_SIE_eff0 = SE_SDE_eff0 = SE_SIE_eff0 = NULL
     Psi_astar0a1_0 = gstar_info$Psi_astar0a1_0
     Psi_astar0a0_0 = gstar_info$Psi_astar0a0_0
     Psi_astar1a1_0 = gstar_info$Psi_astar1a1_0
@@ -180,8 +187,11 @@ SDE_glm4 = function(data, truth = NULL, truncate = list(lower =.0001, upper = .9
                 SE_SIE_1s = SE_SIE_1s, 
                 SE_SDE_iptw = SE_SDE_iptw,   
                 SE_SIE_iptw = SE_SIE_iptw, 
+                
                 SE_SDE_0 = SE_SDE_0, 
                 SE_SIE_0 = SE_SIE_0,
+                SE_SDE_eff0 = SE_SDE_eff0, 
+                SE_SIE_eff0 = SE_SIE_eff0,
                 
                 ests_astar0a1 = ests_astar0a1,
                 ests_astar0a0 = ests_astar0a0,
@@ -206,8 +216,11 @@ SDE_glm4 = function(data, truth = NULL, truncate = list(lower =.0001, upper = .9
                 SE_SIE_1s = SE_SIE_1s, 
                 SE_SDE_iptw = SE_SDE_iptw,   
                 SE_SIE_iptw = SE_SIE_iptw, 
+                
                 SE_SDE_0 = SE_SDE_0, 
                 SE_SIE_0 = SE_SIE_0,
+                SE_SDE_eff0 = SE_SDE_eff0, 
+                SE_SIE_eff0 = SE_SIE_eff0,
                 
                 ests_astar0a1 = ests_astar0a1,
                 ests_astar0a0 = ests_astar0a0,
@@ -302,6 +315,8 @@ get_gstarM_glm  = function(data, truth, forms)
     M_ps0 = with(data, truth$f_M(Z=Z, W=W, S=1))
     Z_ps0 = with(data, truth$f_Z(A=A, W=W, S=S))
     A_ps0 = with(data, truth$f_A(W=W, S=S))
+    Z_psWS0 = with(data, truth$f_Z(A=1, W=W, S=S)*A_ps0 + 
+                     truth$f_Z(A=0, W=W, S=S)*(1-A_ps0))
     
     get_cc_0 = function(data, gstarM_astar, a) {
       with(data, ((S == 1)*(A == a)*
@@ -313,11 +328,24 @@ get_gstarM_glm  = function(data, truth, forms)
               *PS0_0))
     }
     
+    get_cc_eff0 = function(data, gstarM_astar, a) {
+      with(data, ((S == 1)*(A == a)*
+                    ((M == 1)*gstarM_astar + (M == 0)*(1 - gstarM_astar))*
+                    ((Z == 1)*ZS0_ps0 + (Z == 0)*(1 - ZS0_ps0))*(1 - S_ps0))/
+             (((M == 1)*M_ps0 + (M == 0)*(1 - M_ps0))*
+                ((Z == 1)*Z_psWS0 + (Z == 0)*(1 - Z_psWS0))*S_ps0
+              *PS0_0))
+    }
+    
     get_Hz_0 = function(a) with(data, (A == a)*(S == 0)/(A*A_ps0 + (1 - A)*(1 - A_ps0))/PS0_0)
     
     Hm_astar0a1_0 = get_cc_0(data = data, gstarM_astar = gstarM_astar0, a = 1)
     Hm_astar0a0_0 = get_cc_0(data = data, gstarM_astar = gstarM_astar0, a = 0)
     Hm_astar1a1_0 = get_cc_0(data = data, gstarM_astar = gstarM_astar1, a = 1)
+    
+    Hm_astar0a1_eff0 = get_cc_eff0(data = data, gstarM_astar = gstarM_astar0, a = 1)
+    Hm_astar0a0_eff0 = get_cc_eff0(data = data, gstarM_astar = gstarM_astar0, a = 0)
+    Hm_astar1a1_eff0 = get_cc_eff0(data = data, gstarM_astar = gstarM_astar1, a = 1)
     
     Hz_astar0a1_0 = get_Hz_0(1)
     Hz_astar0a0_0 = get_Hz_0(0)
@@ -358,14 +386,31 @@ get_gstarM_glm  = function(data, truth, forms)
                               Psi_0 = Psi_astar1a1_0, Hm_0 = Hm_astar1a1_0,
                               Hz_0 = Hz_astar1a1_0)
     
+    D_astar0a1_eff0 = get_trueIC(gstar_M = gstarM_astar0, a = 1, 
+                              Psi_0 = Psi_astar0a1_0, Hm_0 = Hm_astar0a1_eff0,
+                              Hz_0 = Hz_astar0a1_0)
+    
+    D_astar0a0_eff0 = get_trueIC(gstar_M = gstarM_astar0, a = 0, 
+                              Psi_0 = Psi_astar0a0_0, Hm_0 = Hm_astar0a0_eff0,
+                              Hz_0 = Hz_astar0a0_0)
+    
+    D_astar1a1_eff0 = get_trueIC(gstar_M = gstarM_astar1, a = 1, 
+                              Psi_0 = Psi_astar1a1_0, Hm_0 = Hm_astar1a1_eff0,
+                              Hz_0 = Hz_astar1a1_0)
+    
     return(list(gstarM_astar1 = gstarM_astar1, gstarM_astar0 = gstarM_astar0, 
                 Psi_astar0a1_0 = Psi_astar0a1_0, Psi_astar0a0_0 = Psi_astar0a0_0, 
                 Psi_astar1a1_0 = Psi_astar1a1_0, PS0_0 = PS0_0, 
                 D_astar0a1_0 = D_astar0a1_0, D_astar0a0_0 = D_astar0a0_0,
                 D_astar1a1_0 = D_astar1a1_0, 
+                D_astar0a1_eff0 = D_astar0a1_eff0, D_astar0a0_eff0 = D_astar0a0_eff0,
+                D_astar1a1_eff0 = D_astar1a1_eff0, 
                 Hm_astar0a1_0 = Hm_astar0a1_0, 
                 Hm_astar0a0_0 = Hm_astar0a0_0,
                 Hm_astar1a1_0 = Hm_astar1a1_0,
+                Hm_astar0a1_eff0 = Hm_astar0a1_eff0, 
+                Hm_astar0a0_eff0 = Hm_astar0a0_eff0,
+                Hm_astar1a1_eff0 = Hm_astar1a1_eff0,
                 Hz_astar0a1_0 = Hz_astar0a1_0,
                 Hz_astar0a0_0 = Hz_astar0a0_0,
                 Hz_astar1a1_0 = Hz_astar1a1_0))
