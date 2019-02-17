@@ -21,7 +21,6 @@ SDE_glm_eff = function(data, truth = NULL, truncate = list(lower =.0001, upper =
       # get iptw here while I'm at it
       update = mediation.step1_glm_eff(initdata = init_info$initdata, init_info$Y_preds, data = data, 
                                gstarM_astar[[astar+1]], a = a)
-      iptw_info = list(update$IC_iptw, update$est_iptw)
       
       Y_Mg = get.stochasticM(gstarM_astar[[astar+1]], Y_preds[[2]], Y_preds[[3]]) 
       A_ps = init_info$initdata$A_ps
@@ -39,7 +38,7 @@ SDE_glm_eff = function(data, truth = NULL, truncate = list(lower =.0001, upper =
       
       # compile all estimates
       tmle_info$eps1 = update$eps
-      return(list(EE_gcomp_info = EE_gcomp_info, iptw_info = iptw_info, tmle_info = tmle_info))
+      return(list(EE_gcomp_info = EE_gcomp_info, tmle_info = tmle_info))
     }) 
   })
   
@@ -74,7 +73,7 @@ SDE_glm_eff = function(data, truth = NULL, truncate = list(lower =.0001, upper =
                                     a = a, tmle = TRUE,
                                     EE = FALSE, bootstrap = TRUE, form = forms$QZform)
         # compile all estimates
-        return(list(tmle_est = tmle_info, EE_est = EE_mle_info[1], iptw_est = iptw_info, 
+        return(list(tmle_est = tmle_info, EE_est = EE_mle_info[1],
                     mle_est = EE_mle_info[2]))
       }))
     })
@@ -98,18 +97,12 @@ SDE_glm_eff = function(data, truth = NULL, truncate = list(lower =.0001, upper =
   
   D_SDE_1s = est_info[[1]][[2]]$EE_gcomp_info$IC - est_info[[1]][[1]]$EE_gcomp_info$IC
   D_SIE_1s = est_info[[2]][[2]]$EE_gcomp_info$IC- est_info[[1]][[2]]$EE_gcomp_info$IC
-  
-  D_SDE_iptw = est_info[[1]][[2]]$iptw_info[[1]] - est_info[[1]][[1]]$iptw_info[[1]]
-  D_SIE_iptw = est_info[[2]][[2]]$iptw_info[[1]]- est_info[[1]][[2]]$iptw_info[[1]]
 
   SE_SDE = sd(D_SDE)/sqrt(n)
   SE_SIE = sd(D_SIE)/sqrt(n)
   
   SE_SDE_1s = sd(D_SDE_1s)/sqrt(n)
   SE_SIE_1s = sd(D_SIE_1s)/sqrt(n)
-  
-  SE_SDE_iptw = sd(D_SDE_iptw)/sqrt(n)
-  SE_SIE_iptw = sd(D_SIE_iptw)/sqrt(n)
 
   if (!is.null(truth)) { 
   D_SDE_0 = gstar_info$D_astar0a1_0 - gstar_info$D_astar0a0_0
@@ -154,32 +147,23 @@ SDE_glm_eff = function(data, truth = NULL, truncate = list(lower =.0001, upper =
   
   CI_SDE_1s = c(SDE_ests[2], SDE_ests[2] - 1.96*SE_SDE_1s , SDE_ests[2] + 1.96*SE_SDE_1s)
   CI_SIE_1s  = c(SIE_ests[2], SIE_ests[2] - 1.96*SE_SIE_1s , SIE_ests[2] + 1.96*SE_SIE_1s)
-  
-  CI_SDE_iptw = c(SDE_ests[3], SDE_ests[3] - 1.96*SE_SDE_iptw, SDE_ests[3] + 1.96*SE_SDE_iptw)
-  CI_SIE_iptw = c(SIE_ests[3], SIE_ests[3] - 1.96*SE_SIE_iptw, SIE_ests[3] + 1.96*SE_SIE_iptw)
-  
+
   if (!is.null(B)) {
     CI_SDE_boot = c(SDE_ests[1], SDE_ests[1] - 1.96*bootSE_SDE[1], SDE_ests[1] + 1.96*bootSE_SDE[1])
     CI_SIE_boot = c(SIE_ests[1], SIE_ests[1] - 1.96*bootSE_SIE[1], SIE_ests[1] + 1.96*bootSE_SIE[1])
     
     CI_SDE_1s_boot = c(SDE_ests[2], SDE_ests[2] - 1.96*bootSE_SDE[2] , SDE_ests[2] + 1.96*bootSE_SDE[2])
     CI_SIE_1s_boot  = c(SIE_ests[2], SIE_ests[2] - 1.96*bootSE_SIE[2] , SIE_ests[2] + 1.96*bootSE_SIE[2])
-    
-    CI_SDE_iptw_boot = c(SDE_ests[3], SDE_ests[3] - 1.96*bootSE_SDE[3], SDE_ests[3] + 1.96*bootSE_SDE[3])
-    CI_SIE_iptw_boot = c(SIE_ests[3], SIE_ests[3] - 1.96*bootSE_SIE[3], SIE_ests[3] + 1.96*bootSE_SIE[3])
-    
+
     return(list(CI_SDE = CI_SDE, CI_SIE = CI_SIE, CI_SDE_1s = CI_SDE_1s, CI_SIE_1s = CI_SIE_1s,
-                CI_SDE_iptw = CI_SDE_iptw, CI_SIE_iptw = CI_SIE_iptw, CI_SDE_boot = CI_SDE_boot, 
+                CI_SDE_boot = CI_SDE_boot, 
                 CI_SIE_boot = CI_SIE_boot, CI_SDE_1s_boot = CI_SDE_1s_boot, CI_SIE_1s_boot = CI_SIE_1s_boot, 
-                CI_SDE_iptw_boot = CI_SDE_iptw_boot, CI_SIE_iptw_boot = CI_SIE_iptw_boot,
                 SDE_0 = Psi_astar0a1_0 - Psi_astar0a0_0,
                 SIE_0 = Psi_astar1a1_0 - Psi_astar0a1_0, 
                 SE_SDE = SE_SDE, 
                 SE_SIE = SE_SIE, 
                 SE_SDE_1s = SE_SDE_1s,  
                 SE_SIE_1s = SE_SIE_1s, 
-                SE_SDE_iptw = SE_SDE_iptw,   
-                SE_SIE_iptw = SE_SIE_iptw, 
                 SE_SDE_0 = SE_SDE_0, 
                 SE_SIE_0 = SE_SIE_0,
                 
@@ -197,15 +181,12 @@ SDE_glm_eff = function(data, truth = NULL, truncate = list(lower =.0001, upper =
   } else {
     
     return(list(CI_SDE = CI_SDE, CI_SIE = CI_SIE, CI_SDE_1s = CI_SDE_1s, CI_SIE_1s = CI_SIE_1s,
-                CI_SDE_iptw = CI_SDE_iptw, CI_SIE_iptw = CI_SIE_iptw, 
                 SDE_0 = Psi_astar0a1_0 - Psi_astar0a0_0,
                 SIE_0 = Psi_astar1a1_0 - Psi_astar0a1_0, 
                 SE_SDE = SE_SDE, 
                 SE_SIE = SE_SIE, 
                 SE_SDE_1s = SE_SDE_1s,  
                 SE_SIE_1s = SE_SIE_1s, 
-                SE_SDE_iptw = SE_SDE_iptw,   
-                SE_SIE_iptw = SE_SIE_iptw, 
                 SE_SDE_0 = SE_SDE_0, 
                 SE_SIE_0 = SE_SIE_0,
                 
@@ -301,8 +282,10 @@ get_gstarM_glm_eff  = function(data, truth, forms)
     ZS0_ps0 = with(df_ZS0, truth$f_Z(A=A, W=W, S=S))
     M_ps0 = with(data, truth$f_M(Z=Z, W=W, S=1))
     Z_ps0 = with(data, truth$f_Z(A=A, W=W, S=S))
-    Z_psWS0 = with(data, truth$f_Z(A=1, W=W, S=S) + truth$f_Z(A=0, W=W, S=S))
     A_ps0 = with(data, truth$f_A(W=W, S=S))
+    Z_psWS0 = with(data, truth$f_Z(A=1, W=W, S=S)*A_ps0 + 
+                     truth$f_Z(A=0, W=W, S=S)*(1-A_ps0))
+    
     
     get_cc_0 = function(data, gstarM_astar, a) {
       with(data, ((S == 1)*(A == a)*
@@ -464,12 +447,9 @@ mediation.step1_glm_eff = function(initdata, Y_preds, data, gstarM_astar, a) {
   
   if (class(Qfit)=="try-error") eps = 0 else eps = Qfit$coefficients
   
-  est_iptw = mean(data$Y*H/mean(H))
-  IC_iptw = H/mean(H)*(data$Y - est_iptw*mean(H))
   return(list(Qstar_M  = plogis(qlogis(Y_preds$Y_init) + eps),
               Qstar_M1 = plogis(qlogis(Y_preds$Y_init_M1) + eps),
               Qstar_M0 = plogis(qlogis(Y_preds$Y_init_M0) + eps),
-              IC_iptw = IC_iptw, est_iptw = est_iptw,
               Hm = H,
               eps = eps))
 }

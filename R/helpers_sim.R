@@ -157,3 +157,84 @@ compile_SDE = function(res_list, func_list, forms)
   
 }
 
+#' @export
+compile_SDE_noboot = function(res_list, func_list, forms)
+{  
+  # res_list = res500_well
+  res = lapply(res_list, FUN = function(x) {
+    if (is.numeric(x[[1]][1])) unlist(x) else return(0)
+  })
+  
+  valid_draws = which(vapply(1:length(res), FUN = function(x) res[[x]][1] != 0, FUN.VALUE = TRUE))
+  
+  length(valid_draws)
+  res = res[valid_draws]
+  res = do.call(rbind, res)
+  
+  res = as.data.frame(res)
+  coverage = c(SDE_tmle = mean((res$SDE_0 >= res[,2]) & (res$SDE_0 <= res[,3])),
+               SDE_1s = mean((res$SDE_0 >= res[,8]) & (res$SDE_0 <= res[,9])),
+               SDE_iptw = mean((res$SDE_0 >= res[,14]) & (res$SDE_0 <= res[,15])),
+               SIE_tmle = mean((res$SIE_0 >= res[,5]) & (res$SIE_0 <= res[,6])),
+               SIE_1s = mean((res$SIE_0 >= res[,11]) & (res$SIE_0 <= res[,12])),
+               SIE_iptw = mean((res$SIE_0 >= res[,17]) & (res$SIE_0 <= res[,18])))
+  
+  res_SE_SDE = res[,c(21,23,25)]
+  res_SE_SIE = res[,c(22,24,26)]
+  
+  res_SE_0 = res[,27:28]
+  
+  efficiency_SDE = colMeans(apply(res_SE_SDE, 2, FUN = function(x) x/res_SE_0[,1]))
+  efficiency_SIE = colMeans(apply(res_SE_SIE, 2, FUN = function(x) x/res_SE_0[,2]))
+  
+  
+  res_ests_SDE = res[,c(1,7,13,19)]
+  res_ests_SIE = res[,c(4,10,16,20)]
+  
+  res_bias_SDE = cbind(res_ests_SDE[,1] - res_ests_SDE[,4],
+                       res_ests_SDE[,2] - res_ests_SDE[,4],
+                       res_ests_SDE[,3] - res_ests_SDE[,4])
+  
+  res_bias_SIE = cbind(res_ests_SIE[,1] - res_ests_SIE[,4],
+                       res_ests_SIE[,2] - res_ests_SIE[,4],
+                       res_ests_SIE[,3] - res_ests_SIE[,4])
+  
+  coverage = rbind(coverage[1:6], coverage[7:12])
+  rownames(coverage) = c("IC variance", "Bootstrap")
+  colnames(coverage) = c("SDE_tmle", "SDE_EE", "SDE_iptw", "SIE_tmle", "SIE_EE", "SIE_iptw")
+  
+  # precentage SE of of efficiency bound
+  efficiency_percentageTrue = 100*c(efficiency_SDE, efficiency_SIE)
+  names(efficiency_percentageTrue) = c("SDE_tmle", "SDE_EE", "SDE_iptw", "SIE_tmle", "SIE_EE", "SIE_iptw")
+  
+  
+  # precentage bias of SE
+  bias_perc_SDE = 100*unlist(lapply(lapply(1:3, FUN = function(x) res_bias_SDE[,x]/res_SE_SDE[,x]), mean))
+  bias_perc_SIE = 100*unlist(lapply(lapply(1:3, FUN = function(x) res_bias_SIE[,x]/res_SE_SIE[,x]), mean))
+  bias_percentageSE = c(bias_perc_SDE, bias_perc_SIE)
+  
+  bias_perc_SDE = 100*unlist(lapply(lapply(1:3, FUN = function(x) res_bias_SDE[,x]/res_SE_SDE[,x]), mean))
+  bias_perc_SIE = 100*unlist(lapply(lapply(1:3, FUN = function(x) res_bias_SIE[,x]/res_SE_SIE[,x]), mean))
+  bias  = colMeans(cbind(res_bias_SDE, res_bias_SIE))
+  names(bias) = c("SDE_tmle", "SDE_EE", "SDE_iptw", "SIE_tmle", "SIE_EE", "SIE_iptw")
+  
+  names(bias_percentageSE) = c("SDE_tmle", "SDE_EE", "SDE_iptw", "SIE_tmle", "SIE_EE", "SIE_iptw")
+  
+  RMSE = c(SDE_tmle = sqrt(mean((res$SDE_0 - res[,1])^2)),
+           sqrt(SDE_1s = mean((res$SDE_0 - res[,7])^2)),
+           sqrt(SDE_iptw = mean((res$SDE_0 - res[,13])^2)),
+           sqrt(SIE_tmle = mean((res$SIE_0 - res[,4])^2)),
+           sqrt(SIE_1s = mean((res$SIE_0 - res[,10])^2)),
+           sqrt(SIE_iptw = mean((res$SIE_0 - res[,16])^2)))
+  
+  return(list(results = res,
+              coverage = coverage, 
+              efficiency_percentageTrue = efficiency_percentageTrue,
+              bias_percentageSE = bias_percentageSE,
+              bias = bias,
+              RMSE = RMSE,
+              valid_draws = length(valid_draws),
+              func_list = func_list,
+              forms = forms))
+  
+}

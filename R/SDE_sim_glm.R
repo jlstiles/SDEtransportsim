@@ -20,22 +20,22 @@ SDE_glm4 = function(data, truth = NULL, truncate = list(lower =.0001, upper = .9
       # get tmle info
       # get iptw here while I'm at it
       update = mediation.step1_glm(initdata = init_info$initdata, init_info$Y_preds, data = data, 
-                               gstarM_astar[[astar+1]], a)
+                                   gstarM_astar[[astar+1]], a)
       iptw_info = list(update$IC_iptw, update$est_iptw)
       
       Y_Mg = get.stochasticM(gstarM_astar[[astar+1]], Y_preds[[2]], Y_preds[[3]]) 
       A_ps = init_info$initdata$A_ps
       EE_gcomp_info = mediation.step2_glm(data = data, Qstar_M = Y_preds[[1]], 
-                      Qstar_Mg = Y_Mg, Hm = update$Hm, A_ps = A_ps, 
-                      a = a, tmle = FALSE,
-                      EE = TRUE, bootstrap = FALSE, form = forms$QZform)
-
+                                          Qstar_Mg = Y_Mg, Hm = update$Hm, A_ps = A_ps, 
+                                          a = a, tmle = FALSE,
+                                          EE = TRUE, bootstrap = FALSE, form = forms$QZform)
+      
       Qstar_Mg = get.stochasticM(gstarM_astar[[astar+1]], update$Qstar_M1, update$Qstar_M0) 
       # compute Qstar_Mg here
       tmle_info = mediation.step2_glm(data = data, Qstar_M = update$Qstar_M, 
-                      Qstar_Mg = Qstar_Mg, Hm = update$Hm, A_ps = A_ps, 
-                      a = a, tmle = TRUE,
-                      EE = FALSE, bootstrap = FALSE, form = forms$QZform)
+                                      Qstar_Mg = Qstar_Mg, Hm = update$Hm, A_ps = A_ps, 
+                                      a = a, tmle = TRUE,
+                                      EE = FALSE, bootstrap = FALSE, form = forms$QZform)
       
       # compile all estimates
       tmle_info$eps1 = update$eps
@@ -48,38 +48,38 @@ SDE_glm4 = function(data, truth = NULL, truncate = list(lower =.0001, upper = .9
   n = nrow(data)
   if (!is.null(B)) {
     boot_ests = lapply(1:B, FUN = function(x) {
-    inds = sample(1:n, replace = TRUE)
-    data = data[inds,]
-    init_info = get.mediation.initdata_glm(data = data, forms = forms, RCT = RCT)
-    Y_preds = init_info$Y_preds
-    gstarM_astar = list(gstarM_astar0[inds], gstarM_astar1[inds])
-    
-    est_info = lapply(0:1, FUN = function(astar) {
-      return(lapply(0:1, FUN = function(a) {
-        update = mediation.step1_glm(initdata = init_info$initdata, Y_preds = Y_preds, data = data, 
-                                 gstarM_astar[[astar+1]], a)
-        iptw_info = update$est_iptw
-        
-        Y_Mg = get.stochasticM(gstarM_astar[[astar+1]], Y_preds[[2]], Y_preds[[3]]) 
-        A_ps = init_info$initdata$A_ps
-        EE_mle_info = mediation.step2_glm(data = data, Qstar_M = Y_preds[[1]], 
-                                      Qstar_Mg = Y_Mg, Hm = update$Hm, A_ps = A_ps, 
-                                      a = a, tmle = FALSE,
-                                      EE = TRUE, bootstrap = TRUE, form = forms$QZform)
-        
-        Qstar_Mg = get.stochasticM(gstarM_astar[[astar+1]], update$Qstar_M1, update$Qstar_M0) 
-        # compute Qstar_Mg here
-        tmle_info = mediation.step2_glm(data = data, Qstar_M = update$Qstar_M, 
-                                    Qstar_Mg = Qstar_Mg, Hm = update$Hm, A_ps = A_ps, 
-                                    a = a, tmle = TRUE,
-                                    EE = FALSE, bootstrap = TRUE, form = forms$QZform)
-        # compile all estimates
-        return(list(tmle_est = tmle_info, EE_est = EE_mle_info[1], iptw_est = iptw_info, 
-                    mle_est = EE_mle_info[2]))
-      }))
+      inds = sample(1:n, replace = TRUE)
+      data = data[inds,]
+      init_info = get.mediation.initdata_glm(data = data, forms = forms, RCT = RCT)
+      Y_preds = init_info$Y_preds
+      gstarM_astar = list(gstarM_astar0[inds], gstarM_astar1[inds])
+      
+      est_info = lapply(0:1, FUN = function(astar) {
+        return(lapply(0:1, FUN = function(a) {
+          update = mediation.step1_glm(initdata = init_info$initdata, Y_preds = Y_preds, data = data, 
+                                       gstarM_astar[[astar+1]], a)
+          iptw_info = update$est_iptw
+          
+          Y_Mg = get.stochasticM(gstarM_astar[[astar+1]], Y_preds[[2]], Y_preds[[3]]) 
+          A_ps = init_info$initdata$A_ps
+          EE_mle_info = mediation.step2_glm(data = data, Qstar_M = Y_preds[[1]], 
+                                            Qstar_Mg = Y_Mg, Hm = update$Hm, A_ps = A_ps, 
+                                            a = a, tmle = FALSE,
+                                            EE = TRUE, bootstrap = TRUE, form = forms$QZform)
+          
+          Qstar_Mg = get.stochasticM(gstarM_astar[[astar+1]], update$Qstar_M1, update$Qstar_M0) 
+          # compute Qstar_Mg here
+          tmle_info = mediation.step2_glm(data = data, Qstar_M = update$Qstar_M, 
+                                          Qstar_Mg = Qstar_Mg, Hm = update$Hm, A_ps = A_ps, 
+                                          a = a, tmle = TRUE,
+                                          EE = FALSE, bootstrap = TRUE, form = forms$QZform)
+          # compile all estimates
+          return(list(tmle_est = tmle_info, EE_est = EE_mle_info[1], iptw_est = iptw_info, 
+                      mle_est = EE_mle_info[2]))
+        }))
+      })
     })
-  })
-  
+    
     boot_ests = lapply(boot_ests, FUN = function(boot) {
       SDE = unlist(boot[[1]][[2]]) - unlist(boot[[1]][[1]])
       SIE = unlist(boot[[2]][[2]]) - unlist(boot[[1]][[2]])
@@ -101,7 +101,7 @@ SDE_glm4 = function(data, truth = NULL, truncate = list(lower =.0001, upper = .9
   
   D_SDE_iptw = est_info[[1]][[2]]$iptw_info[[1]] - est_info[[1]][[1]]$iptw_info[[1]]
   D_SIE_iptw = est_info[[2]][[2]]$iptw_info[[1]]- est_info[[1]][[2]]$iptw_info[[1]]
-
+  
   SE_SDE = sd(D_SDE)/sqrt(n)
   SE_SIE = sd(D_SIE)/sqrt(n)
   
@@ -110,18 +110,18 @@ SDE_glm4 = function(data, truth = NULL, truncate = list(lower =.0001, upper = .9
   
   SE_SDE_iptw = sd(D_SDE_iptw)/sqrt(n)
   SE_SIE_iptw = sd(D_SIE_iptw)/sqrt(n)
-
+  
   if (!is.null(truth)) { 
-  D_SDE_0 = gstar_info$D_astar0a1_0 - gstar_info$D_astar0a0_0
-  D_SIE_0 = gstar_info$D_astar1a1_0 - gstar_info$D_astar0a1_0
-  
-  SE_SDE_0 = sd(D_SDE_0)/sqrt(n)
-  SE_SIE_0 = sd(D_SIE_0)/sqrt(n)
-  
-  Psi_astar0a1_0 = gstar_info$Psi_astar0a1_0
-  Psi_astar0a0_0 = gstar_info$Psi_astar0a0_0
-  Psi_astar1a1_0 = gstar_info$Psi_astar1a1_0
-  
+    D_SDE_0 = gstar_info$D_astar0a1_0 - gstar_info$D_astar0a0_0
+    D_SIE_0 = gstar_info$D_astar1a1_0 - gstar_info$D_astar0a1_0
+    
+    SE_SDE_0 = sd(D_SDE_0)/sqrt(n)
+    SE_SIE_0 = sd(D_SIE_0)/sqrt(n)
+    
+    Psi_astar0a1_0 = gstar_info$Psi_astar0a1_0
+    Psi_astar0a0_0 = gstar_info$Psi_astar0a0_0
+    Psi_astar1a1_0 = gstar_info$Psi_astar1a1_0
+    
   } else {
     D_SDE_0 = D_SIE_0 = SE_SDE_0 = SE_SIE_0 = NULL
     Psi_astar0a1_0 = gstar_info$Psi_astar0a1_0
@@ -245,7 +245,7 @@ get_gstarM_glm  = function(data, truth, forms)
     dataM1 = cbind(Z = rep(1,nn), W)
     predM1 = predict(Mstarfit, newdata = dataM1, type = 'response')
     
-    dataM0 = cbind(Z = rep(0,nn), W, M = rep(1,nn))
+    dataM0 = cbind(Z = rep(0,nn), W)
     predM0 = predict(Mstarfit, newdata = dataM0, type = 'response')
     
     dataZ = cbind(A = rep(0,nn), W, S = rep(1, nn))
@@ -259,10 +259,10 @@ get_gstarM_glm  = function(data, truth, forms)
     # W = W[1:10]
     nn = nrow(W)
     # dataM1 = data.frame(cbind)
-    dataM1 = cbind(Z = rep(1,nn), W, M = rep(1,nn))
+    dataM1 = cbind(Z = rep(1,nn), W)
     predM1 = predict(Mstarfit, newdata = dataM1, type = 'response')
     
-    dataM0 = cbind(Z = rep(0,nn), W, M = rep(1,nn))
+    dataM0 = cbind(Z = rep(0,nn), W)
     predM0 = predict(Mstarfit, newdata = dataM0, type = 'response')
     
     dataZ = cbind(A = rep(1,nn), W, S = rep(1, nn))
@@ -519,4 +519,3 @@ mediation.step2_glm = function(data, Qstar_M, Qstar_Mg, Hm, A_ps, a, tmle = TRUE
     }
   }
 }
-
