@@ -288,7 +288,7 @@ get_gstarM_glm_eff  = function(data, truth, forms)
     
     
     get_cc_0 = function(data, gstarM_astar, a) {
-      with(data, ((S == 1)*(A == a)*
+      with(data, ((S == 1)*
                     ((M == 1)*gstarM_astar + (M == 0)*(1 - gstarM_astar))*
                     ((Z == 1)*ZS0_ps0 + (Z == 0)*(1 - ZS0_ps0))*(1 - S_ps0))/
              (((M == 1)*M_ps0 + (M == 0)*(1 - M_ps0))*
