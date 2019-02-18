@@ -274,12 +274,8 @@ get_gstarM_glm_eff  = function(data, truth, forms)
     PS0_0 = mean(data_pop_astar1a1$S==0)   
     
     # get the true IC's
-    df_ZS0 = data
-    df_ZS0$S = 0
-    
     W = data[,grep("W", colnames(data))]
     S_ps0 = with(data, truth$f_S(W=W))
-    ZS0_ps0 = with(df_ZS0, truth$f_Z(A=A, W=W, S=S))
     M_ps0 = with(data, truth$f_M(Z=Z, W=W, S=1))
     Z_ps0 = with(data, truth$f_Z(A=A, W=W, S=S))
     A_ps0 = with(data, truth$f_A(W=W, S=S))
@@ -288,6 +284,10 @@ get_gstarM_glm_eff  = function(data, truth, forms)
     
     
     get_cc_0 = function(data, gstarM_astar, a) {
+      df_ZS0 = data
+      df_ZS0$S = 0
+      df_ZS0$A = a
+      ZS0_ps0 = with(df_ZS0, truth$f_Z(A=A, W=W, S=S))
       with(data, ((S == 1)*
                     ((M == 1)*gstarM_astar + (M == 0)*(1 - gstarM_astar))*
                     ((Z == 1)*ZS0_ps0 + (Z == 0)*(1 - ZS0_ps0))*(1 - S_ps0))/

@@ -319,6 +319,7 @@ get_gstarM_glm  = function(data, truth, forms)
                      truth$f_Z(A=0, W=W, S=S)*(1-A_ps0))
     
     get_cc_0 = function(data, gstarM_astar, a) {
+      
       with(data, ((S == 1)*(A == a)*
                     ((M == 1)*gstarM_astar + (M == 0)*(1 - gstarM_astar))*
                     ((Z == 1)*ZS0_ps0 + (Z == 0)*(1 - ZS0_ps0))*(1 - S_ps0))/
@@ -329,6 +330,10 @@ get_gstarM_glm  = function(data, truth, forms)
     }
     
     get_cc_eff0 = function(data, gstarM_astar, a) {
+      df_ZS0 = data
+      df_ZS0$S = 0
+      df_ZS0$A = a
+      ZS0_ps0 = with(df_ZS0, truth$f_Z(A=A, W=W, S=S))
       with(data, ((S == 1)*
                     ((M == 1)*gstarM_astar + (M == 0)*(1 - gstarM_astar))*
                     ((Z == 1)*ZS0_ps0 + (Z == 0)*(1 - ZS0_ps0))*(1 - S_ps0))/
