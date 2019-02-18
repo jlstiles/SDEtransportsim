@@ -106,8 +106,10 @@ Wnamesalways = c("W1")
 
 
 check_sim = function(n, truth, truth_NT, forms, pooled, gstar_S) {
-  # n=1e5
-  # truth_NT = NULL
+  n=1e3
+  truth_NT = truth_NT
+  pooled = TRUE
+  gstar_S = 1
   data = gendata.SDEtransport(n, truth$f_W, truth$f_S, truth$f_A, truth$f_Z, truth$f_M, truth$f_Y)
   
   data$weights = rep(1,nrow(data))
@@ -122,10 +124,12 @@ check_sim = function(n, truth, truth_NT, forms, pooled, gstar_S) {
   dataG = data
   dataG$weights = NULL
   res3 = SDE_glm4(dataG, truth = truth, truncate = list(lower =.0001, upper = .9999), 
-                  B = NULL, forms, RCT = 0.5) 
+                  B = NULL, formsNP, RCT = 0.5) 
   
   res4 = SDE_glm_eff(dataG, truth = truth, truncate = list(lower =.0001, upper = .9999), 
-                     B = NULL, forms, RCT = 0.5) 
+                     B = NULL, formsNP, RCT = 0.5) 
+  res5 = SDE_glm_eff1(dataG, truth = truth, truncate = list(lower =.0001, upper = .9999), 
+                     B = NULL, formsNP, RCT = 0.5) 
   
   dataNT = data[data$S==1,]
   dataNT$S = NULL
@@ -141,7 +145,8 @@ check_sim = function(n, truth, truth_NT, forms, pooled, gstar_S) {
               c(testNT$CI_SDE, testNT$SDE0), c(testNT1$CI_SDE,testNT1$SDE0),
               c(testNT$CI_SIE, testNT$SIE0), c(testNT1$CI_SIE, testNT1$SIE0),
               c(res3$CI_SDE, res3$SDE0), c(res4$CI_SDE, res4$SDE0),
-              c(res3$CI_SIE, res3$SIE0), c(res4$CI_SIE, res4$SIE0))
+              c(res3$CI_SIE, res3$SIE0), c(res4$CI_SIE, res4$SIE0),
+              c(res5$CI_SIE, res5$SIE0))
   colnames(res) = c("est", "left", "right","truth")
   rownames(res) = c("SDE_lasso_trans", "SDE_lasso_trans_eff", "SIE_lasso_trans", "SIE_lasso_trans_eff",
                     "SDE_lasso", "SDE_lasso_eff", "SIE_lasso", "SIE_lasso_eff",
@@ -149,6 +154,15 @@ check_sim = function(n, truth, truth_NT, forms, pooled, gstar_S) {
   
   return(res)
 }
+
+
+res3$SDE_0
+res3$SIE_0
+
+res3$SE_SDE_0
+res3$SE_SIE_0
+res3$SE_SDE_eff0
+res3$SE_SIE_eff0
 
 check_truth = check_sim(1e5, truth = truth, truth_NT=truth_NT, forms = formsNP, pooled = FALSE, gstar_S = 0)
 check_truth
@@ -162,10 +176,7 @@ check_truth = check_sim(1e5, truth, truth_NT=truth_NT, forms = formsNP, pooled =
 check_truth
 check_truth[,3] - check_truth[,2]
 
-check_truth = check_sim(1e5, truth, truth_NT=truth_NT, forms = forms, pooled = TRUE, gstar_S = 1)
+check_truth = check_sim(1e5, truth, truth_NT=truth_NT, forms = formsNP, pooled = TRUE, gstar_S = 1)
 check_truth
 check_truth[,3] - check_truth[,2]
 
-undebug(check_sim)
-undebug(SDE_tmle_lasso)
-undebug(get.mediation.initdata_lasso)

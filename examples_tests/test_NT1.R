@@ -105,7 +105,7 @@ res = lapply(1:334, FUN = function(x){
   data = gendata.SDEtransport(1000, truth$f_W, truth$f_S, truth$f_A, 
                               truth$f_Z, truth$f_M, truth$f_Y)
   data$weights = rep(1,nrow(data))
-  res1 = try(suppressWarnings(SDE_tmle_lasso(data, forms, RCT = 0.5, Wnames = Wnames, 
+  res1 = try(suppressWarnings(SDE_tmle_lasso1(data, forms, RCT = 0.5, Wnames = Wnames, 
                                              Wnamesalways = Wnamesalways, transport = TRUE, 
                                              pooled = TRUE, gstar_S = 0, truth = truth))) 
   if (class(res1)[1]=="try-error") {
@@ -118,3 +118,4 @@ res = lapply(1:334, FUN = function(x){
 
 save(res, file = "res1.RData")
 
+debug(get_gstarM_lasso1)

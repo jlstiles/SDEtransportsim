@@ -100,5 +100,5 @@ for (a in 1:2) {
   }
 }
 
-results$female$s1$M4$Y2
+results$male$s1$M1$Y3
 

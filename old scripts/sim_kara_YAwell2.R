@@ -1,5 +1,5 @@
 
-library(SDEtransport)
+library(SDEtransportsim)
 
 boots = 500
 type = "YZmis"
@@ -19,6 +19,8 @@ if (type == "YZmis") {
   func_list = func_formsYZ$func_listYZmis
   forms = func_formsYZ$formsYAwell
 }
+
+# sim_kara_resultsYMmis$res5000_YZmis[2:6]
 
 # system(paste0("mkdir -p ", paste0("results", type)))
   
@@ -58,10 +60,10 @@ if (type == "YZmis") {
 
   rm("res100_YAwell", "res500_YAwell")
   
-  B = 1000
+  B = 3
   n=1000
   
-  res5000_YAwell = mclapply(1:B, FUN = function(x) sim_kara(n=5000, forms=forms, truth=func_list, B = boots), 
-                            mc.cores = getOption("mc.cores", 20L))
+  res5000_YAwell = mclapply(1:B, FUN = function(x) sim_kara(n=n, forms=forms, truth=func_list, B = boots), 
+                            mc.cores = getOption("mc.cores", 2L))
   
   save(res5000_YAwell, func_list, forms, file = paste0("results", type,"/res5000_YAwell.RData"))
