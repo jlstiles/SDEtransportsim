@@ -63,9 +63,9 @@ sim_kara = function(n, forms, truth, B = 500) {
   rm("res100_YAwell", "res500_YAwell")
   
   B = 1000
-  n=1000
+  n=5000
   
-  res1000_YAwell = mclapply(1:B, FUN = function(x) sim_kara(n=5000, forms=forms, truth=func_list, B = boots), 
+  res5000_YAwell = mclapply(1:B, FUN = function(x) sim_kara(n=5000, forms=forms, truth=func_list, B = boots), 
                             mc.cores = getOption("mc.cores", 20L))
   
-  save(res10000_YAwell, func_list, forms, file = paste0("results", type,"/res1000_YAwell.RData"))
+  save(res5000_YAwell, func_list, forms, file = paste0("results", type,"/res1000_YAwell.RData"))
