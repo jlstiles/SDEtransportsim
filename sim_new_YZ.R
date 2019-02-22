@@ -100,8 +100,7 @@ system(paste0("mkdir -p ", path))
   
   res5000 = mclapply(1:B, FUN = function(x) sim_kara(n=5000, forms=forms, truth=func_list, B = boots), 
                            mc.cores = getOption("mc.cores", 24L))
-  
-  save(res5000, func_list, forms, file = paste0(path,"/res5000_", suffix ,".RData"))
+ save(res5000, func_list, forms, file = paste0(path,"/res5000_", suffix ,".RData"))
   rm("res5000")
 }
 
