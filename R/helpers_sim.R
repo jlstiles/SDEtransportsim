@@ -241,7 +241,7 @@ compile_SDE_noboot = function(res_list, func_list, forms)
 }
 
 #' @export
-compile_SDE_new = function(res_list, func_list, forms)
+compile_SDE_new = function(res_list, func_list, forms, bootcut)
 {  
   # res_list = res10000_YAwell
   # res_list = res500_Ymis1
@@ -292,7 +292,7 @@ compile_SDE_new = function(res_list, func_list, forms)
     (res[,24] - res[,23])/(2*1.96),
     (res[,30] - res[,29])/(2*1.96),
     (res[,36] - res[,35])/(2*1.96))
-  
+
   res_SE_SDE = res[,c(94,96,39,41,43)]
   res_SE_SIE = res[,c(95,97,40,42,44)]
   # 
@@ -310,8 +310,19 @@ compile_SDE_new = function(res_list, func_list, forms)
   # efficiency_SDE
   # efficiency_SIE
   
+  if (bootcut) {
+  efficiency_SDEboot = unlist(lapply(lapply(1:5, FUN = function(x) {
+    c = res_SE_SDEboot[,x]
+    (c/res_SE_eff0[,1])[c<=20]
+    }), mean))
+  efficiency_SIEboot = unlist(lapply(lapply(1:5,FUN = function(x) {
+    c = res_SE_SIEboot[,x]
+    (c/res_SE_eff0[,2])[c<=20]
+  }), mean))
+  } else {
   efficiency_SDEboot = colMeans(apply(res_SE_SDEboot, 2, FUN = function(x) x/res_SE_eff0[,1]))
   efficiency_SIEboot = colMeans(apply(res_SE_SIEboot, 2, FUN = function(x) x/res_SE_eff0[,2]))
+  }
   # efficiency_SDEboot
   # efficiency_SIEboot
   
@@ -365,12 +376,26 @@ compile_SDE_new = function(res_list, func_list, forms)
            SIE_tmle = sqrt(mean((res$res.SIE_0 - res[,4])^2)),
            SIE_1s = sqrt(mean((res$res.SIE_0 - res[,10])^2)),
            SIE_iptw = sqrt(mean((res$res.SIE_0 - res[,16])^2)))
+  
+  Out_of_bounds = 100*c(
+  mean(res[,70]<= -1 | res[,70] >= 1),
+  mean(res[,76]<= -1 | res[,76] >= 1),
+  mean(res[,1]<= -1 | res[,1] >= 1),
+  mean(res[,7]<= -1 | res[,7] >= 1),
+  mean(res[,13]<= -1 | res[,13] >= 1),
+  mean(res[,73]<= -1 | res[,73] >= 1),
+  mean(res[,79]<= -1 | res[,79] >= 1),
+  mean(res[,4]<= -1 | res[,4] >= 1),
+  mean(res[,10]<= -1 | res[,10] >= 1),
+  mean(res[,16]<= -1 | res[,16] >= 1))
+  names(Out_of_bounds) = colnames(coverage)
   return(list(results = res,
               coverage = coverage, 
               efficiency_percentageTrue = efficiency_percentageTrue,
               bias_percentageSE = bias_percentageSE,
               bias = bias,
               RMSE = RMSE,
+              Out_of_bounds = Out_of_bounds,
               valid_draws = length(valid_draws),
               func_list = func_list,
               forms = forms))
