@@ -1,37 +1,40 @@
 # Simulation function
 #' @export
-SDE_glm_eff_seqT = function(data, forms, RCT = 0.5, pooled, gstar_S = 0, truth, B = 500) 
+SDE_glm_eff_seqT = function(data, forms, RCT = 0.5, transport, pooled, gstar_S = 0, truth, B = 500) 
 {
   
+  if (!transport) pooled = FALSE
   # get the stochastic dist of M and true params if you want 
-  gstar_info = get_gstarM_glm_eff_seqT(data = data, truth = truth, forms = forms, pooled, gstar_S)
+  gstar_info = get_gstarM_glm_eff_seqT(data = data, truth = truth, forms = forms, transport = transport, 
+                                       pooled = pooled, gstar_S = gstar_S)
+  # get the stochastic dist of M and true params if you want 
   gstarM_astar1 = gstar_info$gstarM_astar1
   gstarM_astar0 = gstar_info$gstarM_astar0
   gstarM_astar = list(gstarM_astar0 = gstarM_astar0, gstarM_astar1 = gstarM_astar1)
   
   # perform initial fits for the first regression
-  init_info = get.mediation.initdata_glm_eff_seqT(data = data, forms = forms, RCT = RCT, pooled)
+  init_info = get.mediation.initdata_glm_eff_seqT(data = data, forms = forms, RCT = RCT, pooled, transport)
   Y_preds = init_info$Y_preds
   est_info = lapply(0:1, FUN = function(astar) {
     lapply(0:1, FUN = function(a) {
       # get tmle info
       # get iptw here while I'm at it
       update = mediation.step1_glm_eff_seqT(initdata = init_info$initdata, init_info$Y_preds, data = data, 
-                               gstarM_astar[[astar+1]], a = a)
+                               gstarM_astar[[astar+1]], a = a, transport)
       
       Y_Mg = get.stochasticM(gstarM_astar[[astar+1]], Y_preds[[2]], Y_preds[[3]]) 
       A_ps = init_info$initdata$A_ps
       EE_gcomp_info = mediation.step2_glm_eff_seqT(data = data, Qstar_M = Y_preds[[1]], 
                       Qstar_Mg = Y_Mg, Hm = update$Hm, A_ps = A_ps, 
                       a = a, tmle = FALSE,
-                      EE = TRUE, bootstrap = FALSE, form = forms$QZform)
+                      EE = TRUE, bootstrap = FALSE, form = forms$QZform, transport)
 
       Qstar_Mg = get.stochasticM(gstarM_astar[[astar+1]], update$Qstar_M1, update$Qstar_M0) 
       # compute Qstar_Mg here
       tmle_info = mediation.step2_glm_eff_seqT(data = data, Qstar_M = update$Qstar_M, 
                       Qstar_Mg = Qstar_Mg, Hm = update$Hm, A_ps = A_ps, 
                       a = a, tmle = TRUE,
-                      EE = FALSE, bootstrap = FALSE, form = forms$QZform)
+                      EE = FALSE, bootstrap = FALSE, form = forms$QZform, transport)
       
       # compile all estimates
       tmle_info$eps1 = update$eps
@@ -46,14 +49,14 @@ SDE_glm_eff_seqT = function(data, forms, RCT = 0.5, pooled, gstar_S = 0, truth, 
     boot_ests = lapply(1:B, FUN = function(x) {
     inds = sample(1:n, replace = TRUE)
     data = data[inds,]
-    init_info = get.mediation.initdata_glm_eff_seqT(data = data, forms = forms, RCT = RCT, pooled)
+    init_info = get.mediation.initdata_glm_eff_seqT(data = data, forms = forms, RCT = RCT, pooled, transport)
     Y_preds = init_info$Y_preds
     gstarM_astar = list(gstarM_astar0[inds], gstarM_astar1[inds])
     
     est_info = lapply(0:1, FUN = function(astar) {
       return(lapply(0:1, FUN = function(a) {
         update = mediation.step1_glm_eff_seqT(initdata = init_info$initdata, Y_preds = Y_preds, data = data, 
-                                 gstarM_astar[[astar+1]], a)
+                                 gstarM_astar[[astar+1]], a, transport)
         iptw_info = update$est_iptw
         
         Y_Mg = get.stochasticM(gstarM_astar[[astar+1]], Y_preds[[2]], Y_preds[[3]]) 
@@ -61,14 +64,14 @@ SDE_glm_eff_seqT = function(data, forms, RCT = 0.5, pooled, gstar_S = 0, truth, 
         EE_mle_info = mediation.step2_glm_eff_seqT(data = data, Qstar_M = Y_preds[[1]], 
                                       Qstar_Mg = Y_Mg, Hm = update$Hm, A_ps = A_ps, 
                                       a = a, tmle = FALSE,
-                                      EE = TRUE, bootstrap = TRUE, form = forms$QZform)
+                                      EE = TRUE, bootstrap = TRUE, form = forms$QZform, transport)
         
         Qstar_Mg = get.stochasticM(gstarM_astar[[astar+1]], update$Qstar_M1, update$Qstar_M0) 
         # compute Qstar_Mg here
         tmle_info = mediation.step2_glm_eff_seqT(data = data, Qstar_M = update$Qstar_M, 
                                     Qstar_Mg = Qstar_Mg, Hm = update$Hm, A_ps = A_ps, 
                                     a = a, tmle = TRUE,
-                                    EE = FALSE, bootstrap = TRUE, form = forms$QZform)
+                                    EE = FALSE, bootstrap = TRUE, form = forms$QZform, transport)
         # compile all estimates
         return(list(tmle_est = tmle_info, EE_est = EE_mle_info[1],
                     mle_est = EE_mle_info[2]))
@@ -210,13 +213,13 @@ SDE_glm_eff_seqT = function(data, forms, RCT = 0.5, pooled, gstar_S = 0, truth, 
 
 
 #' @export
-get_gstarM_glm_eff_seqT  = function(data, truth, forms, pooled, gstar_S) 
+get_gstarM_glm_eff_seqT  = function(data, truth, forms, transport, pooled, gstar_S) 
 {
   W = data[,grep("W", colnames(data))]
   Mstarform = forms$Mstarform
   Zstarform = forms$Zstarform
 
-  if (!pooled) {
+  if (transport & !pooled) {
     Mstarfit = glm(Mstarform, data[data$S==gstar_S,], family = binomial)
     Zstarfit = glm(Zstarform, data[data$S==gstar_S,], family = binomial)
   } else {
@@ -229,6 +232,7 @@ get_gstarM_glm_eff_seqT  = function(data, truth, forms, pooled, gstar_S)
     # W = W[1:10]
     nn = length(Z)
     # dataM1 = data.frame(cbind)
+    if (transport) {
     dataM1 = cbind(Z = rep(1,nn), W, S = rep(gstar_S,nn))
     predM1 = predict(Mstarfit, newdata = dataM1, type = 'response')
     
@@ -237,6 +241,16 @@ get_gstarM_glm_eff_seqT  = function(data, truth, forms, pooled, gstar_S)
     
     dataZ = cbind(A = rep(0,nn), W, S = rep(gstar_S, nn))
     predZ = predict(Zstarfit, newdata = dataZ, type = 'response')
+    } else {
+      dataM1 = cbind(Z = rep(1,nn), W)
+      predM1 = predict(Mstarfit, newdata = dataM1, type = 'response')
+      
+      dataM0 = cbind(Z = rep(0,nn), W)
+      predM0 = predict(Mstarfit, newdata = dataM0, type = 'response')
+      
+      dataZ = cbind(A = rep(0,nn), W)
+      predZ = predict(Zstarfit, newdata = dataZ, type = 'response')
+    }
     
     gM = predM1*predZ + predM0*(1 - predZ)
     return(gM)
@@ -245,7 +259,7 @@ get_gstarM_glm_eff_seqT  = function(data, truth, forms, pooled, gstar_S)
   f_truth1 = function(Z, W, S) {
     # W = W[1:10]
     nn = length(Z)
-    # dataM1 = data.frame(cbind)
+    if (transport) {
     dataM1 = cbind(Z = rep(1,nn), W, S = rep(gstar_S,nn))
     predM1 = predict(Mstarfit, newdata = dataM1, type = 'response')
     
@@ -254,6 +268,16 @@ get_gstarM_glm_eff_seqT  = function(data, truth, forms, pooled, gstar_S)
     
     dataZ = cbind(A = rep(1,nn), W, S = rep(gstar_S, nn))
     predZ = predict(Zstarfit, newdata = dataZ, type = 'response')
+    } else {
+      dataM1 = cbind(Z = rep(1,nn), W)
+      predM1 = predict(Mstarfit, newdata = dataM1, type = 'response')
+      
+      dataM0 = cbind(Z = rep(0,nn), W)
+      predM0 = predict(Mstarfit, newdata = dataM0, type = 'response')
+      
+      dataZ = cbind(A = rep(1,nn), W)
+      predZ = predict(Zstarfit, newdata = dataZ, type = 'response')
+    }
     gM = predM1*predZ + predM0*(1 - predZ)
     return(gM)
   }
@@ -262,7 +286,7 @@ get_gstarM_glm_eff_seqT  = function(data, truth, forms, pooled, gstar_S)
   gstarM_astar0 = with(data, f_truth0(Z=Z, W=W, S=S))
   
   if (!is.null(truth)) {
-    
+    if (transport) {
     data_pop_astar0a1 = gendata.SDEtransport(5*1e6, f_W = truth$f_W, 
                                              f_S = truth$f_S, f_A = function(S,W) 1, 
                                              f_Z = truth$f_Z, f_M = f_truth0, f_Y = truth$f_Y) 
@@ -334,6 +358,75 @@ get_gstarM_glm_eff_seqT  = function(data, truth, forms, pooled, gstar_S)
       D_0 = D_0Y + D_0Z + D_0W
       return(D_0)
     }
+    } else {
+      data_pop_astar0a1 = gendata.SDEtransport_alt(5*1e6, f_W = truth$f_W, 
+                                               f_A = function(W) 1, 
+                                               f_Z = truth$f_Z, f_M = f_truth0, f_Y = truth$f_Y) 
+      data_pop_astar0a0 = gendata.SDEtransport_alt(5*1e6, f_W = truth$f_W, 
+                                               f_A = function(W) 0, 
+                                               f_Z = truth$f_Z, f_M = f_truth0, f_Y = truth$f_Y) 
+      
+      data_pop_astar1a1 = gendata.SDEtransport_alt(5*1e6, f_W = truth$f_W, 
+                                               f_A = function(W) 1, 
+                                               f_Z = truth$f_Z, f_M = f_truth1, f_Y = truth$f_Y) 
+      
+      Psi_astar0a1_0 = mean(data_pop_astar0a1$Y) 
+      Psi_astar0a0_0 = mean(data_pop_astar0a0$Y)
+      Psi_astar1a1_0 = mean(data_pop_astar1a1$Y) 
+      
+      # get the true IC's
+      W = data[,grep("W", colnames(data))]
+      M_ps0 = with(data, truth$f_M(Z=Z, W=W))
+      Z_ps0 = with(data, truth$f_Z(A=A, W=W))
+      A_ps0 = with(data, truth$f_A(W=W))
+      Z_psW = with(data, truth$f_Z(A=1, W=W)*A_ps0 + 
+                       truth$f_Z(A=0, W=W)*(1-A_ps0))
+      
+      
+      get_cc_0 = function(data, gstarM_astar, a) {
+        df_ZAa = data
+        df_ZAa$A = a
+        ZAa_ps0 = with(df_ZAa, truth$f_Z(A=A, W=W))
+        with(data, (((M == 1)*gstarM_astar + (M == 0)*(1 - gstarM_astar))*
+                      ((Z == 1)*ZAa_ps0 + (Z == 0)*(1 - ZAa_ps0))/
+               (((M == 1)*M_ps0 + (M == 0)*(1 - M_ps0))*
+                  ((Z == 1)*Z_psW + (Z == 0)*(1 - Z_psW)))))
+      }
+      
+      
+      get_Hz_0 = function(a) with(data, (A == a)/(A*A_ps0 + (1 - A)*(1 - A_ps0)))
+
+      Hm_astar0a1_0 = get_cc_0(data = data, gstarM_astar = gstarM_astar0, a = 1)
+      Hm_astar0a0_0 = get_cc_0(data = data, gstarM_astar = gstarM_astar0, a = 0)
+      Hm_astar1a1_0 = get_cc_0(data = data, gstarM_astar = gstarM_astar1, a = 1)
+      
+      Hz_astar0a1_0 = get_Hz_0(1)
+      Hz_astar0a0_0 = get_Hz_0(0)
+      Hz_astar1a1_0 = get_Hz_0(1)
+      
+      get_trueIC = function(gstar_M, a, Psi_0, Hm_0, Hz_0) {
+        p_0Z = with(data, truth$f_Z(A=a, W=W))
+        Q_0Y = with(data, truth$f_Y(M=M, Z=Z, W=W))
+        Q_0YM1 = with(data, truth$f_Y(M=1, Z=Z, W=W))
+        Q_0YM0 = with(data, truth$f_Y(M=0, Z=Z, W=W))
+        
+        Q_0YM1Z1 = with(data, truth$f_Y(M=1, Z=1, W=W))
+        Q_0YM0Z1 = with(data, truth$f_Y(M=0, Z=1, W=W))
+        Q_0YM1Z0 = with(data, truth$f_Y(M=1, Z=0, W=W))
+        Q_0YM0Z0 = with(data, truth$f_Y(M=0, Z=0, W=W))
+        
+        Q_ghat_astar = with(data, Q_0YM1*gstar_M + Q_0YM0*(1 - gstar_M)) 
+        Q_ghat_astarZ1 = with(data, Q_0YM1Z1*gstar_M + Q_0YM0Z1*(1 - gstar_M)) 
+        Q_ghat_astarZ0 = with(data, Q_0YM1Z0*gstar_M + Q_0YM0Z0*(1 - gstar_M)) 
+        
+        Q_ghat_astarW = with(data, Q_ghat_astarZ1*p_0Z + Q_ghat_astarZ0*(1-p_0Z))
+        D_0Y = with(data, Hm_0*(Y - Q_0Y))
+        D_0Z = Hz_0*(Q_ghat_astar - Q_ghat_astarW)
+        D_0W = with(data, (Q_ghat_astarW - Psi_0))
+        D_0 = D_0Y + D_0Z + D_0W
+        return(D_0)
+      }
+    }
     
     D_astar0a1_0 = get_trueIC(gstar_M = gstarM_astar0, a = 1, 
                               Psi_0 = Psi_astar0a1_0, Hm_0 = Hm_astar0a1_0,
@@ -349,7 +442,7 @@ get_gstarM_glm_eff_seqT  = function(data, truth, forms, pooled, gstar_S)
     
     return(list(gstarM_astar1 = gstarM_astar1, gstarM_astar0 = gstarM_astar0, 
                 Psi_astar0a1_0 = Psi_astar0a1_0, Psi_astar0a0_0 = Psi_astar0a0_0, 
-                Psi_astar1a1_0 = Psi_astar1a1_0, PS0_0 = PS0_0, 
+                Psi_astar1a1_0 = Psi_astar1a1_0,  
                 D_astar0a1_0 = D_astar0a1_0, D_astar0a0_0 = D_astar0a0_0,
                 D_astar1a1_0 = D_astar1a1_0, 
                 Hm_astar0a1_0 = Hm_astar0a1_0, 
@@ -362,8 +455,16 @@ get_gstarM_glm_eff_seqT  = function(data, truth, forms, pooled, gstar_S)
 }
 
 #' @export
-get.mediation.initdata_glm_eff_seqT = function(data, forms, RCT = 0.5, pooled) {
+get.mediation.initdata_glm_eff_seqT = function(data, forms, RCT = 0.5, pooled, transport) {
   
+  if (pooled | !transport) {
+    Zform = forms$Zstarform
+    Mform = forms$Mstarform
+  } else {
+    Zform = forms$Zform
+    Mform = forms$Mform
+  }
+  if (transport) {
   W = data[,grep("W", colnames(data))]
   df_YM1S1 = data
   df_YM1S1$M = 1
@@ -380,10 +481,7 @@ get.mediation.initdata_glm_eff_seqT = function(data, forms, RCT = 0.5, pooled) {
   Yform = forms$Yform
   Yfit = glm(formula = Yform, data = data[data$S==1,], family = binomial())
   
-  if (pooled) Mform = forms$Mstarform else Mform = forms$Mform
   Mfit = glm(formula = Mform, data = data, family = binomial())
-  
-  if (pooled) Zform = forms$Zstarform else Zform = forms$Zform
   Zfit = glm(formula = Zform, data = data, family = binomial())
   
   if (is.null(RCT)) { 
@@ -418,12 +516,58 @@ get.mediation.initdata_glm_eff_seqT = function(data, forms, RCT = 0.5, pooled) {
               Y_preds = list(Y_init = Y_init, 
                              Y_init_M1 = Y_init_M1, 
                              Y_init_M0 = Y_init_M0)))
+} else {
+  W = data[,grep("W", colnames(data))]
+  df_YM1 = data
+  df_YM1$M = 1
+  
+  df_YM0 = df_YM1
+  df_YM0$M = 0
+  
+  df_ZA1 = df_ZA0 = data
+  df_ZA1$A = 1
+  df_ZA0$A = 0
+  
+  Yform = forms$Yform
+  Yfit = glm(formula = Yform, data = data, family = binomial())
+  Mfit = glm(formula = Mform, data = data, family = binomial())
+  Zfit = glm(formula = Zform, data = data, family = binomial())
+  
+  if (is.null(RCT)) { 
+    Aform = forms$Aform
+    Afit = glm(formula = Aform, data = data, family = binomial())
+    A_ps = predict(Afit, type = 'response')
+  } else A_ps = RCT
+  
+  # propensity scores
+  if (is.null(RCT)) A_ps = predict(Afit, type = 'response') else A_ps = RCT
+  df_ZA0 = df_ZA1 = data 
+  df_ZA0$A = 0
+  df_ZA1$A = 1
+  Z_psW = predict(Zfit, newdata = df_ZA0, type = 'response')*(1 - A_ps) +
+    predict(Zfit, newdata = df_ZA1, type = 'response')*A_ps
+  ZA1_ps = predict(Zfit, newdata = df_ZA1, type = 'response')
+  ZA0_ps = predict(Zfit, newdata = df_ZA0, type = 'response')
+  M_ps = predict(Mfit, newdata = data, type = 'response')
+  
+  Y_init = pmin(pmax(predict(Yfit, newdata = data, type = 'response'), 0.001), .999)
+  Y_init_M1 = pmin(pmax(predict(Yfit, newdata = df_YM1, type = 'response'), 0.001), .999)
+  Y_init_M0 = pmin(pmax(predict(Yfit, newdata = df_YM0, type = 'response'), 0.001), .999)
+  return(list(initdata = list(M_ps = M_ps, ZA1_ps = ZA1_ps, ZA0_ps = ZA0_ps,
+                              Z_psW = Z_psW, 
+                              A_ps = A_ps), 
+              Y_preds = list(Y_init = Y_init, 
+                             Y_init_M1 = Y_init_M1, 
+                             Y_init_M0 = Y_init_M0)))
+  
+}
 }
 
 
 
 #' @export
-mediation.step1_glm_eff_seqT = function(initdata, Y_preds, data, gstarM_astar, a) {
+mediation.step1_glm_eff_seqT = function(initdata, Y_preds, data, gstarM_astar, a, transport) {
+  if (transport) {
   if (a==1) ZS0_ps = initdata$ZA1S0_ps else ZS0_ps = initdata$ZA0S0_ps
   H = with(data, with(initdata, ((S == 1)*
                                    ((M == 1)*gstarM_astar + (M == 0)*(1 - gstarM_astar))*
@@ -435,21 +579,41 @@ mediation.step1_glm_eff_seqT = function(initdata, Y_preds, data, gstarM_astar, a
   Qfit = try(glm(data$Y ~ 1 + offset(qlogis(Y_preds$Y_init)), family = binomial,
                  weights = H), silent = TRUE)
   
-  if (class(Qfit)=="try-error") eps = 0 else eps = Qfit$coefficients
+  if (class(Qfit)[1]=="try-error") eps = 0 else eps = Qfit$coefficients
   
   return(list(Qstar_M  = plogis(qlogis(Y_preds$Y_init) + eps),
               Qstar_M1 = plogis(qlogis(Y_preds$Y_init_M1) + eps),
               Qstar_M0 = plogis(qlogis(Y_preds$Y_init_M0) + eps),
               Hm = H,
               eps = eps))
+  } else {
+  
+    if (a==1) Z_ps = initdata$ZA1_ps else Z_ps = initdata$ZA0_ps
+    H = with(data, with(initdata, (((M == 1)*gstarM_astar + (M == 0)*(1 - gstarM_astar))*
+                                     ((Z == 1)*Z_ps + (Z == 0)*(1 - Z_ps)))/
+                          (((M == 1)*M_ps + (M == 0)*(1 - M_ps))*
+                             ((Z == 1)*Z_psW + (Z == 0)*(1 - Z_psW)))))
+    
+    # updates
+    Qfit = try(glm(data$Y ~ 1 + offset(qlogis(Y_preds$Y_init)), family = binomial,
+                   weights = H), silent = TRUE)
+    
+    if (class(Qfit)[1]=="try-error") eps = 0 else eps = Qfit$coefficients
+    
+    return(list(Qstar_M  = plogis(qlogis(Y_preds$Y_init) + eps),
+                Qstar_M1 = plogis(qlogis(Y_preds$Y_init_M1) + eps),
+                Qstar_M0 = plogis(qlogis(Y_preds$Y_init_M0) + eps),
+                Hm = H,
+                eps = eps))  
+  }
 }
 
 
 #' @export
 mediation.step2_glm_eff_seqT = function(data, Qstar_M, Qstar_Mg, Hm, A_ps, a, tmle = TRUE,
-                               EE = FALSE, bootstrap = FALSE, form) {
+                               EE = FALSE, bootstrap = FALSE, form, transport) {
   
-  PS0 = mean(data$S==0)
+  if (transport) PS0 = mean(data$S==0)
   df_QZ = data
   df_QZ$Qstar_Mg = Qstar_Mg
   
@@ -458,19 +622,25 @@ mediation.step2_glm_eff_seqT = function(data, Qstar_M, Qstar_Mg, Hm, A_ps, a, tm
   QZfit = glm(formula = QZform, data = df_QZ[df_QZ$A==a, ], family = binomial())
   # compute the clever covariate and update if tmle
   if (tmle) {
-    Hz = with(data, (A == a)*(S == 0)/(A*A_ps + (1 - A)*(1 - A_ps))/PS0)  
+    if (transport) Hz = with(data, (A == a)*(S == 0)/(A*A_ps + (1 - A)*(1 - A_ps))/PS0) else {
+      Hz = with(data, (A == a)/(A*A_ps + (1 - A)*(1 - A_ps)))
+    }  
     QZ_preds_a = pmin(pmax(predict(QZfit, newdata = data, type = 'response'), .001), .999)
     # update
     QZfit_tmle = try(glm(Qstar_Mg ~ 1 + offset(qlogis(QZ_preds_a)), family = binomial,
                          weights = Hz), silent = TRUE)
-    if (class(QZfit_tmle)=="try-error") eps2 = 0 else eps2 = QZfit_tmle$coefficients
+    if (class(QZfit_tmle)[1]=="try-error") eps2 = 0 else eps2 = QZfit_tmle$coefficients
     
     QZstar_a = plogis(qlogis(QZ_preds_a) + eps2)
-    est = mean(QZstar_a[data$S==0])
+    if (transport) est = mean(QZstar_a[data$S==0]) else {
+      est = mean(QZstar_a)
+    }
     if(!bootstrap) { 
       D_Y = with(data, Hm*(Y - Qstar_M))
       D_Z = Hz*(Qstar_Mg - QZstar_a)
-      D_W = with(data, (QZstar_a - est)*(S ==0)/PS0)
+      if (transport) D_W = with(data, (QZstar_a - est)*(S ==0)/PS0) else {
+        D_W = with(data, (QZstar_a - est))
+      }
       D = D_Y + D_Z + D_W
     }
   } 
@@ -478,11 +648,17 @@ mediation.step2_glm_eff_seqT = function(data, Qstar_M, Qstar_Mg, Hm, A_ps, a, tm
   # regress if EE or mle, EE updates the estimate, mle does not
   if (EE) {
     QZstar_a = pmin(pmax(predict(QZfit, newdata = data, type = 'response'), .001), .999) 
-    init_est = mean(QZstar_a[data$S==0])
+    if (transport) init_est = mean(QZstar_a[data$S==0]) else {
+      init_est = mean(QZstar_a)
+    }
     D_Y1s = with(data, Hm*(Y - Qstar_M))
-    Hz = with(data, (A == a)*(S == 0)/(A*A_ps + (1 - A)*(1 - A_ps))/PS0)
+    if (transport) Hz = with(data, (A == a)*(S == 0)/(A*A_ps + (1 - A)*(1 - A_ps))/PS0) else {
+      Hz = with(data, (A == a)/(A*A_ps + (1 - A)*(1 - A_ps)))
+    }
     D_Z1s = Hz*(Qstar_Mg - QZstar_a)
-    D_W1s = with(data, (QZstar_a - init_est)*(S ==0)/PS0)
+    if (transport) D_W1s = with(data, (QZstar_a - init_est)*(S ==0)/PS0) else {
+      D_W1s = with(data, (QZstar_a - init_est))
+    }
     D = D_Y1s + D_Z1s + D_W1s
     # update the estimate
     est = init_est + mean(D)

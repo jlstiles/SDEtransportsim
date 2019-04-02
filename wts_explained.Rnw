@@ -1,0 +1,84 @@
+\documentclass[titlepage]{article}
+\usepackage[]{graphicx}
+\usepackage[]{color}
+\usepackage{hyperref}
+\hypersetup{
+  colorlinks, linkcolor=black
+}
+
+\usepackage{color,soul}
+\usepackage{alltt}
+\usepackage{enumitem}
+\usepackage{framed}
+\usepackage[style=authoryear,maxcitenames=2, doi=false, backend = biber]{biblatex}
+
+\bibliography{references}
+\newcommand{\noopsort}[2]{#2}
+
+\usepackage[letterpaper, portrait, lmargin=1in, rmargin=1in,
+bmargin = 1.35in, tmargin = 1.35in]{geometry}
+
+\usepackage[english]{babel}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage[section]{placeins}
+\usepackage{setspace}
+\usepackage{caption}
+\def\changemargin#1#2{\list{}{\rightmargin#2\leftmargin#1}\item[]}
+\let\endchangemargin=\endlist
+\setlength{\parindent}{0pt}
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+
+\usepackage{amsmath,amsfonts,amssymb,amsthm,epsfig,epstopdf,titling,url,array}
+
+\makeatletter
+\setlength{\@fptop}{0pt}
+\makeatother
+
+%\doublespacing
+
+\renewcommand{\baselinestretch}{2} 
+
+\theoremstyle{plain}
+\newtheorem{thm}{Theorem}[section]
+\newtheorem{lem}[thm]{Lemma}
+\newtheorem{prop}[thm]{Proposition}
+\newtheorem*{cor}{Corollary}
+
+\theoremstyle{definition}
+\newtheorem{defn}{Definition}[section]
+\newtheorem{conj}{Conjecture}[section]
+\newtheorem{exmp}{Example}[section]
+
+\theoremstyle{remark}
+\newtheorem*{rem}{Remark}
+\newtheorem*{note}{Note}
+
+\definecolor{shadecolor}{rgb}{.97, .97, .97}
+\definecolor{messagecolor}{rgb}{0, 0, 0}
+\definecolor{warningcolor}{rgb}{1, 0, 1}
+\definecolor{errorcolor}{rgb}{1, 0, 0}
+
+
+\title{Survey Weights, explained}
+\author{Jonathan Levy}
+
+
+\begin{document}
+
+\begin{titlepage}
+
+
+\maketitle
+
+\end{titlepage}
+
+
+We have our observed $p_{W, r}(W | S) r(W | S)$ where $r(W | S)$ is the known weight and $p_{W, r}(W | S)$ is the observed data density of W given S for our survey sampling design.  We also assume $p_{W, r}(w | s) r(w | s) * \frac{\sum_i\mathbb{I}(S_i=s)}{\sum_i r(w | S_i=s)} = p_{W}(w | s)$, the true density of w given s.  So, for instance, let's say the true percentage of blacks is 10\% and whites is 90\% but we survey sampled so it is 50\% for blacks and whites so $p_{W, r}(w=white | s)  =  p_{W, r}(w = black | s) = 1/2$.  We upsample the blacks so as to get a representative sample of blacks, which includes all the other relevant characteristics for the population of black people in representative proportions, which is a great idea to improve precision. \\ 
+
+The blacks get a weight, r(w = blacks) = 1/5 and the whites gets a weight of 9/5 for standard survey sampling weighting.  If we sample 100 people from site S=0, we easily see the sum of the weights is just 100.  If the blacks all scored 20 and the whites scored 10, just using the weights of 1/5 and 9/5 would yield 10 blacks getting a score of 20 and 90 whites getting a score of 10, just as it should according to the population.  However, what if I weighted the blacks with 1 and the whites with 9?  Then we would take the weighted average times 100/(sum of the weights for S= 0) = 1/5, which again yields 10 blacks getting a score of 20 and 90 whites getting a score of 10.  Thusly, it is safe to multiply by 100/sum of the weights for S=0 to always get the correct average.\\  
+
+Think of our parameter of interest as $\frac{\Psi_{unscaled}*m}{\sum_i weight_i}$ for $S=0$ where $m$ is the number of participants in site $S = 0$.  Our influence function for $\Psi_{unscaled}$ is as I derived it, except we have the weights in the numerator of all clever covariates and the $\hat{Psi}_{n, unscaled}$ is just a mean, over $S = 0$, of weighted $\bar{Q}_Z^*(a,W,0)$ estimates.  The influence curve for Psi is just m/(sum of weights for S=0) times the IC for $\Psi_{unscaled}$ and the estimate for Psi is just $\frac{m}{\sum_i weight_i}$ for $S=0$ times the estimate for $\Psi_{unscaled}$.   Now, in the case I weight everyone equally, this turns out to be exactly as if I never weighted anyone at all, which is a good sign.  
+
+
+\end{document}
