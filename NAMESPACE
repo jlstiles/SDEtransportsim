@@ -2,8 +2,8 @@
 
 export(SDE_glm)
 export(SDE_glm_eff)
-export(SDE_glm_eff_seqT)
-export(SDE_glm_seqT)
+export(SDE_glm_eff_seq)
+export(SDE_glm_seq)
 export(SDE_tmle_lasso)
 export(SDE_tmle_lasso_eff)
 export(bound)

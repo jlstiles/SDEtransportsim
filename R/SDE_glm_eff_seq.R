@@ -1,6 +1,6 @@
 # Simulation function
 #' @export
-SDE_glm_eff_seqT = function(data, forms, RCT = 0.5, transport, pooled, gstar_S = 0, truth, B = 500) 
+SDE_glm_eff_seq = function(data, forms, RCT = 0.5, transport, pooled, gstar_S = 0, truth, B = 500) 
 {
   
   if (!transport) pooled = FALSE
@@ -215,7 +215,9 @@ SDE_glm_eff_seqT = function(data, forms, RCT = 0.5, transport, pooled, gstar_S =
 #' @export
 get_gstarM_glm_eff_seqT  = function(data, truth, forms, transport, pooled, gstar_S) 
 {
-  W = data[,grep("W", colnames(data))]
+  W = as.data.frame(data[,grep("W", colnames(data))])
+  colnames(W) = colnames(data)[grep("W", colnames(data))]
+  
   Mstarform = forms$Mstarform
   Zstarform = forms$Zstarform
 
@@ -304,7 +306,6 @@ get_gstarM_glm_eff_seqT  = function(data, truth, forms, transport, pooled, gstar
     PS0_0 = mean(data_pop_astar1a1$S==0)   
     
     # get the true IC's
-    W = data[,grep("W", colnames(data))]
     S_ps0 = with(data, truth$f_S(W=W))
     M_ps0 = with(data, truth$f_M(Z=Z, W=W, S=S))
     Z_ps0 = with(data, truth$f_Z(A=A, W=W, S=S))
@@ -375,7 +376,6 @@ get_gstarM_glm_eff_seqT  = function(data, truth, forms, transport, pooled, gstar
       Psi_astar1a1_0 = mean(data_pop_astar1a1$Y) 
       
       # get the true IC's
-      W = data[,grep("W", colnames(data))]
       M_ps0 = with(data, truth$f_M(Z=Z, W=W))
       Z_ps0 = with(data, truth$f_Z(A=A, W=W))
       A_ps0 = with(data, truth$f_A(W=W))
@@ -465,7 +465,7 @@ get.mediation.initdata_glm_eff_seqT = function(data, forms, RCT = 0.5, pooled, t
     Mform = forms$Mform
   }
   if (transport) {
-  W = data[,grep("W", colnames(data))]
+
   df_YM1S1 = data
   df_YM1S1$M = 1
   df_YM1S1$S = 1
@@ -517,7 +517,7 @@ get.mediation.initdata_glm_eff_seqT = function(data, forms, RCT = 0.5, pooled, t
                              Y_init_M1 = Y_init_M1, 
                              Y_init_M0 = Y_init_M0)))
 } else {
-  W = data[,grep("W", colnames(data))]
+
   df_YM1 = data
   df_YM1$M = 1
   
@@ -562,7 +562,6 @@ get.mediation.initdata_glm_eff_seqT = function(data, forms, RCT = 0.5, pooled, t
   
 }
 }
-
 
 
 #' @export

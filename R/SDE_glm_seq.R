@@ -1,6 +1,6 @@
 # Simulation function
 #' @export
-SDE_glm_seqT = function(data, forms, RCT = 0.5, transport, pooled, gstar_S = 0, truth, B = 500) 
+SDE_glm_seq = function(data, forms, RCT = 0.5, transport, pooled, gstar_S = 0, truth, B = 500) 
 {
   
   # get the stochastic dist of M and true params if you want 

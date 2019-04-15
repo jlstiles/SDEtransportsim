@@ -1,0 +1,106 @@
+---
+title: "SDE/SIE Transport Simulation"
+output: html_document
+---
+The following is to reproduce simulation results of recent paper by Rudolph, Levy and van der Laan.  First install the simulations package and load the data generating systems.
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+devtools::install_github("jlstiles/SDEtransportsim")
+data(func_forms1)
+```
+
+There are three data generating systems we used.  DGP 1 is intended to break estimators especially when the models for the outcome and mediator are misspecified. DGP 2 is intended to break estimators especially when the models for the outcome and intermediate confounder, Z, are misspecified. DGP 3 is intended to break estimators especially when the models for the outcome and the conditional outcome model of S given W are misspecified.\\
+
+First select from one of the DGP's by setting DGP = 1, 2 or 3. In the below example we set DGP = 1
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+DGP = 1
+```
+
+Choose which case, where the choices are: 
+
+well where all models are well-specified 
+
+YAwell where only the outcome model and treatment mechanism are well-specified
+
+Ymis where all are well-specified except for the outcome model
+
+YMmis where all are well-specified except for the outcome model and mediator (M) mechansim
+
+YZmis where all are well-specified except for the outcome model and intermediate confounder (Z) mechansim
+
+YSmis where all are well-specified except for the outcome model and model for site, S given W.  
+
+Below we selected "well".  
+
+```{r setup, include=FALSE}
+type = "well"
+
+#select the number of cores to use in parallel, depending on how many are available to you.  This takes about 12 hours to run using 20 cores.  boots are the number of bootstraps we used for each draw from the data to calculate
+# bootstrap inference for our simulations
+cores = 2L
+DGP = 1
+
+if (DGP == 1) {
+  func_list = func_formsYM$func_listYMmis
+  forms = func_formsYM
+}
+
+if (DGP == 2) {
+  func_list = func_formsYZ$func_listYZmis
+  forms = func_formsYZ
+}
+
+if (DGP == 3) {
+  func_list = func_formsYS$func_listYSmis
+  forms = func_formsYS
+}
+
+form_name = paste0("forms", type)
+forms = forms[[form_name]]
+
+sim_kara = function(n, forms, truth, B = 500) {
+  n=100
+  truth = func_list
+  data = gendata.SDEtransport(n, 
+                              f_W = truth$f_W, 
+                              f_S = truth$f_S, 
+                              f_A = truth$f_A, 
+                              f_Z = truth$f_Z, 
+                              f_M = truth$f_M, 
+                              f_Y = truth$f_Y)
+
+  res = SDE_glm_seq(data, forms, RCT = 0.5, transport = TRUE, 
+                    pooled = TRUE, gstar_S = 1, truth, B = 500) 
+  
+  res_eff = SDE_glm_eff_seq(data, forms, RCT = 0.5, transport = TRUE, 
+                            pooled = TRUE, gstar_S = 1, truth, B = 500) 
+  
+  return(list(res= res, res_eff = res_eff))
+}
+
+boots = 500
+B = 2
+n=100
+
+res100 = mclapply(1:B, FUN = function(x) sim_kara(n=100, forms=forms, truth=func_list, B = boots),
+                  mc.cores = getOption("mc.cores", cores))
+
+
+B = 1000
+n=500
+
+res500 = mclapply(1:B, FUN = function(x) sim_kara(n=500, forms=forms, truth=func_list, B = boots),
+                  mc.cores = getOption("mc.cores", cores))
+
+B = 1000
+n=5000
+
+res5000 = mclapply(1:B, FUN = function(x) sim_kara(n=5000, forms=forms, truth=func_list, B = boots), 
+                   mc.cores = getOption("mc.cores", cores))
+
+
+
+```
