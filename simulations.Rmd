@@ -62,8 +62,6 @@ form_name = paste0("forms", type)
 forms = forms[[form_name]]
 
 sim_kara = function(n, forms, truth, B = 500) {
-  n=100
-  truth = func_list
   data = gendata.SDEtransport(n, 
                               f_W = truth$f_W, 
                               f_S = truth$f_S, 
@@ -73,34 +71,40 @@ sim_kara = function(n, forms, truth, B = 500) {
                               f_Y = truth$f_Y)
 
   res = SDE_glm_seq(data, forms, RCT = 0.5, transport = TRUE, 
-                    pooled = TRUE, gstar_S = 1, truth, B = 500) 
+                    pooled = TRUE, gstar_S = 1, truth, B = B) 
   
   res_eff = SDE_glm_eff_seq(data, forms, RCT = 0.5, transport = TRUE, 
-                            pooled = TRUE, gstar_S = 1, truth, B = 500) 
+                            pooled = TRUE, gstar_S = 1, truth = NULL, B = B) 
   
   return(list(res= res, res_eff = res_eff))
 }
 
-boots = 500
-B = 2
+boots = 3
+number_sims = 3
 n=100
+# 
+# undebug(SDE_glm_seq)
+# undebug(SDE_glm_eff_seq)
+# sim_kara(n=100, forms=forms, truth=func_list, B = boots)
 
-res100 = mclapply(1:B, FUN = function(x) sim_kara(n=100, forms=forms, truth=func_list, B = boots),
+res100 = mclapply(1:number_sims, FUN = function(x) sim_kara(n=100, forms=forms, truth=func_list, B = boots),
                   mc.cores = getOption("mc.cores", cores))
 
-
-B = 1000
 n=500
-
-res500 = mclapply(1:B, FUN = function(x) sim_kara(n=500, forms=forms, truth=func_list, B = boots),
+res500 = mclapply(1:number_sims, FUN = function(x) sim_kara(n=500, forms=forms, truth=func_list, B = boots),
                   mc.cores = getOption("mc.cores", cores))
 
-B = 1000
 n=5000
-
-res5000 = mclapply(1:B, FUN = function(x) sim_kara(n=5000, forms=forms, truth=func_list, B = boots), 
+res5000 = mclapply(1:number_sims, FUN = function(x) sim_kara(n=5000, forms=forms, truth=func_list, B = boots), 
                    mc.cores = getOption("mc.cores", cores))
 
 
+```
+
+To compile the information out of the simulations.  The code example is for compiling results for res5000
+
+```{r setup, include=FALSE}
+# bootcut cuts out wild boostrap estimates of the variance that occasionally blew up for the EE estimator
+results_compiled = compile_SDE_new(res_list = res5000, func_list, forms, bootcut = TRUE)
 
 ```
