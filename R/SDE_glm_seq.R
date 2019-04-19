@@ -3,6 +3,8 @@
 SDE_glm_seq = function(data, forms, RCT = 0.5, transport, pooled, gstar_S = 0, truth, B = 500) 
 {
   
+  if (!transport) pooled = FALSE
+  if (length(unique(data$Y))!=2) data$Y = (data$Y - min(data$Y))/(max(data$Y) - min(data$Y))
   # get the stochastic dist of M and true params if you want 
   gstar_info = get_gstarM_glm_seqT(data = data, truth = truth, forms = forms, transport = transport, 
                                    pooled, gstar_S)

@@ -43,7 +43,7 @@ get.mediation.initdata_lasso = function(data, forms, RCT = 0.5, Wnames, Wnamesal
     y = data$Y
     weights = data$weights
   }
-
+  if (length(unique(data$Y))>2) Yfamily = "gaussian" else Yfamily = "binomial"
   Yfit = cv.glmnet(x, y, family = "binomial", penalty.factor=pfac, parallel=TRUE)
   
   dataM = model.matrix(Mform, data)[,-1]

@@ -33,7 +33,7 @@ get_gstarM_lasso  = function(data, forms, Wnames, Wnamesalways, transport,
   # make sure the following gets forced into Zstar fit
   pfacZ<-rep(1, ncol(dataZstar))
   pfacZ[which(colnames(dataZstar) %in% c("A", Wnamesalways))]<-0
-  
+
   if (transport & !pooled) {
     Mstarfit = cv.glmnet(dataMstar[data$S==gstar_S, ], data$M[data$S==gstar_S], family = "binomial", 
                          penalty.factor=pfacM, parallel=TRUE)

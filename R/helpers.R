@@ -57,3 +57,25 @@ gendata.SDEtransport_alt = function(n, f_W, f_A, f_Z, f_M, f_Y) {
   
   return(as.data.frame(cbind(W, A = A, Z = Z, M = M, Y = Y)))
 }
+
+
+#' @export
+gendata.SDEtransport_alt_cont = function(n, f_W, f_A, f_Z, f_M, f_Y) {
+  W = f_W(n)
+  # make a pscore model
+  pscores = f_A(W=W)
+  A = rbinom(n, 1, pscores)
+  
+  # make a intermediate confounder model
+  pzscores = f_Z(A=A,W=W)
+  Z = rbinom(n, 1, pzscores)
+  
+  # make an M model according to the restrictions
+  Mscores = f_M(Z=Z,W=W)
+  M = rbinom(n, 1, Mscores)
+  
+  # make a Y model according to the restrictions
+  Y = f_Y(M=M,Z=Z,W=W)
+  
+  return(as.data.frame(cbind(W, A = A, Z = Z, M = M, Y = Y)))
+}

@@ -25,6 +25,7 @@
 SDE_tmle_lasso = function(data, forms, RCT = 0.5,Wnames, Wnamesalways, transport,
                           pooled, gstar_S = 1, truth = NULL) 
 {
+    if (length(unique(data$Y)>2)) data$Y = (data$Y - min(data$Y))/(max(data$Y) - min(data$Y))
     if (!transport) pooled = FALSE
     # get the stochastic dist of M and true params if you want 
     gstar_info = get_gstarM_lasso(data = data, forms = forms, Wnames = Wnames, Wnamesalways = Wnamesalways, 
