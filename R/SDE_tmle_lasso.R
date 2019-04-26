@@ -25,7 +25,12 @@
 SDE_tmle_lasso = function(data, forms, RCT = 0.5,Wnames, Wnamesalways, transport,
                           pooled, gstar_S = 1, truth = NULL) 
 {
-    if (length(unique(data$Y)>2)) data$Y = (data$Y - min(data$Y))/(max(data$Y) - min(data$Y))
+    if (length(unique(data$Y)>2)) {
+      continuous = TRUE
+      a = min(data$Y)
+      b = max(data$Y)
+      data$Y = (data$Y - min(data$Y))/(max(data$Y) - min(data$Y))
+    } else continuous = FALSE
     if (!transport) pooled = FALSE
     # get the stochastic dist of M and true params if you want 
     gstar_info = get_gstarM_lasso(data = data, forms = forms, Wnames = Wnames, Wnamesalways = Wnamesalways, 
@@ -74,13 +79,23 @@ SDE_tmle_lasso = function(data, forms, RCT = 0.5,Wnames, Wnamesalways, transport
     D_SIE = est_info[[2]][[2]]$IC- est_info[[1]][[2]]$IC
     
     # weighted variance as per weights option in data matrix
+    if (continuous) {
+      SE_SDE = (b-a)*sd(D_SDE)/sqrt(n)
+      SE_SIE = (b-a)*sd(D_SIE)/sqrt(n)
+    } else {
+      SE_SDE = sd(D_SDE)/sqrt(n)
+      SE_SIE = sd(D_SIE)/sqrt(n)
+    }
     
-    SE_SDE = sd(D_SDE)/sqrt(n)
-    SE_SIE = sd(D_SIE)/sqrt(n)
-
-    ests_astar0a1 =   est_info[[1]][[2]]$est
-    ests_astar0a0 =   est_info[[1]][[1]]$est
-    ests_astar1a1 =   est_info[[2]][[2]]$est
+    if (continuous) {
+      ests_astar0a1 =   est_info[[1]][[2]]$est*(b-a) + a
+      ests_astar0a0 =   est_info[[1]][[1]]$est*(b-a) + a
+      ests_astar1a1 =   est_info[[2]][[2]]$est*(b-a) + a
+    } else {
+      ests_astar0a1 =   est_info[[1]][[2]]$est
+      ests_astar0a0 =   est_info[[1]][[1]]$est
+      ests_astar1a1 =   est_info[[2]][[2]]$est
+    }
     
     SDE_ests = ests_astar0a1 - ests_astar0a0
     SIE_ests = ests_astar1a1 - ests_astar0a1
@@ -106,7 +121,6 @@ SDE_tmle_lasso = function(data, forms, RCT = 0.5,Wnames, Wnamesalways, transport
                   eps2_astar1a1 = est_info[[2]][[2]]$eps2 
       )) 
     } else {
-      
       return(list(CI_SDE = CI_SDE, 
                   CI_SIE = CI_SIE, 
                   SE_SDE = SE_SDE, 
