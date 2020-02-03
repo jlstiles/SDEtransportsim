@@ -644,16 +644,17 @@ mediation.step1_glm_seqT = function(initdata, Y_preds, data, gstarM_astar, a, tr
   }
   
   # updates
-  Qfit = try(glm(data$Y ~ 1 + offset(qlogis(Y_preds$Y_init)), family = binomial,
-                 weights = H), silent = TRUE)
-  
+  # Qfit = try(glm(data$Y ~ 1 + offset(qlogis(Y_preds$Y_init)), family = binomial,
+  #                weights = H), silent = TRUE)
+  Qfit = try(glm(data$Y ~ -1 + H + offset(qlogis(Y_preds$Y_init)), 
+                 family = binomial), silent = TRUE)
   if (class(Qfit)[1]=="try-error") eps = 0 else eps = Qfit$coefficients
   
   est_iptw = mean(data$Y*H/mean(H))
   IC_iptw = H/mean(H)*(data$Y - est_iptw*mean(H))
-  return(list(Qstar_M  = plogis(qlogis(Y_preds$Y_init) + eps),
-              Qstar_M1 = plogis(qlogis(Y_preds$Y_init_M1) + eps),
-              Qstar_M0 = plogis(qlogis(Y_preds$Y_init_M0) + eps),
+  return(list(Qstar_M  = plogis(qlogis(Y_preds$Y_init) + H*eps),
+              Qstar_M1 = plogis(qlogis(Y_preds$Y_init_M1) + H*eps),
+              Qstar_M0 = plogis(qlogis(Y_preds$Y_init_M0) + H*eps),
               IC_iptw = IC_iptw, est_iptw = est_iptw,
               Hm = H,
               eps = eps))

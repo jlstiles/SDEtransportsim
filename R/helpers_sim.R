@@ -161,29 +161,60 @@ compile_SDE = function(res_list, func_list, forms)
 #' @export
 compile_SDE_noboot = function(res_list, func_list, forms)
 {  
-  # res_list = res500_well
+  res_list = res100t
   res = lapply(res_list, FUN = function(x) {
-    if (is.numeric(x[[1]][1])) unlist(x) else return(0)
+    if (is.numeric(x[[1]][[1]][1]) & is.numeric(x[[2]][[1]][1])) unlist(x) else return(0)
   })
   
   valid_draws = which(vapply(1:length(res), FUN = function(x) res[[x]][1] != 0, FUN.VALUE = TRUE))
   
   length(valid_draws)
   res = res[valid_draws]
+  
   res = do.call(rbind, res)
-  
+  # colnames(res)
   res = as.data.frame(res)
-  coverage = c(SDE_tmle = mean((res$SDE_0 >= res[,2]) & (res$SDE_0 <= res[,3])),
-               SDE_1s = mean((res$SDE_0 >= res[,8]) & (res$SDE_0 <= res[,9])),
-               SDE_iptw = mean((res$SDE_0 >= res[,14]) & (res$SDE_0 <= res[,15])),
-               SIE_tmle = mean((res$SIE_0 >= res[,5]) & (res$SIE_0 <= res[,6])),
-               SIE_1s = mean((res$SIE_0 >= res[,11]) & (res$SIE_0 <= res[,12])),
-               SIE_iptw = mean((res$SIE_0 >= res[,17]) & (res$SIE_0 <= res[,18])))
+  colnames(res)
   
-  res_SE_SDE = res[,c(21,23,25)]
-  res_SE_SIE = res[,c(22,24,26)]
+  coverage = c(SDE_tmle = mean((res$res.SDE_0 >= res[,2]) & (res$res.SDE_0 <= res[,3])),
+               SDE_1s = mean((res$res.SDE_0 >= res[,8]) & (res$res.SDE_0 <= res[,9])),
+               SDE_iptw = mean((res$res.SDE_0 >= res[,14]) & (res$res.SDE_0 <= res[,15])),
+               SIE_tmle = mean((res$res.SIE_0 >= res[,5]) & (res$res.SIE_0 <= res[,6])),
+               SIE_1s = mean((res$res.SIE_0 >= res[,11]) & (res$res.SIE_0 <= res[,12])),
+               SIE_iptw = mean((res$res.SIE_0 >= res[,17]) & (res$res.SIE_0 <= res[,18])))
   
-  res_SE_0 = res[,27:28]
+  eff = 51
+  coverage_eff = c(SDE_tmle_eff = mean((res$res.SDE_0 >= res[,2+eff]) & (res$res.SDE_0 <= res[,3+eff])),
+               SDE_1s_eff = mean((res$res.SDE_0 >= res[,8+eff]) & (res$res.SDE_0 <= res[,9+eff])),
+               SDE_iptw_eff = mean((res$res.SDE_0 >= res[,14+eff]) & (res$res.SDE_0 <= res[,15+eff])),
+               SIE_tmle_eff = mean((res$res.SIE_0 >= res[,5+eff]) & (res$res.SIE_0 <= res[,6+eff])),
+               SIE_1s_eff = mean((res$res.SIE_0 >= res[,11+eff]) & (res$res.SIE_0 <= res[,12+eff])),
+               SIE_iptw_eff = mean((res$res.SIE_0 >= res[,17+eff]) & (res$res.SIE_0 <= res[,18+eff])))
+  
+  coverage = c(coverage, coverage_eff)
+  coverage
+  
+  coveragedf = data.frame(SDE_tmle = ((res$res.SDE_0 >= res[,2]) & (res$res.SDE_0 <= res[,3])),
+               SDE_1s = ((res$res.SDE_0 >= res[,8]) & (res$res.SDE_0 <= res[,9])),
+               SDE_iptw = ((res$res.SDE_0 >= res[,14]) & (res$res.SDE_0 <= res[,15])),
+               SIE_tmle = ((res$res.SIE_0 >= res[,5]) & (res$res.SIE_0 <= res[,6])),
+               SIE_1s = ((res$res.SIE_0 >= res[,11]) & (res$res.SIE_0 <= res[,12])),
+               SIE_iptw = ((res$res.SIE_0 >= res[,17]) & (res$res.SIE_0 <= res[,18])))
+  
+  SDE_fucked = which(!coveragedf$SDE_tmle & coveragedf$SDE_1s)
+  colMeans(res[!1:100 %in% SDE_fucked,c(46:51)])
+  colMeans(res[,c(46:51)])
+  res[,48]
+  colMeans(abs(res[1:100 %in% SDE_fucked,c(46:51)])>1)
+  colMeans(abs(res[!1:100 %in% SDE_fucked,c(46:51)])>1)
+  
+  colMeans(res[SDE_fucked,c(64:69)])
+  forms
+  func_list
+  res_SE_SDE = res[,c(21,23,25,66,68)]
+  res_SE_SIE = res[,c(22,24,26,67,69)]
+  
+  res_SE_0 = res[,70:71]
   
   efficiency_SDE = colMeans(apply(res_SE_SDE, 2, FUN = function(x) x/res_SE_0[,1]))
   efficiency_SIE = colMeans(apply(res_SE_SIE, 2, FUN = function(x) x/res_SE_0[,2]))

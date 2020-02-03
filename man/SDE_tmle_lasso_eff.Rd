@@ -4,8 +4,8 @@
 \alias{SDE_tmle_lasso_eff}
 \title{SDE_tmle_lasso}
 \usage{
-SDE_tmle_lasso_eff(data, forms, RCT = 0.5, Wnames, Wnamesalways, transport,
-  pooled, gstar_S = 1, truth = NULL)
+SDE_tmle_lasso_eff(data, forms, RCT = 0.5, Wnames, Wnamesalways,
+  transport, pooled, gstar_S = 1, truth = NULL)
 }
 \arguments{
 \item{data, }{data.frame where confounders have any names but the following, which must be

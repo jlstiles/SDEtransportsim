@@ -576,14 +576,14 @@ mediation.step1_glm_eff_seqT = function(initdata, Y_preds, data, gstarM_astar, a
                            ((Z == 1)*Z_psWS + (Z == 0)*(1 - Z_psWS))*S_ps*PS0)))
   
   # updates
-  Qfit = try(glm(data$Y ~ 1 + offset(qlogis(Y_preds$Y_init)), family = binomial,
-                 weights = H), silent = TRUE)
+  Qfit = try(glm(data$Y ~ -1 + H + offset(qlogis(Y_preds$Y_init)), 
+                 family = binomial), silent = TRUE)
   
   if (class(Qfit)[1]=="try-error") eps = 0 else eps = Qfit$coefficients
   
-  return(list(Qstar_M  = plogis(qlogis(Y_preds$Y_init) + eps),
-              Qstar_M1 = plogis(qlogis(Y_preds$Y_init_M1) + eps),
-              Qstar_M0 = plogis(qlogis(Y_preds$Y_init_M0) + eps),
+  return(list(Qstar_M  = plogis(qlogis(Y_preds$Y_init) + H*eps),
+              Qstar_M1 = plogis(qlogis(Y_preds$Y_init_M1) + H*eps),
+              Qstar_M0 = plogis(qlogis(Y_preds$Y_init_M0) + H*eps),
               Hm = H,
               eps = eps))
   } else {
@@ -595,14 +595,14 @@ mediation.step1_glm_eff_seqT = function(initdata, Y_preds, data, gstarM_astar, a
                              ((Z == 1)*Z_psW + (Z == 0)*(1 - Z_psW)))))
     
     # updates
-    Qfit = try(glm(data$Y ~ 1 + offset(qlogis(Y_preds$Y_init)), family = binomial,
+    Qfit = try(glm(data$Y ~ -1 + H + offset(qlogis(Y_preds$Y_init)), family = binomial,
                    weights = H), silent = TRUE)
     
     if (class(Qfit)[1]=="try-error") eps = 0 else eps = Qfit$coefficients
     
-    return(list(Qstar_M  = plogis(qlogis(Y_preds$Y_init) + eps),
-                Qstar_M1 = plogis(qlogis(Y_preds$Y_init_M1) + eps),
-                Qstar_M0 = plogis(qlogis(Y_preds$Y_init_M0) + eps),
+    return(list(Qstar_M  = plogis(qlogis(Y_preds$Y_init) + H*eps),
+                Qstar_M1 = plogis(qlogis(Y_preds$Y_init_M1) + H*eps),
+                Qstar_M0 = plogis(qlogis(Y_preds$Y_init_M0) + H*eps),
                 Hm = H,
                 eps = eps))  
   }
