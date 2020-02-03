@@ -22,8 +22,7 @@ if (type == "YZmis") {
 
 system(paste0("mkdir -p ", paste0("results", type)))
   
-# unique(data[data$M==1 &data$S ==0, c(2,4,5)])
-sim_kara = function(n, forms, truth, B = 500) {
+sim_kara = function(n, forms, truth, B = boots) {
   
   data = gendata.SDEtransport(n, 
                               f_W = truth$f_W, 
@@ -32,17 +31,13 @@ sim_kara = function(n, forms, truth, B = 500) {
                               f_Z = truth$f_Z, 
                               f_M = truth$f_M, 
                               f_Y = truth$f_Y)
-  res = SDE_glm_seq(data, truth = truth,
-                    truncate = list(lower =.0001, upper = .9999),
-                    B=B, forms = forms, RCT = 0.5)
+  res = SDE_glm_seq(data, forms, RCT = 0.5, transport=T, 
+                    pooled=T, gstar_S = 0, truth=truth, B = boots) 
   
-  res_eff = SDE_glm_eff_seq(data, truth = NULL,
-                            truncate = list(lower =.0001, upper = .9999),
-                            B=B, forms = forms, RCT = 0.5)
-  
+  res_eff = SDE_glm_eff_seq(data, forms, RCT = 0.5, transport=T,
+                            pooled=T, gstar_S = 0, truth=truth, B = boots)
   return(list(res= res, res_eff = res_eff))
 }
-
 library(parallel)
   
   B = 1000
