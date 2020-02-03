@@ -1,7 +1,7 @@
 #!/bin/bash
 ######### Sbatch configuration.
 #
-# NOTE: we do not specify account, partition, or QOS in this file,
+# NOTE: we do not specify account, parition, or QOS in this file,
 # in order to allow easier customization. Instead those settings
 # should be specified in the command line via the calling file.
 #

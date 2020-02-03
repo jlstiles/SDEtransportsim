@@ -248,7 +248,7 @@ bash:
 
 ####
 # Add other rules here.
-####
+###
 
 # Clean up any logs or temporary files via "make clean"
 # Next line ensures that this rule works even if there's a file named "clean".
